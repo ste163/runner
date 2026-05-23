@@ -2,12 +2,10 @@
   "name": "runner",
   "version": "1.0.0",
   "private": false,
-  "description": "Brownfield Lynx app based on Sparkling",
-  "homepage": "https://tiktok.github.io/sparkling/",
+  "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tiktok/sparkling",
-    "directory": "template/sparkling-app-template"
+    "url": "https://github.com/ste163/runner"
   },
   "type": "module",
   "scripts": {
@@ -15,7 +13,7 @@
     "autolink": "sparkling-app-cli autolink",
     "dev": "rspeedy dev",
     "doctor": "sparkling-app-cli doctor",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint src app.config.ts vitest.config.ts",
     "lint:fix": "oxlint --fix src app.config.ts vitest.config.ts",
@@ -26,30 +24,29 @@
     "avd:list": "sh -lc 'ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\"; \"$ANDROID_HOME/emulator/emulator\" -list-avds'",
     "avd:start": "sh -lc 'ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\"; \"$ANDROID_HOME/emulator/emulator\" -avd \"${ANDROID_AVD:?set ANDROID_AVD}\"'",
     "android": "sh ./scripts/android.sh",
-    "run:android": "sh ./scripts/android.sh",
-    "run:ios": "sparkling-app-cli run:ios --copy",
+    "ios": "sparkling-app-cli run:ios --copy",
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "@lynx-js/react": "^0.116.2",
-    "sparkling-navigation": "^2.0.1"
+    "@lynx-js/react": "0.121.0",
+    "sparkling-navigation": "2.0.1"
   },
   "devDependencies": {
-    "@lynx-js/qrcode-rsbuild-plugin": "^0.4.4",
-    "@lynx-js/react-rsbuild-plugin": "^0.12.7",
-    "@lynx-js/rspeedy": "^0.13.3",
-    "@lynx-js/types": "^3.6.0",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@types/react": "^18.3.20",
-    "@vitest/coverage-v8": "^4.0.18",
-    "husky": "^9.1.7",
-    "jsdom": "^28.0.0",
-    "lint-staged": "^16.4.0",
-    "oxfmt": "^0.51.0",
-    "oxlint": "^1.66.0",
-    "sparkling-app-cli": "~2.0.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "@lynx-js/qrcode-rsbuild-plugin": "0.4.7",
+    "@lynx-js/react-rsbuild-plugin": "0.16.2",
+    "@lynx-js/rspeedy": "0.14.4",
+    "@lynx-js/types": "3.9.0",
+    "@testing-library/jest-dom": "6.9.1",
+    "@types/react": "18.3.29",
+    "@vitest/coverage-v8": "4.1.7",
+    "husky": "9.1.7",
+    "jsdom": "28.1.0",
+    "lint-staged": "16.4.0",
+    "oxfmt": "0.51.0",
+    "oxlint": "1.66.0",
+    "sparkling-app-cli": "2.0.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.7"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

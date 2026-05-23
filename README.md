@@ -68,33 +68,13 @@ Builds bundles and copies assets into `android/app/src/main/assets`.
 ## Tests
 
 ```bash
-bun test
+bun run test
 ```
-
-Run unit tests.
-
-```bash
-bun test:watch
-```
-
-Watch mode.
 
 ## Lint + Format
 
 ```bash
 bun lint
-```
-
-Lint project.
-
-```bash
-bun lint:fix
-```
-
-Fix lint issues.
-
-```bash
-bun fmt
 ```
 
 Format project.
