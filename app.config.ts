@@ -39,6 +39,9 @@ const config: AppConfig = {
       bundleIdentifier: 'com.example.sparkling.go',
     },
   },
+  dev: {
+    port: 3000,
+  },
   paths: {
     androidAssets: 'android/app/src/main/assets',
     iosAssets: 'ios/SparklingGo/SparklingGo/Resources/Assets',

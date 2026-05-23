@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tiktok.sparkling.Sparkling
 import com.tiktok.sparkling.SparklingContext
 import com.tiktok.sparkling.method.registry.core.utils.JsonUtils
+import com.example.sparkling.go.DebugDevUrlSupport
+import com.example.sparkling.go.DebugSparklingUiProvider
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,9 +20,17 @@ class SplashActivity : AppCompatActivity() {
     private fun gotoSparklingPage() {
         val initData = mapOf<Any, Any>()
         val initialData: String = JsonUtils.toJson(initData)
+        val launchScheme = if (BuildConfig.DEBUG) {
+            DebugDevUrlSupport.buildMainPageScheme(this)
+        } else {
+            "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
+        }
 
         val context = SparklingContext()
-        context.scheme = "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
+        context.scheme = launchScheme
+        if (BuildConfig.DEBUG) {
+            context.sparklingUIProvider = DebugSparklingUiProvider(initialData.toString(), launchScheme)
+        }
         context.withInitData("{ \"initial_data\":$initialData}")
         Sparkling.build(this, context).navigate()
         finish()

@@ -4,6 +4,7 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
 import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config'
 
+// TODO: update tests, remove coverage
 const defaultConfig = await createVitestConfig()
 const config = defineConfig({
   test: {

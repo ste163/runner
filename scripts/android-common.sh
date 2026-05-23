@@ -1,7 +1,17 @@
 #!/usr/bin/env sh
 
 android_home() {
-  printf '%s' "${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+  if [ -n "${ANDROID_HOME:-}" ]; then
+    printf '%s' "$ANDROID_HOME"
+    return 0
+  fi
+
+  if [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+    printf '%s' "$ANDROID_SDK_ROOT"
+    return 0
+  fi
+
+  printf '%s' "$HOME/Library/Android/sdk"
 }
 
 java_home() {
@@ -34,10 +44,37 @@ adb_bin() {
   printf '%s' "$(android_home)/platform-tools/adb"
 }
 
+reverse_android_port() {
+  port="$1"
+  "$(adb_bin)" reverse "tcp:$port" "tcp:$port" >/dev/null 2>&1 || true
+}
+
 emulator_bin() {
   printf '%s' "$(android_home)/emulator/emulator"
 }
 
 has_connected_device() {
   "$(adb_bin)" devices | awk 'NR > 1 && $2 == "device" { found = 1 } END { exit found ? 0 : 1 }'
+}
+
+start_emulator_if_needed() {
+  if has_connected_device; then
+    return 0
+  fi
+
+  AVD_NAME="${ANDROID_AVD:-}"
+  if [ -z "$AVD_NAME" ]; then
+    AVD_NAME="$($(emulator_bin) -list-avds | sed -n '1p')"
+  fi
+
+  if [ -z "$AVD_NAME" ]; then
+    printf '%s\n' 'No Android emulator found. Set ANDROID_AVD or create one in the SDK.'
+    exit 1
+  fi
+
+  "$(emulator_bin)" -avd "$AVD_NAME" >/dev/null 2>&1 &
+
+  until has_connected_device; do
+    sleep 2
+  done
 }

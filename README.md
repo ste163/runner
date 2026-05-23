@@ -15,10 +15,26 @@
 
 `bun android`
 
-- runs dev server
 - ensures the android emulator is running
 - runs sparkling cli
 - builds app and runs
+
+`bun android:static`
+
+- installs the copied bundle into Android
+- launches the app from local assets
+
+`bun android:hot`
+
+- runs Sparkling Android debug build
+- uses remote dev bundle mode
+- keeps the dev server and Android app in one flow
+
+`bun debug`
+
+- checks Sparkling Android env
+- starts emulator if needed
+- runs Sparkling Android in verbose mode
 
 ## Quick Start
 
@@ -27,7 +43,9 @@ bun install
 bun android
 ```
 
-`bun android` starts emulator if needed, then builds, autolinks, copies assets, installs, and launches the Android app.
+`bun android` is the same as `bun android:static`.
+`bun android:hot` is the single hot-reload entrypoint.
+Use `bun debug` when you want a more chatty Android run path.
 
 ## Android Tools
 
@@ -48,6 +66,14 @@ ANDROID_AVD="<name>" bun avd:start
 ```
 
 Start a specific emulator.
+
+## Logs
+
+```bash
+adb logcat | tail -n 200
+```
+
+Watch Android logs while `bun android:hot` is running. Use `Ctrl+C` to stop.
 
 ## Dev Server
 
