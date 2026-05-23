@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "browser": true,
+    "vitest": true
+  },
+  "ignorePatterns": ["node_modules/**", "dist/**", "android/**", "ios/**"],
+  "options": {
+    "denyWarnings": true
+  },
+  "rules": {
+    "eslint/no-unused-vars": "error"
+  }
+}

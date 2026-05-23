@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+PATH="$HOME/.bun/bin:$PATH" bunx --bun lint-staged
