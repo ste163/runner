@@ -2,6 +2,7 @@
 set -eu
 
 android_home() {
+  # Prefer explicit env, then common macOS SDK location.
   if [ -n "${ANDROID_HOME:-}" ]; then
     printf '%s' "$ANDROID_HOME"
     return 0
@@ -16,6 +17,7 @@ android_home() {
 }
 
 java_home() {
+  # Prefer explicit env, then macOS JDK 17 lookup, then Homebrew.
   if [ -n "${JAVA_HOME:-}" ]; then
     printf '%s' "$JAVA_HOME"
     return 0
@@ -54,6 +56,7 @@ has_connected_device() {
 }
 
 start_emulator_if_needed() {
+  # Reuse an attached device if one already exists.
   if has_connected_device; then
     return 0
   fi
