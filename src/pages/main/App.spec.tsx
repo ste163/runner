@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { expect, test, vi } from 'vitest'
 import { render, getQueriesForElement } from '@lynx-js/react/testing-library'
 
-import { App } from '../App.js'
+import { App } from './App.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn() }))
 

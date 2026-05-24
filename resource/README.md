@@ -2,7 +2,7 @@ Shared app resources
 
 This directory holds cross-platform assets used by Sparkling templates:
 
-- app_icon.png — App icon for Android/iOS
+- app_icon.png — App icon for Android
 - splash_icon.png — Splash image (light)
 - splash_icon_dark.png — Splash image (dark)
 

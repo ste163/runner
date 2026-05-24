@@ -40,6 +40,5 @@ Thumbs.db
 android/app/src/main/assets/
 ios/SparklingGo/SparklingGo/Resources/Assets/
 
-# Ruby / Bundler (used by CocoaPods)
-vendor/bundle/
-.bundle/
+# Sparkling/lynx recreates this on build
+ios/*
