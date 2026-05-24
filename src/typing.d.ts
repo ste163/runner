@@ -9,10 +9,6 @@ declare module '@lynx-js/types' {
     theme: string
     isNotchScreen: boolean
   }
-
-  interface IntrinsicElements extends Lynx.IntrinsicElements {
-    input: InputProps
-  }
 }
 
 export interface InputProps extends StandardProps {
@@ -45,3 +41,4 @@ export interface InputProps extends StandardProps {
 }
 
 export type InputEvent = BaseEvent<'input', { value: string }>
+export type BlurEvent = BaseEvent<'blur', { value: string }>
