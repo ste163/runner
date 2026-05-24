@@ -7,8 +7,6 @@ import android.content.Context
 
 object DebugDevUrlSupport {
     fun buildMainPageScheme(context: Context): String {
-        val host = "127.0.0.1"
-        val port = 3000
-        return "hybrid://lynxview_page?bundle=http://$host:$port/main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
+        return "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
     }
 }

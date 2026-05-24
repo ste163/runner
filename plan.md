@@ -2,7 +2,13 @@
 
 ## Goal
 
-Get the Android dev flow in this repo working reliably for Sparkling/Lynx, with hot reload or the correct supported dev refresh path.
+Get the Android dev flow in this repo working reliably for Sparkling/Lynx, using the Sparkling-supported refresh path first.
+
+## Decision
+
+- Try Sparkling-supported page reload or equivalent dev refresh first.
+- If that fails, use rebuild + reinstall on change.
+- Do not spend effort faking HMR if Sparkling already has a supported refresh path.
 
 ## Current Repo State
 
@@ -70,10 +76,9 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, with 
 
 - Sets up Android/JAVA env.
 - Starts emulator if needed.
-- Runs `adb reverse tcp:3000 tcp:3000`.
-- Starts `rspeedy dev` and tails logs.
-- Waits for `http://127.0.0.1:3000/main.lynx.bundle`.
-- Runs `sparkling-app-cli run:android`.
+- Runs rebuild + reinstall loop.
+- Rebuilds with `bun build`.
+- Reinstalls with `bun android:static`.
 
 ### `scripts/android-common.sh`
 
@@ -98,7 +103,7 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, with 
 - `adb devices` showed an emulator device.
 - `adb reverse --list` showed port 3000 reversed.
 - Earlier failure showed cleartext HTTP blocked on `127.0.0.1`.
-- Later failure showed `Failed to load Sparkling debug bundle.`
+- Later failure showed the debug path still pointed at remote bundle URL.
 - We have not yet proven whether the Android client is reaching the HMR websocket path or only the bundle URL.
 
 ## Most Likely Interpretation
@@ -108,7 +113,7 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, with 
 - The unresolved part is whether Sparkling Android debug expects:
   - HMR websocket transport,
   - page reload transport,
-  - or a different debug bundle URL format.
+  - or local asset bundle loading.
 
 ## Working Hypotheses
 
@@ -122,7 +127,7 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, with 
 1. Verify whether the Android debug client can reach the rspeedy HMR websocket endpoint.
 2. Check Sparkling Android debug path for whether it expects HMR or page reload.
 3. Compare current config against rspeedy defaults and explicit `dev.hmr` / `dev.liveReload` overrides.
-4. Decide whether to force HMR or fall back to `reload-page`.
+4. Use rebuild + reinstall as the fallback dev loop.
 
 ## Constraints
 
@@ -148,4 +153,4 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, with 
 
 - Android hot flow loads the app reliably.
 - The correct dev refresh path is understood and documented.
-- If HMR is unsupported here, the repo uses the supported reload mode instead.
+- If HMR is unsupported here, the repo uses rebuild + reinstall on change.

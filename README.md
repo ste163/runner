@@ -26,9 +26,9 @@
 
 `bun android:hot`
 
-- runs Sparkling Android debug build
-- uses remote dev bundle mode
-- keeps the dev server and Android app in one flow
+- watches source and config changes
+- runs `bun build`
+- reinstalls the Android app after each change with `bun android:static`
 
 `bun debug`
 
@@ -44,7 +44,7 @@ bun android
 ```
 
 `bun android` is the same as `bun android:static`.
-`bun android:hot` is the single hot-reload entrypoint.
+`bun android:hot` is the rebuild-and-reinstall loop.
 Use `bun debug` when you want a more chatty Android run path.
 
 ## Android Tools
