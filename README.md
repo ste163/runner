@@ -1,5 +1,14 @@
 # Runner
 
+## MacOS Install
+
+- `bun`
+- Android Studio, with Android SDK, platform-tools, and emulator
+- `brew install --cask android-studio`
+- `brew install openjdk@17`
+- Add to `~/.zshrc`: `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"`
+- Or use Homebrew path: `export JAVA_HOME="$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"`
+
 ## Stack
 
 - `bun` [package manager and runner]

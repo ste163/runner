@@ -12,12 +12,7 @@ let pending = false
 let timer: ReturnType<typeof setTimeout> | null = null
 const watchers: Array<{ close: () => void }> = []
 
-// TODO: remove this
-function log(message: string) {
-  console.log(message)
-}
-
-function runCommand(command: string, args: string[]) {
+const runCommand = (command: string, args: string[]) => {
   return new Promise<number>((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: 'inherit',
@@ -37,7 +32,7 @@ function runCommand(command: string, args: string[]) {
   })
 }
 
-async function rebuildAndInstall() {
+const rebuildAndInstall = async () => {
   if (running) {
     pending = true
     return
@@ -46,13 +41,13 @@ async function rebuildAndInstall() {
   running = true
 
   try {
-    log('android:dev: build -> bun run build')
+    console.log('android:dev: build -> bun run build')
     const buildCode = await runCommand('bun', ['run', 'build'])
     if (buildCode !== 0) {
       throw new Error(`build failed with code ${buildCode}`)
     }
 
-    log('android:dev: install -> sparkling-app-cli run:android')
+    console.log('android:dev: install -> sparkling-app-cli run:android')
     const runCode = await runCommand('sparkling-app-cli', ['run:android'])
     if (runCode !== 0) {
       throw new Error(`run:android failed with code ${runCode}`)
@@ -67,7 +62,7 @@ async function rebuildAndInstall() {
   }
 }
 
-function scheduleRebuild() {
+const scheduleRebuild = () => {
   if (timer) {
     clearTimeout(timer)
   }
@@ -80,7 +75,7 @@ function scheduleRebuild() {
   }, 250)
 }
 
-function isRelevantChange(changedPath: string) {
+const isRelevantChange = (changedPath: string) => {
   const normalized = changedPath.split(path.sep).join('/')
   return (
     watchRoots.some((rootPath) => normalized.startsWith(`${rootPath}/`)) ||
@@ -88,7 +83,7 @@ function isRelevantChange(changedPath: string) {
   )
 }
 
-function startWatchers() {
+const startWatchers = () => {
   for (const watchRoot of watchRoots) {
     const watcher = watch(path.join(root, watchRoot), { recursive: true }, (_event, filename) => {
       if (!filename) {
@@ -97,7 +92,7 @@ function startWatchers() {
 
       const changedPath = path.join(watchRoot, String(filename))
       if (isRelevantChange(changedPath)) {
-        log(`android:dev: change -> ${changedPath}`)
+        console.log(`android:dev: change -> ${changedPath}`)
         scheduleRebuild()
       }
     })
@@ -110,7 +105,7 @@ function startWatchers() {
   for (const watchFile of watchFiles) {
     const watcher = watch(path.join(root, watchFile), {}, () => {
       if (isRelevantChange(watchFile)) {
-        log(`android:dev: change -> ${watchFile}`)
+        console.log(`android:dev: change -> ${watchFile}`)
         scheduleRebuild()
       }
     })
@@ -121,7 +116,7 @@ function startWatchers() {
   }
 }
 
-function cleanup() {
+const cleanup = () => {
   if (timer) {
     clearTimeout(timer)
     timer = null
@@ -132,8 +127,8 @@ function cleanup() {
   }
 }
 
-async function main() {
-  log('android:dev: env ready')
+const main = async () => {
+  console.log('android:dev: env ready')
   startWatchers()
   await rebuildAndInstall()
 
