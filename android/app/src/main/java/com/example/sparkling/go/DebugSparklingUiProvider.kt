@@ -32,7 +32,7 @@ class DebugSparklingUiProvider(
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(48, 48, 48, 48)
-            addView(TextView(context).apply { text = "Failed to load Sparkling debug bundle." })
+            addView(TextView(context).apply { text = "Failed to load Sparkling app." })
         }
     }
 

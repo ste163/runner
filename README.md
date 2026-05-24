@@ -13,59 +13,19 @@
 
 ## Flow
 
-`bun android`
+`bun dev`
 
 - ensures the android emulator is running
-- runs sparkling cli
-- builds app and runs
-
-`bun android:static`
-
-- installs the copied bundle into Android
-- launches the app from local assets
-
-`bun android:hot`
-
-- watches source and config changes
-- runs `bun build`
-- reinstalls the Android app after each change with `bun android:static`
-
-`bun debug`
-
-- checks Sparkling Android env
-- starts emulator if needed
-- runs Sparkling Android in verbose mode
+- runs rebuild + reinstall loop
 
 ## Quick Start
 
 ```bash
 bun install
-bun android
+bun dev
 ```
 
-`bun android` is the same as `bun android:static`.
-`bun android:hot` is the rebuild-and-reinstall loop.
-Use `bun debug` when you want a more chatty Android run path.
-
-## Android Tools
-
-```bash
-bun adb:devices
-```
-
-Show connected devices.
-
-```bash
-bun avd:list
-```
-
-List emulators.
-
-```bash
-ANDROID_AVD="<name>" bun avd:start
-```
-
-Start a specific emulator.
+`bun dev` is the main day-to-day command.
 
 ## Logs
 
@@ -73,15 +33,15 @@ Start a specific emulator.
 adb logcat | tail -n 200
 ```
 
-Watch Android logs while `bun android:hot` is running. Use `Ctrl+C` to stop.
+Watch Android logs while `bun dev` is running. Use `Ctrl+C` to stop.
 
-## Dev Server
+## Dev Loop
 
 ```bash
 bun dev
 ```
 
-Starts `rspeedy` and serves Lynx bundle URLs. Use when you want hot reload without installing APK each time.
+Starts the Android rebuild + reinstall loop.
 
 ## Build
 
@@ -111,17 +71,8 @@ bun fmt:check
 
 Check formatting.
 
-## Env Check
-
-```bash
-bun doctor
-```
-
-Checks Sparkling env.
-
 ## Notes
 
 - Android SDK path comes from `ANDROID_HOME`, defaulting to `~/Library/Android/sdk`.
 - `JAVA_HOME` falls back to JDK 17.
-- `bun android` is the main day-to-day command.
-- `bun dev` does not render UI by itself. It only serves bundles.
+- `bun dev` is the main day-to-day command.

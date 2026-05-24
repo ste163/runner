@@ -16,14 +16,12 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, using
 - Sparkling app scaffold is in place.
 - Android-only work is the current focus.
 - Vitest, `oxlint`, `oxfmt`, Husky, and lint-staged are already wired.
-- Android helper scripts exist for static run and hot run.
+- Android dev loop is centralized in `dev`.
+- Old Android command wrappers removed.
 
 ## Relevant Scripts
 
-- `android`: `sh ./scripts/android.sh`
-- `android:static`: `sh ./scripts/android.sh`
-- `android:hot`: `sh ./scripts/android-hot.sh`
-- `dev`: `rspeedy dev`
+- `dev`: `sh ./scripts/android-dev.sh`
 
 ## Current Dev Config
 
@@ -60,11 +58,6 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, using
 
 ## What We Learned
 
-- `@lynx-js/rspeedy` defaults `dev.hmr` to `true`.
-- `@lynx-js/rspeedy` defaults `dev.liveReload` to `true`.
-- `@lynx-js/rspeedy` supports `dev.watchFiles` with:
-  - `type: 'reload-page'`
-  - `type: 'reload-server'`
 - `@lynx-js/react-webpack-plugin` says HMR requires development mode.
 - `@lynx-js/react-webpack-plugin` also says standalone lazy bundle mode does not support HMR.
 - File change observation is already working in our environment.
@@ -72,15 +65,15 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, using
 
 ## Android Hot Flow
 
-### `scripts/android-hot.sh`
+### `scripts/android-dev.sh`
 
 - Sets up Android/JAVA env.
 - Starts emulator if needed.
 - Runs rebuild + reinstall loop.
 - Rebuilds with `bun build`.
-- Reinstalls with `bun android:static`.
+- Reinstalls with `sparkling-app-cli run:android`.
 
-### `scripts/android-common.sh`
+### `scripts/android-dev.sh`
 
 - Resolves Android SDK.
 - Resolves Java 17 from `JAVA_HOME`, `/usr/libexec/java_home`, or Homebrew openjdk.
@@ -100,34 +93,24 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, using
 
 ## Observed Runtime History
 
-- `adb devices` showed an emulator device.
-- `adb reverse --list` showed port 3000 reversed.
 - Earlier failure showed cleartext HTTP blocked on `127.0.0.1`.
 - Later failure showed the debug path still pointed at remote bundle URL.
-- We have not yet proven whether the Android client is reaching the HMR websocket path or only the bundle URL.
 
 ## Most Likely Interpretation
 
-- This is probably a transport/config mismatch, not a missing file-change signal.
-- rspeedy supports HMR by default, so the config is not obviously disabling it.
-- The unresolved part is whether Sparkling Android debug expects:
-  - HMR websocket transport,
-  - page reload transport,
-  - or local asset bundle loading.
+- Static install loop is the chosen path.
+- Remaining work is cleanup, not transport debug.
 
 ## Working Hypotheses
 
-1. The Android debug client is not connecting to the rspeedy HMR websocket.
-2. Sparkling Android debug may expect page reload rather than full HMR for this setup.
-3. The bundle URL or debug source selection may not match the current Sparkling debug bridge expectations.
-4. Standalone lazy bundle mode may be preventing HMR in this path.
+1. Stale HMR wording still exists in docs and comments.
+2. Debug labels can be simplified.
+3. Hot loop should stay source-only and static-install only.
 
 ## Verification Plan
 
-1. Verify whether the Android debug client can reach the rspeedy HMR websocket endpoint.
-2. Check Sparkling Android debug path for whether it expects HMR or page reload.
-3. Compare current config against rspeedy defaults and explicit `dev.hmr` / `dev.liveReload` overrides.
-4. Use rebuild + reinstall as the fallback dev loop.
+1. Keep rebuild + reinstall loop as the Android dev path.
+2. Trim stale HMR-specific config and docs.
 
 ## Constraints
 
@@ -142,12 +125,10 @@ Get the Android dev flow in this repo working reliably for Sparkling/Lynx, using
 - If resuming from scratch, start by reading:
   - `package.json`
   - `app.config.ts`
-  - `scripts/android-hot.sh`
-  - `scripts/android-common.sh`
+  - `scripts/android-dev.sh`
   - `android/app/src/main/AndroidManifest.xml`
   - `android/app/src/debug/AndroidManifest.xml`
-- Then inspect rspeedy defaults for `dev.hmr`, `dev.liveReload`, and `dev.watchFiles`.
-- Then inspect Sparkling Android debug bridge code paths.
+- Then inspect Sparkling Android debug bridge code paths if reinstall loop breaks.
 
 ## Definition of Done
 

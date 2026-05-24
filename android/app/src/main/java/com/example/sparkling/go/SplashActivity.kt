@@ -21,7 +21,7 @@ class SplashActivity : AppCompatActivity() {
         val initData = mapOf<Any, Any>()
         val initialData: String = JsonUtils.toJson(initData)
         val launchScheme = if (BuildConfig.DEBUG) {
-            DebugDevUrlSupport.buildMainPageScheme(this)
+            DebugDevUrlSupport.buildMainPageScheme()
         } else {
             "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
         }

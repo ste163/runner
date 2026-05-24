@@ -46,16 +46,16 @@ async function rebuildAndInstall() {
   running = true
 
   try {
-    log('android:hot: build -> bun run build')
+    log('android:dev: build -> bun run build')
     const buildCode = await runCommand('bun', ['run', 'build'])
     if (buildCode !== 0) {
       throw new Error(`build failed with code ${buildCode}`)
     }
 
-    log('android:hot: install -> bun android:static')
-    const runCode = await runCommand('bun', ['android:static'])
+    log('android:dev: install -> sparkling-app-cli run:android')
+    const runCode = await runCommand('sparkling-app-cli', ['run:android'])
     if (runCode !== 0) {
-      throw new Error(`android:static failed with code ${runCode}`)
+      throw new Error(`run:android failed with code ${runCode}`)
     }
   } finally {
     running = false
@@ -75,7 +75,7 @@ function scheduleRebuild() {
   timer = setTimeout(() => {
     timer = null
     void rebuildAndInstall().catch((error: unknown) => {
-      console.error('android:hot:', error)
+      console.error('android:dev:', error)
     })
   }, 250)
 }
@@ -97,7 +97,7 @@ function startWatchers() {
 
       const changedPath = path.join(watchRoot, String(filename))
       if (isRelevantChange(changedPath)) {
-        log(`android:hot: change -> ${changedPath}`)
+        log(`android:dev: change -> ${changedPath}`)
         scheduleRebuild()
       }
     })
@@ -110,7 +110,7 @@ function startWatchers() {
   for (const watchFile of watchFiles) {
     const watcher = watch(path.join(root, watchFile), {}, () => {
       if (isRelevantChange(watchFile)) {
-        log(`android:hot: change -> ${watchFile}`)
+        log(`android:dev: change -> ${watchFile}`)
         scheduleRebuild()
       }
     })
@@ -133,7 +133,7 @@ function cleanup() {
 }
 
 async function main() {
-  log('android:hot: env ready')
+  log('android:dev: env ready')
   startWatchers()
   await rebuildAndInstall()
 
@@ -151,6 +151,6 @@ async function main() {
 }
 
 void main().catch((error: unknown) => {
-  console.error('android:hot:', error)
+  console.error('android:dev:', error)
   process.exit(1)
 })

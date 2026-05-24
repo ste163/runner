@@ -3,10 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 package com.example.sparkling.go
 
-import android.content.Context
-
 object DebugDevUrlSupport {
-    fun buildMainPageScheme(context: Context): String {
+    fun buildMainPageScheme(): String {
         return "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
     }
 }

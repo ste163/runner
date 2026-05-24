@@ -19,7 +19,7 @@ export function App(props: { onMounted?: () => void }) {
     <view className='page'>
       <view className='App'>
         <view className='Banner'>
-          <text className='Title'>This is the page</text>
+          <text className='Title'>This is the other page</text>
         </view>
         <view className='Content'>
           <text className='Button' bindtap={onClose}>

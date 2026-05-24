@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+set -eu
 
 android_home() {
   if [ -n "${ANDROID_HOME:-}" ]; then
@@ -44,11 +45,6 @@ adb_bin() {
   printf '%s' "$(android_home)/platform-tools/adb"
 }
 
-reverse_android_port() {
-  port="$1"
-  "$(adb_bin)" reverse "tcp:$port" "tcp:$port" >/dev/null 2>&1 || true
-}
-
 emulator_bin() {
   printf '%s' "$(android_home)/emulator/emulator"
 }
@@ -78,3 +74,8 @@ start_emulator_if_needed() {
     sleep 2
   done
 }
+
+setup_android_env
+start_emulator_if_needed
+
+exec bun ./scripts/android-dev.ts
