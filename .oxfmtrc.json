@@ -7,5 +7,5 @@
   "useTabs": false,
   "trailingComma": "es5",
   "bracketSpacing": true,
-  "ignorePatterns": ["node_modules/**", "dist/**", "android/**", "ios/**"]
+  "ignorePatterns": ["node_modules/**", "dist/**", "android/**"]
 }

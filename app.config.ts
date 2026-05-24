@@ -35,16 +35,12 @@ const config: AppConfig = {
     android: {
       packageName: 'com.example.sparkling.go',
     },
-    ios: {
-      bundleIdentifier: 'com.example.sparkling.go',
-    },
   },
   dev: {
     port: 3000,
   },
   paths: {
     androidAssets: 'android/app/src/main/assets',
-    iosAssets: 'ios/SparklingGo/SparklingGo/Resources/Assets',
   },
   appIcon: './resource/app_icon.png',
   router: {

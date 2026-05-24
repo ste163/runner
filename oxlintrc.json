@@ -4,7 +4,7 @@
     "browser": true,
     "vitest": true
   },
-  "ignorePatterns": ["node_modules/**", "dist/**", "android/**", "ios/**"],
+  "ignorePatterns": ["node_modules/**", "dist/**", "android/**"],
   "options": {
     "denyWarnings": true
   },
