@@ -58,21 +58,45 @@ start day.
 
 ## Data Model
 
+These types represent **persisted storage only**. UI and runtime state (timer, current phase, navigation)
+are derived from this data at runtime and are not stored.
+
 ```typescript
+// What level the user is currently training at
+interface TrainingLevel {
+  runSeconds: number // current run interval (starts 30)
+  walkSeconds: number // current walk interval (starts 120)
+  intervalBlockSeconds: number // total interval block duration (starts 1200 = 20 min)
+}
+
+// Tracks the rolling 7-day window for progression/regression decisions
+interface ProgressionWindow {
+  windowStart: string // ISO date when the current 7-day window began
+  consecutiveMissed: number // consecutive windows without 3 completions (triggers regression at 2)
+}
+
+// GPS-derived stats for a single interval (populated only if location permission granted)
+interface IntervalRecord {
+  type: 'warmup' | 'run' | 'walk' | 'cooldown'
+  durationSeconds: number
+  distanceMiles: number | null // approximate, null if no location permission
+  avgPaceMinPerMile: number // 0 if no movement detected
+}
+
+// A single completed workout session
 interface Session {
   id: string
   completedAt: string // ISO date string
-  runSeconds: number // interval values used during this session
-  walkSeconds: number
+  level: TrainingLevel // snapshot of the level used for this session
+  intervals: IntervalRecord[] // per-interval GPS stats (empty if no GPS)
+  totalDistanceMiles: number | null // sum across all intervals (null if no GPS)
 }
 
-interface AppState {
-  runSeconds: number // current run interval (starts 30)
-  walkSeconds: number // current walk interval (starts 120)
-  intervalBlockSeconds: number // duration of interval block (TBD — see Open Questions #1)
-  sessions: Session[] // all completed sessions (persisted)
-  currentWindowStart: string // ISO date when current 7-day window began
-  consecutiveWindowsMissed: number // for tracking 2-window regression trigger
+// Root persisted record — the only thing written to storage
+interface TrainingProfile {
+  level: TrainingLevel
+  window: ProgressionWindow
+  sessions: Session[]
 }
 ```
 
@@ -139,15 +163,36 @@ Deferred — log of past sessions and progression over time. Add after core flow
 - Workout → Home: `close()` from `sparkling-navigation`
 - New `workout` entry required in `app.config.ts` (`source.entry` + `router`)
 
-### State Persistence
+### GPS / Location Tracking
 
-Lynx does not have React Native's AsyncStorage. Options to investigate before implementation:
+**Requires a custom native Android module** (Kotlin) bridging Android's `FusedLocationProviderClient`
+into Lynx via `NativeModules`. This is the same bridge work as storage — both land in the same native
+module layer.
 
-1. **Lynx `NativeModules`** — custom Android bridge (preferred for structured data)
-2. **`lynx.__globalProps`** — read-only at startup, set by native layer; not ideal for writes
-3. **Lynx system storage API** — check if `sparkling-app-cli` exposes one
+**Privacy design:**
 
-**Decision needed:** Confirm storage approach before building state management.
+- Raw GPS coordinates are **never stored or persisted**
+- Only computed stats are kept: per-interval distance (miles) and avg pace (min/mile)
+- Location updates run only during an active workout session
+- Android `ACCESS_FINE_LOCATION` permission required (requested at workout start)
+
+**Data collected per interval** (warmup, each run, each walk, cooldown):
+
+- Duration (seconds)
+- Approximate distance (miles)
+- Average pace (min/mile)
+
+**Shown on post-workout summary screen:**
+
+- Total distance for the session
+- Per-interval breakdown: distance + avg pace for each run and walk interval
+- Clearly labeled as approximate ("~1.2 mi")
+
+**Units:** Imperial (miles, min/mile).
+
+**GPS fallback:** If the user denies location permission or GPS is unavailable, the app works normally — interval stats just show 0/nil for distance and pace. No blocking.
+
+**Not included:** Real-time pace during workout, route maps, coordinate storage.
 
 ### Interval Timer
 
@@ -183,13 +228,15 @@ Timer for 28–35 minute sessions:
 - Phase labels (WARMUP / RUN / WALK / COOLDOWN), countdown, next-up preview
 - Audio chime on transitions, haptic pulses in last 5 seconds of each interval
 - Pause/stop (stopped early = session does not count)
-- Completion summary state, back navigation to home
+- Post-workout summary: total distance + per-interval breakdown (distance + avg pace) if GPS available
+- Back navigation to home
 
-### Phase 4 — Persistence
+### Phase 4 — Persistence & GPS (native bridge)
 
-- Investigate and implement Lynx/sparkling storage API
-- Replace in-memory stub
-- Progression evaluation on 7-day window expiry
+- **Storage**: Investigate and implement Lynx/sparkling storage API; replace in-memory stub; progression
+  evaluation on 7-day window expiry
+- **GPS**: Investigate how to access device location from Lynx/sparkling. Implement once approach is
+  confirmed. Graceful fallback if unavailable or denied.
 
 ### Phase 5 — Polish & edge cases
 
@@ -212,8 +259,11 @@ Timer for 28–35 minute sessions:
    starting level before relying on auto-progression.
 6. **Rest day guidance**: After each session, suggest next session in 2 days (not enforced).
 7. **Graduation**: What happens when run fills the full interval block? — **TBD, revisit after Phase 3.**
-8. **Storage API**: Investigate Lynx/sparkling native storage before Phase 4 — **technical spike.**
-9. **History screen**: Deferred — revisit after Phase 3.
+8. **GPS / location tracking**: Post-workout stats only (no real-time, no maps, no coordinate storage).
+   Per-interval distance (miles) + avg pace (min/mile), plus session total. Imperial units. Graceful
+   fallback if GPS unavailable or permission denied. **Implementation approach TBD — needs investigation.**
+9. **Storage API**: Investigate Lynx/sparkling native storage before Phase 4 — **technical spike.**
+10. **History screen**: Deferred — revisit after Phase 3.
 
 ## Open Questions
 
