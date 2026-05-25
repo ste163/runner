@@ -8,6 +8,13 @@ Read the docs below before working on any Lynx task.
 
 - Lynx: [llms.txt](https://lynxjs.org/next/llms.txt) — entry point for all Lynx docs. **MUST read** for any Lynx-related task.
 
+If the `lynx-docs` MCP server is available, use it instead of `llms.txt`:
+
+1. Use the "List Resources Tool" to list all resources in MCP `lynx-docs`.
+2. Read `lynx-docs://llms.txt` first (**REQUIRED**) — it is the entry point for all Lynx docs.
+3. Use "Read MCP Resources Tool" to fetch specific docs as needed.
+4. Prefer MCP resources over web search for any Lynx question.
+
 ## What This Repo Is
 
 `runner` is an Android app built with ReactLynx and `sparkling-app-cli`. Two Lynx pages (`main`, `second`) run inside a native Android shell. Stack: bun, Lynx, ReactLynx, Rspeedy, Vitest, oxlint, oxfmt.

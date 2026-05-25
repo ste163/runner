@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "echo '--- Verification ---' && bun typecheck && bun lint && echo '✓ typecheck + lint passed'",
+        "powershell": "Write-Host '--- Verification ---'; bun typecheck; bun lint; Write-Host '✓ typecheck + lint passed'",
+        "cwd": ".",
+        "timeoutSec": 60
+      }
+    ]
+  }
+}
