@@ -277,17 +277,47 @@ kill it.
 
 This is part of Phase 4 native bridge work (same module layer as storage + GPS).
 
-### Audio & Haptic Feedback — Needs Investigation
+### Haptic Feedback
 
-**Committed behavior**: chime on interval transitions + 1-sec haptic pulse per second in the last 5
-seconds of each interval.
+Lynx has **no built-in haptic API** (confirmed: `@lynx-js/types` has no haptic/vibration types;
+Lynx docs have no haptic built-ins). Requires a custom `RunnerHapticModule` (`LynxContextModule`).
 
-**Unknown**: Does Lynx have built-in audio playback and haptic APIs, or do we need additional
-`NativeModules`? Investigate before Phase 3:
+**Android implementation:**
 
-- Check `@lynx-js/types` and Lynx docs for `Audio` or `Haptics` built-ins
-- If not available: add `RunnerFeedbackModule` (chime playback via `MediaPlayer` or `SoundPool`;
-  haptic via `Vibrator` / `VibrationEffect`)
+- API 26+: `VibrationEffect.createOneShot(durationMs, DEFAULT_AMPLITUDE)` via `Vibrator`
+- API 24–25 fallback (our `minSdk = 24`): `vibrator.vibrate(durationMs)` (deprecated but functional)
+- Permission: `android.permission.VIBRATE` — **normal permission**, manifest-only, no runtime prompt
+
+**Module interface:**
+
+```typescript
+RunnerHapticModule: {
+  vibrate(durationMs: number): void   // single pulse
+  cancel(): void                       // stop active vibration
+}
+```
+
+**Timing design**: JS controls when to call `vibrate()`. The foreground service sends timer ticks to
+the Lynx page; JS calls `vibrate(200)` once per second during the last 5 seconds of each interval,
+and `vibrate(500)` on interval transitions. No native-side timer needed.
+
+**Registration**: `SparklingLynxConfig.Builder` exposes `addLynxModules(Map<String, SparklingLynxModuleWrapper>)`.
+Confirmed by inspecting `sparkling-2.0.1.aar` bytecode. Register in `SparklingApplication.kt`:
+
+```kotlin
+addLynxModules(mapOf(
+    "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java)
+))
+```
+
+### Audio Feedback — Needs Investigation
+
+**Committed behavior**: chime sound on interval transitions.
+
+**Unknown**: Does Lynx have built-in audio playback, or do we need a `NativeModule`?
+
+- Check `@lynx-js/types` for any `Audio` built-in
+- If not available: add `RunnerAudioModule` using `MediaPlayer` or `SoundPool`
 - Audio asset (chime sound file) needs to be bundled with the app
 
 ---
@@ -328,8 +358,8 @@ seconds of each interval.
 - **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
 - **Foreground service**: Android foreground service owning the workout timer; persistent notification;
   tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission
-- **Audio + haptic**: Investigate Lynx built-ins first; if absent, `RunnerFeedbackModule`
-  (`MediaPlayer`/`SoundPool` for chime, `VibrationEffect` for haptic pulses); bundle chime asset
+- **Audio + haptic**: Haptics resolved — `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal
+  permission. Audio still needs investigation — `RunnerAudioModule` likely needed (see Technical Considerations)
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
 - **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
   if unavailable
@@ -348,7 +378,8 @@ seconds of each interval.
 2. **Partial sessions**: Stopped early → does **not** count. Normal window-expiry regression logic applies.
 3. **Cooldown walk**: Every session ends with 5 min cooldown walk. Total: 5 warmup + 20 intervals + 5 cooldown = 30 min.
 4. **Audio/haptic cues**: Chime on interval transitions; 1-sec haptic pulse per second during last 5
-   seconds of each interval. Built-in Lynx API vs. native module — **needs investigation (Phase 4).**
+   seconds of each interval. **Haptics resolved**: `RunnerHapticModule` (`vibrate(durationMs)` +
+   `cancel()`), `VIBRATE` normal permission (manifest only). **Audio**: still needs investigation.
 5. **Manual level adjustment**: Home screen increase/decrease buttons. Bounds: run min 15s, walk min 10s,
    run max = `intervalBlockSeconds`.
 6. **Rest day guidance**: Suggest next session in 2 days after each completed session (not enforced).
