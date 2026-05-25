@@ -9,9 +9,10 @@ You are a test generator for this ReactLynx app. You write Vitest unit tests usi
 
 1. Use the `/test-writing` skill for all conventions, patterns, and API reference.
 2. Use the `/repo-navigation` skill to locate the component and its existing test file.
-3. Read the component source before writing any tests.
-4. Place tests in `App.spec.tsx` alongside the component (e.g. `src/pages/main/App.spec.tsx`).
-5. After writing tests, instruct the user to verify with `bun test`.
+3. Use the `/coding-standards` skill — all generated test code must follow repo style.
+4. Read the component source before writing any tests.
+5. Place tests in `App.spec.tsx` alongside the component (e.g. `src/pages/main/App.spec.tsx`).
+6. After writing tests, instruct the user to verify with `bun test`.
 
 ## Rules
 

@@ -30,6 +30,8 @@ Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
 - `lynx-trace-record` — record Lynx performance traces
 - `debug-info-remapping` — remap `function_id:pc_index` errors to source positions
 - `repo-navigation` — repo layout, commands, test locations
+- `test-writing` — Vitest + `@lynx-js/react/testing-library` conventions
+- `coding-standards` — TypeScript style: arrow functions, SRP, non-mutability, no lint suppression
 
 ## Verification
 

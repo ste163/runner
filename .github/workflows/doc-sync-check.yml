@@ -1,0 +1,25 @@
+name: Doc Sync Check
+
+on:
+  pull_request:
+
+jobs:
+  doc-sync:
+    name: Verify docs match codebase
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify docs are in sync
+        run: bun run verify-docs

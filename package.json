@@ -23,7 +23,8 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "verify-docs": "bun scripts/verify-docs.ts"
   },
   "dependencies": {
     "@lynx-js/lynx-ui": "^3.133.1",

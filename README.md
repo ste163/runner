@@ -2,6 +2,43 @@
 
 This project is set up for agentic development with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli). Project skills and instructions live in `.github/skills/` and `.github/copilot-instructions.md`.
 
+## Agentic Development
+
+`AGENTS.md` is the entry point for all agents (CLI, IDE, cloud). It describes the repo, how to use the Lynx Docs MCP, and the verification commands.
+
+### Structure
+
+```
+.github/
+  agents/           # Custom agents (reactlynx-reviewer, test-generator)
+  hooks/            # Agent lifecycle hooks (verification on agentStop)
+  mcp.json          # Lynx Docs MCP — auto-loaded, provides Lynx API docs
+  skills/           # Project-specific skills (see below)
+  workflows/        # CI workflows (including doc-sync gate)
+```
+
+### Skills
+
+| Skill                      | Purpose                                                |
+| -------------------------- | ------------------------------------------------------ |
+| `repo-navigation`          | Repo layout, commands, test locations                  |
+| `test-writing`             | Vitest + `@lynx-js/react/testing-library` conventions  |
+| `coding-standards`         | TypeScript style: arrow functions, SRP, non-mutability |
+| `reactlynx-best-practices` | Dual-thread patterns, static analysis                  |
+| `lynx-typescript`          | TypeScript issues in Lynx development                  |
+| `lynx-devtool`             | Inspect and debug running Lynx apps                    |
+| `lynx-trace-analysis`      | Analyze `.ptrace` performance traces                   |
+| `lynx-trace-record`        | Record Lynx performance traces                         |
+| `debug-info-remapping`     | Remap `function_id:pc_index` errors to source          |
+
+### Doc Sync
+
+`scripts/verify-docs.ts` checks that `repo-navigation/SKILL.md` stays in sync with the actual codebase (pages, commands). Runs on every PR as a hard gate and at the end of every agent session.
+
+```bash
+bun run verify-docs
+```
+
 ## MacOS Install
 
 - `bun`

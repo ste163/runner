@@ -4,8 +4,8 @@
     "agentStop": [
       {
         "type": "command",
-        "bash": "echo '--- Verification ---' && bun typecheck && bun lint && echo '✓ typecheck + lint passed'",
-        "powershell": "Write-Host '--- Verification ---'; bun typecheck; bun lint; Write-Host '✓ typecheck + lint passed'",
+        "bash": "echo '--- Verification ---' && bun typecheck && bun lint && bun run verify-docs && echo '✓ typecheck + lint + doc-sync passed'",
+        "powershell": "Write-Host '--- Verification ---'; bun typecheck; if ($LASTEXITCODE -eq 0) { bun lint }; if ($LASTEXITCODE -eq 0) { bun run verify-docs }; if ($LASTEXITCODE -eq 0) { Write-Host '✓ typecheck + lint + doc-sync passed' }",
         "cwd": ".",
         "timeoutSec": 60
       }
