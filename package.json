@@ -26,6 +26,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
+    "@lynx-js/lynx-ui": "^3.133.1",
     "@lynx-js/react": "0.121.0",
     "sparkling-navigation": "2.0.1"
   },

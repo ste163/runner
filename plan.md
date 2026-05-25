@@ -1,52 +1,80 @@
-# Colocated Vitest Spec Plan
+# Agentic Setup Plan
 
 ## Goal
 
-Move unit tests to colocated component-adjacent files and standardize on the `.spec` naming convention.
+Set up this repo (a Lynx/ReactLynx Android app using `sparkling-app-cli`, `bun`, `Vitest`, `oxlint`) for
+agentic development with GitHub Copilot CLI — including cloud agent via `/delegate`.
 
-## Decision
+## What Good Looks Like
 
-- Treat this as a file-organization change, not a runtime change.
-- Keep the current Vitest setup as-is.
-- Prefer colocating tests beside the component they cover.
+- `.github/` is the source of truth for project-specific agent config: skills, cloud agent setup, instructions.
+- `AGENTS.md` is a lightweight shared entry point — identity, pointer to skills, minimal behavior rules.
+- Lynx community skills live in `.github/skills/` so they travel with the repo.
+- Cloud agent (`/delegate`) can install deps and run verification commands without trial and error.
+- The setup is maintainable and doesn't duplicate content across files.
+- README says the repo is ready for agentic development with Copilot CLI.
 
-## Current Repo State
+## Instruction Hierarchy
 
-- Tests run with Vitest 4.1.7.
-- `jsdom` is installed.
-- `vitest.config.ts` uses `createVitestConfig()` from `@lynx-js/react/testing-library/vitest-config` and currently only merges in coverage settings.
-- Existing tests use `@lynx-js/react/testing-library` helpers.
-- The only app test has been moved next to `src/pages/main/App.tsx`.
+```
+AGENTS.md                          ← root, shared, minimal: repo identity + behavior rules
+.github/copilot-instructions.md    ← IDE Copilot (not CLI) repo-wide instructions
+.github/instructions/*.md          ← path-scoped IDE instructions (only if needed)
+.github/skills/                    ← project-scoped skills (CLI)
+```
 
-## What We Need To Learn
+**`AGENTS.md` covers:**
 
-1. Whether colocated `.spec.tsx` files are picked up by Vitest without config changes.
-2. Whether the test import path changes cleanly when the test sits beside the component.
-3. Whether the repo should adopt a single colocated convention for future Lynx component tests.
+- What this repo is (Lynx/ReactLynx Android fitness app, `sparkling-app-cli` shell)
+- Stack summary: bun, Lynx, ReactLynx, Vitest, oxlint, oxfmt
+- Verification commands in order: `bun typecheck` → `bun test` → `bun lint`
+- Pointer to `.github/skills/` for skill list
+- Pointer to `https://lynxjs.org/llms.txt` for Lynx docs
+- Agent behavior rules: minimal changes, ask before risky ops, no broad rewrites
 
-## Experiment Plan
+**`.github/` owns all project-specific detail** — skills, cloud env, path rules.
 
-1. Move the existing app test beside the component it covers.
-2. Rename the test to use the `.spec` suffix.
-3. Keep the test body unchanged unless the colocated path requires an import adjustment.
-4. Run Vitest and confirm the test is discovered and passes.
-5. Use the new layout as the pattern for future component tests.
+## Skills (`.github/skills/`)
 
-## Likely Risk Areas
+### Community Lynx skills (download from awesome-copilot or `gh skill install`)
 
-- Future tests may be harder to find if conventions are not documented.
-- Colocation can create path churn when files move.
-- Existing `__tests__` assumptions in tooling or docs may need cleanup.
+- `lynx-typescript`
+- `reactlynx-best-practices`
+- `lynx-ui`
+- `lynx-devtool`
+- `trace-analysis`
+- `trace-record`
+- `debug-info-remapping`
+
+### Repo-specific skills
+
+- `repo-navigation`: layout of `src/`, `scripts/`, `android/`, `resource/`; which commands do what; where tests live.
+
+## Plan
+
+1. Create `.github/skills/repo-navigation/SKILL.md` — repo layout, commands, test locations. ✅
+2. Copy Lynx community skills into `.github/skills/`. ✅
+3. Create `AGENTS.md` at repo root — identity, stack, verification order, pointer to skills + Lynx docs, behavior rules. ✅
+4. Create `.github/copilot-instructions.md` — IDE Copilot guidance. ✅
+5. Update `README.md` — mention Copilot CLI agentic development support.
+6. Verify: run `/skills list` in CLI session, confirm skills load; test a real prompt; run `bun typecheck && bun test && bun lint`.
+
+## Design Rules
+
+- `.github/skills/` owns Lynx knowledge. `AGENTS.md` does not duplicate it.
+- `AGENTS.md` stays under ~60 lines. No copy-paste of README content.
+- `copilot-setup-steps.yml` covers only what cloud agent can actually run (no Android emulator).
+- Add path-specific `.github/instructions/` files only if a concrete IDE workflow needs them.
+- Community Lynx skills preferred over custom rewrites.
 
 ## Verification
 
-1. Run the current unit test suite after the move.
-2. Confirm the colocated `.spec.tsx` file is discovered by Vitest.
-3. Check for any broken relative imports or helper assumptions.
-4. Decide whether to update additional tests to the same convention.
+- `/skills list` in CLI shows all `.github/skills/` entries.
+- `bun typecheck`, `bun test`, `bun lint` pass after any agent-assisted changes.
+- Real prompt test: ask Copilot to explain the ReactLynx component structure using the Lynx skills.
 
 ## Definition of Done
 
-- Tests use colocated `.spec` files next to their components.
-- The existing app test runs from its new location.
-- The test organization rule is documented for future changes.
+- `.github/skills/` contains `repo-navigation` + all Lynx community skills.
+- `AGENTS.md` exists at root, stays minimal, points to `.github/skills/`.
+- `README.md` mentions Copilot CLI agentic support.

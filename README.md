@@ -1,5 +1,7 @@
 # Runner
 
+This project is set up for agentic development with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli). Project skills and instructions live in `.github/skills/` and `.github/copilot-instructions.md`.
+
 ## MacOS Install
 
 - `bun`
