@@ -1,80 +1,199 @@
-# Agentic Setup Plan
+# Runner App — Application Plan
 
-## Goal
+## What This App Is
 
-Set up this repo (a Lynx/ReactLynx Android app using `sparkling-app-cli`, `bun`, `Vitest`, `oxlint`) for
-agentic development with GitHub Copilot CLI — including cloud agent via `/delegate`.
+**Runner** is a beginner-friendly Android run/walk interval training app. The goal is gradual progress — not
+"run a 5K in X weeks." The user completes 3 × 30-minute sessions per week; the app adjusts interval ratios
+automatically based on consistency, meeting users where they are.
 
-## What Good Looks Like
+---
 
-- `.github/` is the source of truth for project-specific agent config: skills, cloud agent setup, instructions.
-- `AGENTS.md` is a lightweight shared entry point — identity, pointer to skills, minimal behavior rules.
-- Lynx community skills live in `.github/skills/` so they travel with the repo.
-- Cloud agent (`/delegate`) can install deps and run verification commands without trial and error.
-- The setup is maintainable and doesn't duplicate content across files.
-- README says the repo is ready for agentic development with Copilot CLI.
+## Core Mechanics
 
-## Instruction Hierarchy
+### Session Structure
+
+Every session has two phases:
+
+1. **Warmup walk** — always 5 minutes (300 seconds), no exceptions.
+2. **Interval block** — 30 minutes of alternating run/walk cycles.
+   - Cycles repeat until 30 minutes are exhausted.
+   - The last cycle is truncated if it would exceed 30 minutes.
+   - Total max session length: **35 minutes** (when run fills the full 30-min block).
+
+### Starting Intervals
+
+| Interval | Duration            |
+| -------- | ------------------- |
+| Run      | 30 seconds          |
+| Walk     | 120 seconds (2 min) |
+
+### Interval Precision
+
+Decimal precision — no rounding (e.g., 33 sec, 1m 48s). Display rounds to nearest second in the UI.
+
+### Progression Rules
+
+Evaluated at the **start of each new week** (calendar week, Monday–Sunday).
+
+| Last week's result                                | Action              |
+| ------------------------------------------------- | ------------------- |
+| ✅ 3/3 sessions completed                         | Run +10%, Walk −10% |
+| ⚠️ < 3/3 sessions, first missed week              | Stay the same       |
+| ❌ < 3/3 sessions, second consecutive missed week | Run −10%, Walk +10% |
+
+**End state:** When run duration fills the entire 30-minute interval block (no walk breaks needed), the
+user has "graduated." App shows a completion/celebration state.
+
+---
+
+## Data Model
+
+```typescript
+interface Session {
+  id: string
+  completedAt: string // ISO date string
+  runSeconds: number // interval values used during this session
+  walkSeconds: number
+}
+
+interface AppState {
+  runSeconds: number // current run interval (starts 30)
+  walkSeconds: number // current walk interval (starts 120)
+  sessions: Session[] // all completed sessions (persisted)
+  currentWeekStart: string // ISO date of this week's Monday
+  consecutiveWeeksMissed: number // for tracking 2-week regression trigger
+}
+```
+
+### Progression Logic (pseudocode)
 
 ```
-AGENTS.md                          ← root, shared, minimal: repo identity + behavior rules
-.github/copilot-instructions.md    ← IDE Copilot (not CLI) repo-wide instructions
-.github/instructions/*.md          ← path-scoped IDE instructions (only if needed)
-.github/skills/                    ← project-scoped skills (CLI)
+on app open:
+  if today is a new week since currentWeekStart:
+    thisWeekCount = sessions in currentWeekStart..now
+    if thisWeekCount >= 3:
+      runSeconds *= 1.1
+      walkSeconds *= 0.9
+      consecutiveWeeksMissed = 0
+    else:
+      consecutiveWeeksMissed += 1
+      if consecutiveWeeksMissed >= 2:
+        runSeconds *= 0.9
+        walkSeconds *= 1.1
+    currentWeekStart = this Monday
 ```
 
-**`AGENTS.md` covers:**
+---
 
-- What this repo is (Lynx/ReactLynx Android fitness app, `sparkling-app-cli` shell)
-- Stack summary: bun, Lynx, ReactLynx, Vitest, oxlint, oxfmt
-- Verification commands in order: `bun typecheck` → `bun test` → `bun lint`
-- Pointer to `.github/skills/` for skill list
-- Pointer to `https://lynxjs.org/llms.txt` for Lynx docs
-- Agent behavior rules: minimal changes, ask before risky ops, no broad rewrites
+## Pages & Screens
 
-**`.github/` owns all project-specific detail** — skills, cloud env, path rules.
+### Page 1: Home (`main`)
 
-## Skills (`.github/skills/`)
+Repurpose existing `main` page. Shows:
 
-### Community Lynx skills (download from awesome-copilot or `gh skill install`)
+- App name / branding
+- **This week's progress**: visual 3-dot tracker (e.g., `● ● ○` = 2/3 done)
+- **Current interval display**: "Run 30s · Walk 2m 0s"
+- **Progression context**: "Complete 1 more session this week to progress!"
+- **Start Workout** — primary CTA button
 
-- `lynx-typescript`
-- `reactlynx-best-practices`
-- `lynx-ui`
-- `lynx-devtool`
-- `trace-analysis`
-- `trace-record`
-- `debug-info-remapping`
+### Page 2: Workout (`workout`) ← new page
 
-### Repo-specific skills
+New Lynx page added to `app.config.ts`. Full-screen workout experience:
 
-- `repo-navigation`: layout of `src/`, `scripts/`, `android/`, `resource/`; which commands do what; where tests live.
+- **Phase label** (large, prominent): `WARMUP` / `RUN` / `WALK`
+- **Countdown timer**: time remaining in current interval
+- **Session progress**: elapsed time / estimated total
+- **Next up** preview: "Next: Walk 2m 0s"
+- **Pause / Stop** controls
+- On completion: inline summary state before navigating back to home
 
-## Plan
+### Page 3: History (`history`) ← new page, v2
 
-1. Create `.github/skills/repo-navigation/SKILL.md` — repo layout, commands, test locations. ✅
-2. Copy Lynx community skills into `.github/skills/`. ✅
-3. Create `AGENTS.md` at repo root — identity, stack, verification order, pointer to skills + Lynx docs, behavior rules. ✅
-4. Create `.github/copilot-instructions.md` — IDE Copilot guidance. ✅
-5. Update `README.md` — mention Copilot CLI agentic development support.
-6. Verify: run `/skills list` in CLI session, confirm skills load; test a real prompt; run `bun typecheck && bun test && bun lint`.
+Deferred — log of past sessions and progression over time. Add after core flow works.
 
-## Design Rules
+---
 
-- `.github/skills/` owns Lynx knowledge. `AGENTS.md` does not duplicate it.
-- `AGENTS.md` stays under ~60 lines. No copy-paste of README content.
-- `copilot-setup-steps.yml` covers only what cloud agent can actually run (no Android emulator).
-- Add path-specific `.github/instructions/` files only if a concrete IDE workflow needs them.
-- Community Lynx skills preferred over custom rewrites.
+## Lynx/Sparkling Technical Considerations
+
+### Navigation
+
+- Home → Workout: `router.open()` via `sparkling-navigation` with scheme
+  `hybrid://lynxview_page?bundle=workout.lynx.bundle&...`
+- Workout → Home: `close()` from `sparkling-navigation`
+- New `workout` entry required in `app.config.ts` (`source.entry` + `router`)
+
+### State Persistence
+
+Lynx does not have React Native's AsyncStorage. Options to investigate before implementation:
+
+1. **Lynx `NativeModules`** — custom Android bridge (preferred for structured data)
+2. **`lynx.__globalProps`** — read-only at startup, set by native layer; not ideal for writes
+3. **Lynx system storage API** — check if `sparkling-app-cli` exposes one
+
+**Decision needed:** Confirm storage approach before building state management.
+
+### Interval Timer
+
+Background/foreground timer for 30+ minutes:
+
+- Use `setInterval` in the background thread (ReactLynx worker thread)
+- Foreground display updates via `lynx.postMessage` / state
+- Handle app backgrounding (pause timer, resume on return)
+
+---
+
+## Implementation Phases
+
+### Phase 1 — Core domain logic (no UI)
+
+- Interval calculation utilities (run/walk cycles for a 30-min block)
+- Progression rules (week evaluation, +10%/−10% math)
+- Session storage abstraction (interface + in-memory stub, swap in real persistence later)
+- Full unit test coverage for all domain logic
+
+### Phase 2 — Home screen
+
+- Repurpose `main` page with real UI: week tracker, current intervals, Start button
+- Wire to domain state (stub persistence for now)
+
+### Phase 3 — Workout screen
+
+- New `workout` Lynx page
+- Warmup + interval block timer
+- Phase labels, countdown, next-up preview
+- Pause/stop, completion summary
+- Navigate back to home on finish
+
+### Phase 4 — Persistence
+
+- Implement real storage (Android native bridge or Lynx storage API)
+- Replace in-memory stub
+- Progression evaluation on week boundary
+
+### Phase 5 — Polish & edge cases
+
+- Graduation state (user can run full 30-min block)
+- Handle partial sessions (user stops early — count or don't count?)
+- Accessibility, visual feedback, sound/haptics (TBD)
+
+---
+
+## Decisions
+
+1. **Week boundary**: Monday–Sunday calendar week. Week resets every Monday.
+2. **Partial sessions**: A session stopped early does **not** count toward the weekly 3. Stopping early is
+   treated as a signal the current level is too hard — it contributes to the consecutive-missed-weeks
+   counter the same as a skipped session would (i.e., if the week ends without 3 completions, the normal
+   regression logic applies).
+3. **Graduation**: What happens after the user can run the full 30 min? — **TBD, revisit after Phase 3.**
+4. **Storage API**: Investigate Lynx/sparkling native storage before Phase 4 — **technical spike.**
+5. **History screen**: Deferred — revisit after Phase 3.
+
+---
 
 ## Verification
 
-- `/skills list` in CLI shows all `.github/skills/` entries.
-- `bun typecheck`, `bun test`, `bun lint` pass after any agent-assisted changes.
-- Real prompt test: ask Copilot to explain the ReactLynx component structure using the Lynx skills.
-
-## Definition of Done
-
-- `.github/skills/` contains `repo-navigation` + all Lynx community skills.
-- `AGENTS.md` exists at root, stays minimal, points to `.github/skills/`.
-- `README.md` mentions Copilot CLI agentic support.
+```sh
+bun typecheck && bun test && bun lint
+```
