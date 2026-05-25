@@ -183,7 +183,7 @@ the live file, just copied).
 **Import safety**: Before overwriting, rename current file to `training_profile.json.bak`. If the
 incoming JSON fails validation, restore the backup.
 
-JS interface (declared in `src/typing.d.ts`):
+JS interface additions for GPS (added to `RunnerStorageModule` or a separate `RunnerGpsModule`):
 
 ```typescript
 declare let NativeModules: {
@@ -193,10 +193,20 @@ declare let NativeModules: {
     exportProfile(callback: (success: boolean) => void): void
     importProfile(callback: (json: string | null) => void): void
   }
+  RunnerGpsModule: {
+    requestPermission(callback: (granted: boolean) => void): void
+    startInterval(type: 'warmup' | 'run' | 'walk' | 'cooldown'): void
+    endInterval(callback: (distanceMiles: number, avgPaceMinPerMile: number) => void): void
+    stopTracking(): void
+  }
 }
 ```
 
-#### Export & Import: Android Storage Access Framework (SAF)
+**Privacy**: Raw GPS coordinates are never stored or persisted. Only computed stats per interval are
+kept. Location updates run only during an active workout. Fallback: if permission denied or GPS
+unavailable, stats are 0 — app works normally. No blocking.
+
+**Not included**: Real-time pace during workout, route maps, coordinate storage.
 
 No cloud, no accounts. The user picks where to save/load the file via the Android system file picker
 (works with the Files app, USB transfer, any storage provider on device).
@@ -207,34 +217,31 @@ No cloud, no accounts. The user picks where to save/load the file via the Androi
 SAF requires Android Activity result handling in the native module. No additional permissions required —
 SAF is permission-free by design on modern Android.
 
-**Requires a custom native Android module** (Kotlin) bridging Android's `FusedLocationProviderClient`
-into Lynx via `NativeModules`. This is the same bridge work as storage — both land in the same native
-module layer.
+### GPS / Location Tracking
 
-**Privacy design:**
+**Confirmed feasible** via Lynx `NativeModules` using Android's `FusedLocationProviderClient`.
 
-- Raw GPS coordinates are **never stored or persisted**
-- Only computed stats are kept: per-interval distance (miles) and avg pace (min/mile)
-- Location updates run only during an active workout session
-- Android `ACCESS_FINE_LOCATION` permission required (requested at workout start)
+**Context access**: `LynxModule` provides `mContext` (a `LynxContext` → application context). For runtime
+permission requests, `HybridActivityStackManager.getTopActivity()` is already used by sparkling's router
+bridge and is available here too.
 
-**Data collected per interval** (warmup, each run, each walk, cooldown):
+**Permission**: `ACCESS_FINE_LOCATION` declared in `AndroidManifest.xml`. Runtime permission requested
+at **app launch in `SplashActivity`** — one-and-done before any Lynx page opens. If denied, GPS stats
+are silently omitted; the app works normally.
 
-- Duration (seconds)
-- Approximate distance (miles)
-- Average pace (min/mile)
+**`FusedLocationProviderClient`** works with application context — no Activity needed for location
+updates once permission is granted.
 
-**Shown on post-workout summary screen:**
+**Per-interval collection design** — JS drives the interval lifecycle:
 
-- Total distance for the session
-- Per-interval breakdown: distance + avg pace for each run and walk interval
-- Clearly labeled as approximate ("~1.2 mi")
+- `startInterval(type: string)` → module records start timestamp + position, begins accumulating GPS
+- `endInterval(callback)` → module computes distance (miles) + avg pace (min/mile) for that interval,
+  returns stats to JS
 
-**Units:** Imperial (miles, min/mile).
+No continuous GPS stream to JS. Module accumulates silently during each interval.
 
-**GPS fallback:** If the user denies location permission or GPS is unavailable, the app works normally — interval stats just show 0/nil for distance and pace. No blocking.
-
-**Not included:** Real-time pace during workout, route maps, coordinate storage.
+**SAF (export/import Activity intents)** uses the same `HybridActivityStackManager.getTopActivity()`
+pattern — no additional infrastructure needed.
 
 ### Interval Timer
 
@@ -301,9 +308,9 @@ Timer for 28–35 minute sessions:
    starting level before relying on auto-progression.
 6. **Rest day guidance**: After each session, suggest next session in 2 days (not enforced).
 7. **Graduation**: What happens when run fills the full interval block? — **TBD, revisit after Phase 3.**
-8. **GPS / location tracking**: Post-workout stats only (no real-time, no maps, no coordinate storage).
-   Per-interval distance (miles) + avg pace (min/mile), plus session total. Imperial units. Graceful
-   fallback if GPS unavailable or permission denied. **Implementation approach TBD — needs investigation.**
+8. **GPS / location tracking**: `FusedLocationProviderClient` via `RunnerGpsModule` (`LynxModule`).
+   `ACCESS_FINE_LOCATION` permission requested at **app launch in `SplashActivity`** (one-and-done).
+   Per-interval stats only (distance + avg pace). Privacy: no coordinates stored. Fallback if denied.
 9. **Storage**: `context.filesDir/training_profile.json` via Lynx `NativeModules`. Atomic writes via
    write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions
    required.
