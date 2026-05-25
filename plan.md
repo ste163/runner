@@ -87,7 +87,7 @@ interface TrainingLevel {
 
 // Tracks the rolling 7-day window for progression/regression decisions
 interface ProgressionWindow {
-  windowStart: string // ISO date when the current 7-day window began
+  windowStart: string // Full ISO timestamp (e.g. "2024-01-15T23:45:00.000Z") when the current window began
   consecutiveMissed: number // consecutive windows without 3 completions (triggers regression at 2)
 }
 
@@ -110,6 +110,7 @@ interface Session {
 
 // Root persisted record — the only thing written to storage
 interface TrainingProfile {
+  schemaVersion: number // starts at 1; increment when data model changes to enable future migrations
   level: TrainingLevel
   window: ProgressionWindow
   sessions: Session[]
@@ -120,22 +121,25 @@ interface TrainingProfile {
 
 ```
 on session completed (or app open after window has expired):
-  missedWindows = floor((now - window.windowStart) / 7 days) - (1 if current window not yet evaluated)
-  for each expired window (including current if expired):
-    windowCount = sessions completed within that window
+  // Evaluate all expired windows since windowStart, oldest first
+  for each expired window in chronological order:
+    windowCount = sessions completed within that window's 7-day span
     if windowCount >= 3:
       level.runSeconds = clamp(level.runSeconds * 1.1, 15, intervalBlockSeconds)
       level.walkSeconds = clamp(level.walkSeconds * 0.9, 10, 300)
-      window.consecutiveMissed = 0
+      window.consecutiveMissed = 0  // success resets the streak
     else:
       window.consecutiveMissed += 1
       if window.consecutiveMissed >= 2:
         level.runSeconds = clamp(level.runSeconds * 0.9, 15, intervalBlockSeconds)
         level.walkSeconds = clamp(level.walkSeconds * 1.1, 10, 300)
-  window.windowStart = today (start of new window)
+  // Advance window to now — saved atomically with the updated level.
+  // If the app crashes before this save, re-evaluation on next open produces the same result
+  // (level update + windowStart advance are one atomic write).
+  window.windowStart = now (full ISO timestamp)
 
 on first session of new window:
-  if no window.windowStart: window.windowStart = today
+  if no window.windowStart: window.windowStart = now (full ISO timestamp)
 ```
 
 ---
@@ -148,8 +152,8 @@ Repurpose existing `main` page. Shows:
 
 - App name / branding
 - **This week's progress**: visual 3-dot tracker (e.g., `● ● ○` = 2/3 done)
-- **Current interval display**: "Run 30s · Walk 2m 0s"
-- **Progression context**: "Complete 1 more session this week to progress!"
+- **Current interval display**: "Run 30s · Walk 2m 0s" — in graduation state, shows "Running 20m 0s" (no walk)
+- **Progression context**: "Complete 1 more session this week to progress!" — in graduation state, shows celebration/completion message
 - **Start Workout** — primary CTA button
 - **Manual level adjustment** — increase/decrease buttons (10% per tap, same as auto-progression; run min: 15s, walk min: 10s)
 
@@ -248,7 +252,8 @@ No cloud, no accounts. The user picks where to save/load the file via the Androi
 (works with the Files app, USB transfer, any storage provider on device).
 
 - **Export** (`ACTION_CREATE_DOCUMENT`): Writes `runner_backup_YYYY-MM-DD.json` to user-chosen location.
-- **Import** (`ACTION_OPEN_DOCUMENT`): User picks any `.json` file; app reads, validates, and restores.
+- **Import** (`ACTION_OPEN_DOCUMENT`): User picks any `.json` file; app shows a **confirmation dialog**
+  ("This will replace your current progress. Continue?") before reading, validating, and restoring.
 
 SAF requires Android Activity result handling in the native module. No additional permissions required —
 SAF is permission-free by design on modern Android.
@@ -355,9 +360,19 @@ addLynxModules(mapOf(
 ))
 ```
 
-### Audio
+### Screen Wake Lock
 
-No audio. Haptics are sufficient for all feedback.
+The screen must stay on for the full 30–35 minute workout. Android's default auto-lock would obscure the phase label and timer.
+
+**Solution**: Set `FLAG_KEEP_SCREEN_ON` on the Activity's window when the workout screen becomes active; clear it when the workout ends (complete, stop, or pause — actually keep it on during pause too since the user may be checking the screen). Implemented via a `RunnerScreenModule` NativeModule:
+
+```typescript
+RunnerScreenModule: {
+  keepScreenOn(enabled: boolean): void
+}
+```
+
+Calls `HybridActivityStackManager.getTopActivity().runOnUiThread { window.addFlags(FLAG_KEEP_SCREEN_ON) }` (or `clearFlags`). No permission required — `FLAG_KEEP_SCREEN_ON` is a window flag, not a manifest permission.
 
 ---
 
@@ -402,6 +417,8 @@ No audio. Haptics are sufficient for all feedback.
   to push timer ticks to Lynx page
 - **Haptic**: Haptics only — `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE`
   normal permission. Triggers: workout start + last 5 sec of each interval.
+- **Screen wake lock**: `RunnerScreenModule` (`keepScreenOn(bool)`), called on workout start/end.
+  No permission needed.
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
 - **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
   if unavailable
@@ -451,6 +468,11 @@ No audio. Haptics are sufficient for all feedback.
 21. **`sessions` unbounded**: All sessions retained forever (intentional — needed for future history screen).
     ~2.5MB max after 10 years; no performance concern.
 22. **Native → JS timer events**: Mechanism TBD — investigate `GlobalEventEmitter` or callback pattern before Phase 4.
+23. **`windowStart` timestamp**: Full ISO timestamp (not date-only) to ensure precise 7-day window calculation.
+24. **Schema versioning**: `TrainingProfile.schemaVersion` starts at 1; increment on any breaking data model change to enable future migrations.
+25. **Import confirmation**: Before restoring an imported file, show a confirmation dialog ("This will replace your current progress. Continue?").
+26. **Graduation state UI**: Home screen shows "Running Xm Ys" (no walk display) and celebration message when `walkSeconds ≤ 10`.
+27. **Screen wake lock**: `RunnerScreenModule.keepScreenOn(bool)` keeps screen on for full workout duration. No permission required. Called on workout start; cleared on workout complete or stop.
 
 ## Open Questions
 
