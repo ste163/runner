@@ -79,7 +79,7 @@ interface ProgressionWindow {
 interface IntervalRecord {
   type: 'warmup' | 'run' | 'walk' | 'cooldown'
   durationSeconds: number
-  distanceMiles: number | null // approximate, null if no location permission
+  distanceMiles: number // approximate
   avgPaceMinPerMile: number // 0 if no movement detected
 }
 
@@ -89,7 +89,7 @@ interface Session {
   completedAt: string // ISO date string
   level: TrainingLevel // snapshot of the level used for this session
   intervals: IntervalRecord[] // per-interval GPS stats (empty if no GPS)
-  totalDistanceMiles: number | null // sum across all intervals (null if no GPS)
+  totalDistanceMiles: number // sum across all intervals (0 if no GPS)
 }
 
 // Root persisted record — the only thing written to storage
@@ -104,21 +104,21 @@ interface TrainingProfile {
 
 ```
 on session completed (or app open after 7+ days):
-  if 7 days have elapsed since currentWindowStart:
+  if 7 days have elapsed since window.windowStart:
     windowCount = sessions completed within window
     if windowCount >= 3:
-      runSeconds *= 1.1
-      walkSeconds *= 0.9
-      consecutiveWindowsMissed = 0
+      level.runSeconds *= 1.1
+      level.walkSeconds *= 0.9
+      window.consecutiveMissed = 0
     else:
-      consecutiveWindowsMissed += 1
-      if consecutiveWindowsMissed >= 2:
-        runSeconds *= 0.9
-        walkSeconds *= 1.1
-    currentWindowStart = today
+      window.consecutiveMissed += 1
+      if window.consecutiveMissed >= 2:
+        level.runSeconds *= 0.9
+        level.walkSeconds *= 1.1
+    window.windowStart = today
 
-on session started (new window):
-  if no currentWindowStart: currentWindowStart = today
+on first session of new window:
+  if no window.windowStart: window.windowStart = today
 ```
 
 ---
