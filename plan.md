@@ -15,10 +15,12 @@ automatically based on consistency, meeting users where they are.
 Every session has three phases:
 
 1. **Warmup walk** — always 5 minutes (300 seconds), no exceptions.
-2. **Interval block** — **20 minutes** of alternating run/walk cycles (grows up to 25 min max as run
-   time increases, when run fills the full block).
+2. **Interval block** — **20 minutes** of alternating run/walk cycles (may grow toward 25 min max
+   as part of graduation design — mechanic TBD, see Decisions #7).
    - Cycles repeat until the interval block time is exhausted.
    - The last cycle is truncated if it would exceed the block duration.
+   - **Walk graduation trigger**: if `walkSeconds ≤ 10`, skip walk intervals — treat session as
+     continuous running and enter graduation state.
 3. **Cooldown walk** — always 5 minutes (300 seconds), no exceptions.
 
 **Total session length: 30 minutes at start → 35 minutes max** (5 warmup + 20–25 intervals + 5 cooldown).
@@ -47,8 +49,11 @@ completing 3 sessions, the window expires and a new one begins on the next sessi
 | ⚠️ Window expired with < 3 sessions, first time              | Stay the same       |
 | ❌ Window expired with < 3 sessions, second consecutive time | Run −10%, Walk +10% |
 
-**End state:** When run duration fills the entire interval block (no walk breaks needed), the user has
-"graduated." App shows a celebration state.
+**Window cap**: Sessions beyond 3 in a window are tracked but do not carry over to the next window.
+A window holds exactly the sessions completed within its 7-day span.
+
+**End state:** When `walkSeconds ≤ 10`, walk intervals are dropped and the user enters graduation state.
+App shows a celebration state.
 
 **Rest day guidance** (suggested, not enforced): After a session, the app recommends the next session in
 2 days ("Next suggested session: Wednesday"). This naturally produces a MWF-style spread regardless of
@@ -134,10 +139,11 @@ Repurpose existing `main` page. Shows:
 - **Current interval display**: "Run 30s · Walk 2m 0s"
 - **Progression context**: "Complete 1 more session this week to progress!"
 - **Start Workout** — primary CTA button
+- **Manual level adjustment** — increase/decrease buttons (run min: 15s, walk min: 10s)
 
-### Page 2: Workout (`workout`) ← new page
+### Page 2: Workout (`workout`) ← repurpose existing `second` page
 
-New Lynx page added to `app.config.ts`. Full-screen workout experience:
+Repurpose existing `second` page (rename/replace). Full-screen workout experience:
 
 - **Phase label** (large, prominent): `WARMUP` / `RUN` / `WALK` / `COOLDOWN`
 - **Countdown timer**: time remaining in current interval
@@ -148,7 +154,18 @@ New Lynx page added to `app.config.ts`. Full-screen workout experience:
 - **Pause / Stop** controls
 - On completion: inline summary state before navigating back to home
 
-### Page 3: History (`history`) ← new page, v2
+### Page 3: How It Works (`onboarding`) ← new page, shown on first launch
+
+Shown only once on first app open. Explains:
+
+- What the program is (run/walk intervals, 3x/week)
+- How progression works (+10% run / −10% walk when consistent)
+- How regression works (misses two windows → scales back)
+- Warmup/cooldown structure
+
+After viewing, user lands on the Home screen with default `TrainingProfile` initialized.
+
+### Page 4: History (`history`) ← new page, v2
 
 Deferred — log of past sessions and progression over time. Add after core flow works.
 
@@ -243,15 +260,35 @@ No continuous GPS stream to JS. Module accumulates silently during each interval
 **SAF (export/import Activity intents)** uses the same `HybridActivityStackManager.getTopActivity()`
 pattern — no additional infrastructure needed.
 
-### Interval Timer
+### Interval Timer & Foreground Service
 
-Timer for 28–35 minute sessions:
+The workout timer must survive screen-off and app-switching for 30–35 minute sessions. A plain
+`setInterval` in the ReactLynx background thread is **not sufficient** — Android will throttle and
+kill it.
 
-- Use `setInterval` in the background thread (ReactLynx worker thread)
-- Foreground display updates via state/events
-- Handle app backgrounding (pause timer, resume on return)
-- **Audio cues**: chime sound on interval transition (not voice prompts)
-- **Haptic cues**: 1-second pulse every second during the last 5 seconds of each interval
+**Required**: Android **foreground service** that owns the timer and posts a persistent notification
+(e.g., "Runner · RUN · 14:23 remaining"). The foreground service:
+
+- Starts when the workout begins
+- Maintains the interval clock independently of the JS thread
+- Sends tick events to the Lynx page via the native bridge
+- Stops when workout completes or user stops early
+- Requires `FOREGROUND_SERVICE` permission in `AndroidManifest.xml`
+
+This is part of Phase 4 native bridge work (same module layer as storage + GPS).
+
+### Audio & Haptic Feedback — Needs Investigation
+
+**Committed behavior**: chime on interval transitions + 1-sec haptic pulse per second in the last 5
+seconds of each interval.
+
+**Unknown**: Does Lynx have built-in audio playback and haptic APIs, or do we need additional
+`NativeModules`? Investigate before Phase 3:
+
+- Check `@lynx-js/types` and Lynx docs for `Audio` or `Haptics` built-ins
+- If not available: add `RunnerFeedbackModule` (chime playback via `MediaPlayer` or `SoundPool`;
+  haptic via `Vibrator` / `VibrationEffect`)
+- Audio asset (chime sound file) needs to be bundled with the app
 
 ---
 
@@ -260,19 +297,23 @@ Timer for 28–35 minute sessions:
 ### Phase 1 — Core domain logic (no UI)
 
 - Interval calculation utilities (run/walk cycles for the interval block duration)
-- Progression rules (rolling 7-day window evaluation, +10%/−10% math)
+- Progression rules (rolling 7-day window evaluation, +10%/−10% math, window cap at 3)
+- Walk graduation trigger (`walkSeconds ≤ 10` → no more walk intervals)
+- Manual level adjustment with bounds (run min: 15s, walk min: 10s, run max: `intervalBlockSeconds`)
 - Session storage abstraction (interface + in-memory stub, swap in real persistence later)
+- Default `TrainingProfile` initialization (for first-time users)
 - Full unit test coverage for all domain logic
 
-### Phase 2 — Home screen
+### Phase 2 — Home screen + onboarding
 
-- Repurpose `main` page with real UI: 3-session tracker, current intervals, next suggested date, Start button
-- Manual level adjustment buttons (increase/decrease difficulty)
+- Onboarding "How It Works" screen (shown once on first launch)
+- Repurpose `main` page: 3-session tracker, current intervals, next suggested date, Start button,
+  manual level adjustment buttons
 - Wire to domain state (stub persistence for now)
 
 ### Phase 3 — Workout screen
 
-- New `workout` Lynx page
+- Repurpose `second` page as `workout` (update `app.config.ts`)
 - Warmup + interval block + cooldown timer
 - Phase labels (WARMUP / RUN / WALK / COOLDOWN), countdown, next-up preview
 - Audio chime on transitions, haptic pulses in last 5 seconds of each interval
@@ -280,12 +321,18 @@ Timer for 28–35 minute sessions:
 - Post-workout summary: total distance + per-interval breakdown (distance + avg pace) if GPS available
 - Back navigation to home
 
-### Phase 4 — Native bridge (storage + GPS)
+### Phase 4 — Native bridge (storage + GPS + timer + feedback)
 
-- **Storage**: Implement `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `SharedPreferences`
-  backend; register in `SparklingLynxConfig`; replace in-memory stub; add SAF export/import
-- **GPS**: Investigate how to access device location from Lynx via `NativeModules`. Implement once
-  approach is confirmed. Graceful fallback if unavailable or denied.
+- **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
+  atomic write pattern; SAF export/import; replace in-memory stub
+- **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
+- **Foreground service**: Android foreground service owning the workout timer; persistent notification;
+  tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission
+- **Audio + haptic**: Investigate Lynx built-ins first; if absent, `RunnerFeedbackModule`
+  (`MediaPlayer`/`SoundPool` for chime, `VibrationEffect` for haptic pulses); bundle chime asset
+- **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
+- **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
+  if unavailable
 
 ### Phase 5 — Polish & edge cases
 
@@ -298,23 +345,27 @@ Timer for 28–35 minute sessions:
 ## Decisions
 
 1. **Week boundary**: Rolling 7-day window from first session of each cycle (not calendar Mon–Sun).
-2. **Partial sessions**: Stopped early → does **not** count. Signals the level is too hard. Normal
-   window-expiry regression logic still applies if the window ends without 3 completions.
-3. **Cooldown walk**: Every session ends with 5 min cooldown walk. Total session = warmup + intervals +
-   cooldown, targeting 28–35 min total.
-4. **Audio/haptic cues**: Chime on interval transitions; 1-sec haptic pulse each second during last 5
-   seconds of each interval (user holds phone while running).
-5. **Manual level adjustment**: Home screen has increase/decrease buttons so users can dial in their
-   starting level before relying on auto-progression.
-6. **Rest day guidance**: After each session, suggest next session in 2 days (not enforced).
-7. **Graduation**: What happens when run fills the full interval block? — **TBD, revisit after Phase 3.**
+2. **Partial sessions**: Stopped early → does **not** count. Normal window-expiry regression logic applies.
+3. **Cooldown walk**: Every session ends with 5 min cooldown walk. Total: 5 warmup + 20 intervals + 5 cooldown = 30 min.
+4. **Audio/haptic cues**: Chime on interval transitions; 1-sec haptic pulse per second during last 5
+   seconds of each interval. Built-in Lynx API vs. native module — **needs investigation (Phase 4).**
+5. **Manual level adjustment**: Home screen increase/decrease buttons. Bounds: run min 15s, walk min 10s,
+   run max = `intervalBlockSeconds`.
+6. **Rest day guidance**: Suggest next session in 2 days after each completed session (not enforced).
+7. **Graduation**: When `walkSeconds ≤ 10s`, drop walk intervals entirely — user is a continuous runner.
+   Interval block growth toward 25 min max (35 min total session) — **exact mechanic TBD, Phase 5.**
 8. **GPS / location tracking**: `FusedLocationProviderClient` via `RunnerGpsModule` (`LynxModule`).
-   `ACCESS_FINE_LOCATION` permission requested at **app launch in `SplashActivity`** (one-and-done).
-   Per-interval stats only (distance + avg pace). Privacy: no coordinates stored. Fallback if denied.
+   `ACCESS_FINE_LOCATION` permission at **app launch in `SplashActivity`** (one-and-done).
+   Per-interval stats only. Privacy: no coordinates stored. Fallback if denied.
 9. **Storage**: `context.filesDir/training_profile.json` via Lynx `NativeModules`. Atomic writes via
-   write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions
-   required.
-10. **History screen**: Deferred — revisit after Phase 3.
+   write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions required.
+10. **Foreground service**: Required to keep timer alive when screen off / app backgrounded. Persistent
+    notification showing current phase + time remaining. `FOREGROUND_SERVICE` permission at launch.
+11. **Window session cap**: Sessions beyond 3 in a window are tracked in that window, not carried forward.
+12. **First-time experience**: "How It Works" onboarding screen shown on first launch only.
+13. **Session ID**: Investigate `crypto.randomUUID()` in Lynx background thread — use `nanoid` if unavailable.
+14. **`second` Lynx page**: Repurpose as the `workout` page.
+15. **History screen**: Deferred — revisit after Phase 3.
 
 ## Open Questions
 
