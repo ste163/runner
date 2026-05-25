@@ -49,6 +49,17 @@ completing 3 sessions, the window expires and a new one begins on the next sessi
 | ⚠️ Window expired with < 3 sessions, first time              | Stay the same       |
 | ❌ Window expired with < 3 sessions, second consecutive time | Run −10%, Walk +10% |
 
+**Multiple missed windows**: If the user hasn't opened the app in N weeks, evaluate each missed
+window individually and apply regression once per missed window (not just once total). The user
+can manually adjust afterward if the regression feels too steep.
+
+**Progression/regression bounds** (prevents runaway values):
+
+- Run: min **15 seconds**, max = `intervalBlockSeconds`
+- Walk: min **10 seconds**, max **5 minutes (300 seconds)**
+
+Bounds apply to both auto-progression/regression and manual adjustment.
+
 **Window cap**: Sessions beyond 3 in a window are tracked but do not carry over to the next window.
 A window holds exactly the sessions completed within its 7-day span.
 
@@ -108,19 +119,20 @@ interface TrainingProfile {
 ### Progression Logic (pseudocode)
 
 ```
-on session completed (or app open after 7+ days):
-  if 7 days have elapsed since window.windowStart:
-    windowCount = sessions completed within window
+on session completed (or app open after window has expired):
+  missedWindows = floor((now - window.windowStart) / 7 days) - (1 if current window not yet evaluated)
+  for each expired window (including current if expired):
+    windowCount = sessions completed within that window
     if windowCount >= 3:
-      level.runSeconds *= 1.1
-      level.walkSeconds *= 0.9
+      level.runSeconds = clamp(level.runSeconds * 1.1, 15, intervalBlockSeconds)
+      level.walkSeconds = clamp(level.walkSeconds * 0.9, 10, 300)
       window.consecutiveMissed = 0
     else:
       window.consecutiveMissed += 1
       if window.consecutiveMissed >= 2:
-        level.runSeconds *= 0.9
-        level.walkSeconds *= 1.1
-    window.windowStart = today
+        level.runSeconds = clamp(level.runSeconds * 0.9, 15, intervalBlockSeconds)
+        level.walkSeconds = clamp(level.walkSeconds * 1.1, 10, 300)
+  window.windowStart = today (start of new window)
 
 on first session of new window:
   if no window.windowStart: window.windowStart = today
@@ -139,7 +151,7 @@ Repurpose existing `main` page. Shows:
 - **Current interval display**: "Run 30s · Walk 2m 0s"
 - **Progression context**: "Complete 1 more session this week to progress!"
 - **Start Workout** — primary CTA button
-- **Manual level adjustment** — increase/decrease buttons (run min: 15s, walk min: 10s)
+- **Manual level adjustment** — increase/decrease buttons (10% per tap, same as auto-progression; run min: 15s, walk min: 10s)
 
 ### Page 2: Workout (`workout`) ← repurpose existing `second` page
 
@@ -152,7 +164,9 @@ Repurpose existing `second` page (rename/replace). Full-screen workout experienc
 - **Last 5 seconds**: haptic pulse every second (200ms vibration) as interval-end warning
 - **Workout start**: single 500ms haptic pulse
 - **Pause / Stop** controls
-- On completion: inline summary state before navigating back to home
+- On completion: inline **post-workout summary** — app saves session, evaluates progression window,
+  then shows summary (distance, time, per-interval breakdown if GPS available, new level if changed).
+  User taps "Done" or simply closes the app. No forced navigation.
 
 ### Page 3: How It Works (`onboarding`) ← new page, shown on first launch
 
@@ -164,6 +178,11 @@ Shown only once on first app open. Explains:
 - Warmup/cooldown structure
 
 After viewing, user lands on the Home screen with default `TrainingProfile` initialized.
+
+**Profile initialization**: On every app launch, if `training_profile.json` does not exist, a default
+`TrainingProfile` is created in memory immediately (before any page loads). Onboarding is shown
+if and only if this is a first-time creation. Second launch onward: file exists → skip onboarding
+→ load Home directly.
 
 ### Page 4: History (`history`) ← new page, v2
 
@@ -257,6 +276,15 @@ updates once permission is granted.
 
 No continuous GPS stream to JS. Module accumulates silently during each interval.
 
+**GPS cleanup on workout end**: Whether the workout completes normally or is abandoned mid-interval,
+`stopTracking()` is always called. If abandoned mid-interval, `endInterval()` is skipped (that
+interval's partial data is discarded) and `stopTracking()` is called directly. This prevents GPS
+location updates from leaking after the workout ends.
+
+**`sessions` array is unbounded by design** — all sessions are retained forever for the future
+history screen (Phase 5). At ~2.5MB max after 10 years of perfect consistency, storage is not
+a concern.
+
 **SAF (export/import Activity intents)** uses the same `HybridActivityStackManager.getTopActivity()`
 pattern — no additional infrastructure needed.
 
@@ -272,10 +300,24 @@ kill it.
 - Starts when the workout begins
 - Maintains the interval clock independently of the JS thread
 - Sends tick events to the Lynx page via the native bridge
-- Stops when workout completes or user stops early
+- Stops when workout completes or user stops/abandons early
 - Requires `FOREGROUND_SERVICE` permission in `AndroidManifest.xml`
+- Requires `android:foregroundServiceType="health"` in the `<service>` manifest declaration
+  (**Android 14 / API 34 requirement** — our `targetSdk = 34`; omitting this prevents the service
+  from starting on modern Android)
 
-This is part of Phase 4 native bridge work (same module layer as storage + GPS).
+**Pause**: Pausing freezes the foreground service timer. The session clock stops; GPS accumulation
+pauses. Duration of pause is irrelevant — the session still counts when resumed. Pause is not
+equivalent to stop.
+
+**Native → JS event communication — Needs Investigation**: `NativeModules` is JS-calls-native only.
+Sending timer tick events _from_ the foreground service _to_ the Lynx page requires a different
+mechanism. Options to investigate:
+
+- Lynx `GlobalEventEmitter` (background thread)
+- A JS-registered callback stored in the native module
+- Lynx's event bridge / `postMessage` equivalent
+  Resolve before Phase 4.
 
 ### Haptic Feedback
 
@@ -354,7 +396,10 @@ No audio. Haptics are sufficient for all feedback.
   atomic write pattern; SAF export/import; replace in-memory stub
 - **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
 - **Foreground service**: Android foreground service owning the workout timer; persistent notification;
-  tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission
+  tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission;
+  `android:foregroundServiceType="health"` in manifest (Android 14 / API 34 required)
+- **Native → JS events**: Investigate `GlobalEventEmitter` or callback pattern for foreground service
+  to push timer ticks to Lynx page
 - **Haptic**: Haptics only — `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE`
   normal permission. Triggers: workout start + last 5 sec of each interval.
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
@@ -377,8 +422,8 @@ No audio. Haptics are sufficient for all feedback.
 4. **Haptic feedback only** (no audio): `RunnerHapticModule` (`vibrate(durationMs)` + `cancel()`),
    `VIBRATE` normal permission (manifest only). Triggers: workout start (500ms pulse) + last 5
    seconds of each interval (200ms pulse/sec).
-5. **Manual level adjustment**: Home screen increase/decrease buttons. Bounds: run min 15s, walk min 10s,
-   run max = `intervalBlockSeconds`.
+5. **Manual level adjustment**: Home screen increase/decrease buttons. 10% per tap (same as
+   auto-progression). Bounds: run min 15s, walk min 10s. Same bounds apply to auto-regression.
 6. **Rest day guidance**: Suggest next session in 2 days after each completed session (not enforced).
 7. **Graduation**: When `walkSeconds ≤ 10s`, drop walk intervals entirely — user is a continuous runner.
    Interval block growth toward 25 min max (35 min total session) — **exact mechanic TBD, Phase 5.**
@@ -388,12 +433,24 @@ No audio. Haptics are sufficient for all feedback.
 9. **Storage**: `context.filesDir/training_profile.json` via Lynx `NativeModules`. Atomic writes via
    write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions required.
 10. **Foreground service**: Required to keep timer alive when screen off / app backgrounded. Persistent
-    notification showing current phase + time remaining. `FOREGROUND_SERVICE` permission at launch.
+    notification showing current phase + time remaining. `FOREGROUND_SERVICE` permission + `foregroundServiceType="health"` (Android 14 / API 34 requirement).
 11. **Window session cap**: Sessions beyond 3 in a window are tracked in that window, not carried forward.
-12. **First-time experience**: "How It Works" onboarding screen shown on first launch only.
+12. **First-time experience**: "How It Works" onboarding screen shown on first launch only. Default
+    `TrainingProfile` created in memory on app launch if file not found; onboarding shown iff first creation.
 13. **Session ID**: Investigate `crypto.randomUUID()` in Lynx background thread — use `nanoid` if unavailable.
 14. **`second` Lynx page**: Repurpose as the `workout` page.
 15. **History screen**: Deferred — revisit after Phase 3.
+16. **Multiple missed windows**: Evaluate each missed window individually; apply regression once per
+    missed window. User can manually adjust afterward.
+17. **Progression/regression bounds**: Run min 15s / max `intervalBlockSeconds`. Walk min 10s / max 300s.
+    Applies to both auto and manual adjustment.
+18. **Pause**: Freezes foreground service timer and GPS. Session still counts on resume. Unlimited pause duration.
+19. **Post-workout flow**: Save session → evaluate progression → show summary screen → user closes app or taps Done.
+20. **GPS cleanup**: `stopTracking()` always called on workout end (complete or abandoned). Abandoned
+    mid-interval → skip `endInterval()`, call `stopTracking()` directly.
+21. **`sessions` unbounded**: All sessions retained forever (intentional — needed for future history screen).
+    ~2.5MB max after 10 years; no performance concern.
+22. **Native → JS timer events**: Mechanism TBD — investigate `GlobalEventEmitter` or callback pattern before Phase 4.
 
 ## Open Questions
 
