@@ -102,7 +102,7 @@ interface IntervalRecord {
 // A single completed workout session
 interface Session {
   id: string
-  completedAt: string // ISO date string
+  completedAt: string // Full ISO timestamp (e.g. "2024-01-15T23:45:00.000Z")
   level: TrainingLevel // snapshot of the level used for this session
   intervals: IntervalRecord[] // per-interval GPS stats (empty if no GPS)
   totalDistanceMiles: number // sum across all intervals (0 if no GPS)
@@ -239,6 +239,14 @@ declare let NativeModules: {
     endInterval(callback: (distanceMiles: number, avgPaceMinPerMile: number) => void): void
     stopTracking(): void
   }
+  RunnerHapticModule: {
+    vibrate(durationMs: number): void
+    cancel(): void
+  }
+  RunnerScreenModule: {
+    keepScreenOn(enabled: boolean): void
+  }
+  // Timer/tick module TBD — mechanism under investigation (GlobalEventEmitter or callback pattern)
 }
 ```
 
@@ -307,6 +315,9 @@ kill it.
 - Sends tick events to the Lynx page via the native bridge
 - Stops when workout completes or user stops/abandons early
 - Requires `FOREGROUND_SERVICE` permission in `AndroidManifest.xml`
+- Requires `FOREGROUND_SERVICE_HEALTH` permission in `AndroidManifest.xml`
+  (**Android 14 / API 34 requirement** — required alongside `FOREGROUND_SERVICE` for health-type services;
+  omitting it prevents the service from starting on API 34+)
 - Requires `android:foregroundServiceType="health"` in the `<service>` manifest declaration
   (**Android 14 / API 34 requirement** — our `targetSdk = 34`; omitting this prevents the service
   from starting on modern Android)
@@ -450,7 +461,8 @@ Calls `HybridActivityStackManager.getTopActivity().runOnUiThread { window.addFla
 9. **Storage**: `context.filesDir/training_profile.json` via Lynx `NativeModules`. Atomic writes via
    write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions required.
 10. **Foreground service**: Required to keep timer alive when screen off / app backgrounded. Persistent
-    notification showing current phase + time remaining. `FOREGROUND_SERVICE` permission + `foregroundServiceType="health"` (Android 14 / API 34 requirement).
+    notification showing current phase + time remaining. `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_HEALTH`
+    permissions (both manifest-only, normal permissions) + `foregroundServiceType="health"` (Android 14 / API 34 requirement).
 11. **Window session cap**: Sessions beyond 3 in a window are tracked in that window, not carried forward.
 12. **First-time experience**: "How It Works" onboarding screen shown on first launch only. Default
     `TrainingProfile` created in memory on app launch if file not found; onboarding shown iff first creation.
