@@ -149,8 +149,8 @@ Repurpose existing `second` page (rename/replace). Full-screen workout experienc
 - **Countdown timer**: time remaining in current interval
 - **Session progress**: elapsed time / estimated total
 - **Next up** preview: "Next: Walk 2m 0s"
-- **Last 5 seconds**: haptic pulse every second (1-sec vibration burst) as interval-end warning
-- **Interval transition**: audio chime + haptic on phase change
+- **Last 5 seconds**: haptic pulse every second (200ms vibration) as interval-end warning
+- **Workout start**: single 500ms haptic pulse
 - **Pause / Stop** controls
 - On completion: inline summary state before navigating back to home
 
@@ -298,8 +298,11 @@ RunnerHapticModule: {
 ```
 
 **Timing design**: JS controls when to call `vibrate()`. The foreground service sends timer ticks to
-the Lynx page; JS calls `vibrate(200)` once per second during the last 5 seconds of each interval,
-and `vibrate(500)` on interval transitions. No native-side timer needed.
+the Lynx page:
+
+- **Workout start**: single `vibrate(500)` to signal "go"
+- **Last 5 seconds of each interval**: `vibrate(200)` once per second as countdown warning
+  No native-side timer needed.
 
 **Registration**: `SparklingLynxConfig.Builder` exposes `addLynxModules(Map<String, SparklingLynxModuleWrapper>)`.
 Confirmed by inspecting `sparkling-2.0.1.aar` bytecode. Register in `SparklingApplication.kt`:
@@ -310,15 +313,9 @@ addLynxModules(mapOf(
 ))
 ```
 
-### Audio Feedback — Needs Investigation
+### Audio
 
-**Committed behavior**: chime sound on interval transitions.
-
-**Unknown**: Does Lynx have built-in audio playback, or do we need a `NativeModule`?
-
-- Check `@lynx-js/types` for any `Audio` built-in
-- If not available: add `RunnerAudioModule` using `MediaPlayer` or `SoundPool`
-- Audio asset (chime sound file) needs to be bundled with the app
+No audio. Haptics are sufficient for all feedback.
 
 ---
 
@@ -346,7 +343,7 @@ addLynxModules(mapOf(
 - Repurpose `second` page as `workout` (update `app.config.ts`)
 - Warmup + interval block + cooldown timer
 - Phase labels (WARMUP / RUN / WALK / COOLDOWN), countdown, next-up preview
-- Audio chime on transitions, haptic pulses in last 5 seconds of each interval
+- Haptic pulses in last 5 seconds of each interval; single pulse on workout start
 - Pause/stop (stopped early = session does not count)
 - Post-workout summary: total distance + per-interval breakdown (distance + avg pace) if GPS available
 - Back navigation to home
@@ -358,8 +355,8 @@ addLynxModules(mapOf(
 - **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
 - **Foreground service**: Android foreground service owning the workout timer; persistent notification;
   tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission
-- **Audio + haptic**: Haptics resolved — `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal
-  permission. Audio still needs investigation — `RunnerAudioModule` likely needed (see Technical Considerations)
+- **Haptic**: Haptics only — `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE`
+  normal permission. Triggers: workout start + last 5 sec of each interval.
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
 - **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
   if unavailable
@@ -377,9 +374,9 @@ addLynxModules(mapOf(
 1. **Week boundary**: Rolling 7-day window from first session of each cycle (not calendar Mon–Sun).
 2. **Partial sessions**: Stopped early → does **not** count. Normal window-expiry regression logic applies.
 3. **Cooldown walk**: Every session ends with 5 min cooldown walk. Total: 5 warmup + 20 intervals + 5 cooldown = 30 min.
-4. **Audio/haptic cues**: Chime on interval transitions; 1-sec haptic pulse per second during last 5
-   seconds of each interval. **Haptics resolved**: `RunnerHapticModule` (`vibrate(durationMs)` +
-   `cancel()`), `VIBRATE` normal permission (manifest only). **Audio**: still needs investigation.
+4. **Haptic feedback only** (no audio): `RunnerHapticModule` (`vibrate(durationMs)` + `cancel()`),
+   `VIBRATE` normal permission (manifest only). Triggers: workout start (500ms pulse) + last 5
+   seconds of each interval (200ms pulse/sec).
 5. **Manual level adjustment**: Home screen increase/decrease buttons. Bounds: run min 15s, walk min 10s,
    run max = `intervalBlockSeconds`.
 6. **Rest day guidance**: Suggest next session in 2 days after each completed session (not enforced).
