@@ -163,7 +163,49 @@ Deferred — log of past sessions and progression over time. Add after core flow
 - Workout → Home: `close()` from `sparkling-navigation`
 - New `workout` entry required in `app.config.ts` (`source.entry` + `router`)
 
-### GPS / Location Tracking
+### State Persistence & Native Bridge
+
+Both storage and GPS wire through **Lynx `NativeModules`**: extend `LynxModule`, annotate methods with
+`@LynxMethod`, register in `SparklingLynxConfig`. This is the confirmed approach — the official Lynx docs
+use a storage module as their primary NativeModules example.
+
+#### Primary Storage: Internal JSON file (`context.filesDir`)
+
+`TrainingProfile` is serialized as a single JSON file at `context.filesDir/training_profile.json`.
+Marginally better than `SharedPreferences` for this size of data, and simplifies export (the backup _is_
+the live file, just copied).
+
+**Atomic write pattern** (prevents corruption on crash):
+
+1. Write to `training_profile.json.tmp`
+2. `File.renameTo("training_profile.json")` — atomic on Android
+
+**Import safety**: Before overwriting, rename current file to `training_profile.json.bak`. If the
+incoming JSON fails validation, restore the backup.
+
+JS interface (declared in `src/typing.d.ts`):
+
+```typescript
+declare let NativeModules: {
+  RunnerStorageModule: {
+    saveProfile(json: string): void
+    loadProfile(callback: (json: string | null) => void): void
+    exportProfile(callback: (success: boolean) => void): void
+    importProfile(callback: (json: string | null) => void): void
+  }
+}
+```
+
+#### Export & Import: Android Storage Access Framework (SAF)
+
+No cloud, no accounts. The user picks where to save/load the file via the Android system file picker
+(works with the Files app, USB transfer, any storage provider on device).
+
+- **Export** (`ACTION_CREATE_DOCUMENT`): Writes `runner_backup_YYYY-MM-DD.json` to user-chosen location.
+- **Import** (`ACTION_OPEN_DOCUMENT`): User picks any `.json` file; app reads, validates, and restores.
+
+SAF requires Android Activity result handling in the native module. No additional permissions required —
+SAF is permission-free by design on modern Android.
 
 **Requires a custom native Android module** (Kotlin) bridging Android's `FusedLocationProviderClient`
 into Lynx via `NativeModules`. This is the same bridge work as storage — both land in the same native
@@ -231,12 +273,12 @@ Timer for 28–35 minute sessions:
 - Post-workout summary: total distance + per-interval breakdown (distance + avg pace) if GPS available
 - Back navigation to home
 
-### Phase 4 — Persistence & GPS (native bridge)
+### Phase 4 — Native bridge (storage + GPS)
 
-- **Storage**: Investigate and implement Lynx/sparkling storage API; replace in-memory stub; progression
-  evaluation on 7-day window expiry
-- **GPS**: Investigate how to access device location from Lynx/sparkling. Implement once approach is
-  confirmed. Graceful fallback if unavailable or denied.
+- **Storage**: Implement `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `SharedPreferences`
+  backend; register in `SparklingLynxConfig`; replace in-memory stub; add SAF export/import
+- **GPS**: Investigate how to access device location from Lynx via `NativeModules`. Implement once
+  approach is confirmed. Graceful fallback if unavailable or denied.
 
 ### Phase 5 — Polish & edge cases
 
@@ -262,7 +304,9 @@ Timer for 28–35 minute sessions:
 8. **GPS / location tracking**: Post-workout stats only (no real-time, no maps, no coordinate storage).
    Per-interval distance (miles) + avg pace (min/mile), plus session total. Imperial units. Graceful
    fallback if GPS unavailable or permission denied. **Implementation approach TBD — needs investigation.**
-9. **Storage API**: Investigate Lynx/sparkling native storage before Phase 4 — **technical spike.**
+9. **Storage**: `context.filesDir/training_profile.json` via Lynx `NativeModules`. Atomic writes via
+   write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions
+   required.
 10. **History screen**: Deferred — revisit after Phase 3.
 
 ## Open Questions
