@@ -4,16 +4,13 @@ You are an expert in ReactLynx, TypeScript, and Lynx application development.
 
 ## Read in Advance
 
-Read the docs below before working on any Lynx task.
-
-- Lynx: [llms.txt](https://lynxjs.org/next/llms.txt) — entry point for all Lynx docs. **MUST read** for any Lynx-related task.
-
-If the `lynx-docs` MCP server is available, use it instead of `llms.txt`:
+For any Lynx-related task, use the `lynx-docs` MCP server if available:
 
 1. Use the "List Resources Tool" to list all resources in MCP `lynx-docs`.
-2. Read `lynx-docs://llms.txt` first (**REQUIRED**) — it is the entry point for all Lynx docs.
+2. Read `lynx-docs://llms.txt` first — it is the entry point for all Lynx docs.
 3. Use "Read MCP Resources Tool" to fetch specific docs as needed.
-4. Prefer MCP resources over web search for any Lynx question.
+
+If the MCP server is unavailable, fall back to: [https://lynxjs.org/next/llms.txt](https://lynxjs.org/next/llms.txt)
 
 ## What This Repo Is
 
@@ -32,6 +29,7 @@ Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
 - `repo-navigation` — repo layout, commands, test locations
 - `test-writing` — Vitest + `@lynx-js/react/testing-library` conventions
 - `coding-standards` — TypeScript style: arrow functions, SRP, non-mutability, no lint suppression
+- `app-domain` — Runner app business rules: session mechanics, progression algorithm, data model
 
 ## Verification
 
@@ -45,5 +43,5 @@ bun typecheck && bun test && bun lint
 
 - Make minimal, targeted changes. Do not refactor unrelated code.
 - Ask before deleting files, changing package versions, or modifying Android native code.
-- Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt in cloud agent.
+- Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt without them.
 - Tests live next to source: `src/pages/<name>/App.spec.tsx`.

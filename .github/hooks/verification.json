@@ -1,11 +1,19 @@
 {
   "version": 1,
   "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "bash .github/hooks/pre-tool.sh",
+        "matcher": "bash",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ],
     "agentStop": [
       {
         "type": "command",
-        "bash": "echo '--- Verification ---' && bun typecheck && bun lint && bun run verify-docs && echo '✓ typecheck + lint + doc-sync passed'",
-        "powershell": "Write-Host '--- Verification ---'; bun typecheck; if ($LASTEXITCODE -eq 0) { bun lint }; if ($LASTEXITCODE -eq 0) { bun run verify-docs }; if ($LASTEXITCODE -eq 0) { Write-Host '✓ typecheck + lint + doc-sync passed' }",
+        "bash": "bash .github/hooks/verify.sh",
         "cwd": ".",
         "timeoutSec": 60
       }
