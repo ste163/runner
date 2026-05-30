@@ -25,16 +25,28 @@ This project is set up for agentic development with [GitHub Copilot CLI](https:/
 bun run verify-docs
 ```
 
-## MacOS Install
+## macOS Install
+
+Install the Android pieces with Homebrew:
+
+```bash
+brew install --cask android-studio
+brew install openjdk@17
+```
+
+Add this to `~/.zshrc`:
+
+```bash
+export JAVA_HOME="$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+```
 
 - `bun`
 - `npm install -g typescript typescript-language-server` — required for LSP code intelligence in Copilot CLI (see `.github/lsp.json`)
 - Android Studio, with Android SDK, platform-tools, and emulator
-- `brew install --cask android-studio`
-- `brew install openjdk@17`
-- Add to `~/.zshrc`: `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"`
-- Or use Homebrew path: `export JAVA_HOME="$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"`
-- Add Android SDK to `~/.zshrc` so `adb` works: `export ANDROID_HOME="$HOME/Library/Android/sdk"`, `export ANDROID_SDK_ROOT="$ANDROID_HOME"`, `export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"`
 
 ## Stack
 
@@ -156,6 +168,6 @@ Formats project.
 ## Notes
 
 - Android SDK path comes from `ANDROID_HOME`, defaulting to `~/Library/Android/sdk`.
-- `JAVA_HOME` falls back to JDK 17.
+- `JAVA_HOME` should point at the Homebrew `openjdk@17` install path shown above.
 - `adb` and emulator commands need Android SDK paths in `~/.zshrc`.
 - `bun dev` is the main day-to-day command.
