@@ -429,15 +429,21 @@ Completed:
 - `app.config.ts`
 - `src/global.css`
 
-### Phase 3 — Workout screen
+### Phase 3 — Workout screen ✅ Complete
 
-- Workout screen (already renamed to `workout`; `app.config.ts` points at the new folder)
+- Workout screen with explicit Start Workout gate before the timer begins
 - Warmup + interval block + cooldown timer
 - Phase labels (WARMUP / RUN / WALK / COOLDOWN), countdown, next-up preview
-- Haptic pulses in last 5 seconds of each interval; single pulse on workout start
-- Pause/stop (stopped early = session does not count)
-- Post-workout summary: total distance + per-interval breakdown (distance + avg pace) if GPS available
-- Back navigation to home
+- Haptic adapter with start pulse and last-5-seconds pulses
+- Pause/stop controls and back navigation to home
+- Post-workout summary with total distance and per-interval breakdown support
+
+Completed:
+
+- `src/pages/workout/Workout.tsx`
+- `src/pages/workout/Workout.css`
+- `src/pages/workout/Workout.spec.tsx`
+- Workout flow now stays idle until the user taps `Start Workout`
 
 ### Phase 4 — Native bridge (storage + GPS + timer + feedback)
 
