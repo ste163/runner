@@ -163,3 +163,49 @@
   min-height: 64px;
   line-height: 20px;
 }
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.copy {
+  font-size: 14px;
+  line-height: 20px;
+  color: #335260;
+}
+
+.tracker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tracker__dot {
+  font-size: 18px;
+  line-height: 1;
+  color: #c5d7dd;
+}
+
+.tracker__dot--filled {
+  color: #009995;
+}
+
+.secondary {
+  background: rgba(254, 44, 58, 0.08);
+  border: 1px solid #fe2c3a;
+  border-radius: 12px;
+  padding: 14px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  gap: 8px;
+}
+
+.secondary__text {
+  color: #fe2c3a;
+  font-weight: 800;
+  font-size: 15px;
+}

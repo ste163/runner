@@ -1,12 +1,11 @@
 // Copyright (c) 2025 TikTok Pte. Ltd.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { defineConfig, mergeConfig } from 'vitest/config'
-import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config'
+import { defineConfig } from 'vitest/config'
+import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins'
 
-// TODO: update tests, remove coverage
-const defaultConfig = await createVitestConfig()
-const config = defineConfig({
+export default defineConfig({
+  plugins: [vitestTestingLibraryPlugin()],
   test: {
     coverage: {
       provider: 'v8',
@@ -23,5 +22,3 @@ const config = defineConfig({
     },
   },
 })
-
-export default mergeConfig(defaultConfig, config)

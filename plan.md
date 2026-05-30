@@ -504,5 +504,5 @@ Completed:
 ## Verification
 
 ```sh
-bun typecheck && bun test && bun lint
+bun typecheck && bun run test && bun lint
 ```

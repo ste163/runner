@@ -33,4 +33,39 @@ export class InMemoryProfileStorage implements ProfileStorage {
   save = (profile: TrainingProfile): void => {
     this.profile = cloneProfile(profile)
   }
+  clear = (): void => {
+    this.profile = null
+  }
 }
+
+export interface SharedProfileLoadResult {
+  profile: TrainingProfile
+  isFirstLaunch: boolean
+}
+
+export class SharedProfileStore {
+  private storage = new InMemoryProfileStorage()
+
+  loadOrCreate = (): SharedProfileLoadResult => {
+    const profile = this.storage.load()
+
+    if (profile !== null) {
+      return { profile, isFirstLaunch: false }
+    }
+
+    const defaultProfile = createDefaultProfile()
+    this.storage.save(defaultProfile)
+
+    return { profile: defaultProfile, isFirstLaunch: true }
+  }
+
+  save = (profile: TrainingProfile): void => {
+    this.storage.save(profile)
+  }
+
+  reset = (): void => {
+    this.storage.clear()
+  }
+}
+
+export const sharedProfileStore = new SharedProfileStore()
