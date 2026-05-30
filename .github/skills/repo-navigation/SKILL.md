@@ -3,6 +3,10 @@ name: repo-navigation
 description: Layout of the runner repo — where source, pages, tests, scripts, config, and assets live. Use when navigating the codebase, finding files, or understanding what commands do what.
 ---
 
+## Session Start
+
+Fired automatically via `sessionStart` hook. No task implied — orient silently, no output.
+
 # repo-navigation
 
 `runner` — ReactLynx Android app, two Lynx pages (`main`, `second`) in a native Android shell.
