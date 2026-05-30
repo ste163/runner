@@ -20,7 +20,7 @@ class SplashActivity : AppCompatActivity() {
     private fun gotoSparklingPage() {
         val initData = mapOf<Any, Any>()
         val initialData: String = JsonUtils.toJson(initData)
-        val launchScheme = if (BuildConfig.DEBUG) {
+        val launchScheme = if (isDebuggable) {
             DebugDevUrlSupport.buildMainPageScheme()
         } else {
             "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
@@ -28,7 +28,7 @@ class SplashActivity : AppCompatActivity() {
 
         val context = SparklingContext()
         context.scheme = launchScheme
-        if (BuildConfig.DEBUG) {
+        if (isDebuggable) {
             context.sparklingUIProvider = DebugSparklingUiProvider(initialData.toString(), launchScheme)
         }
         context.withInitData("{ \"initial_data\":$initialData}")

@@ -514,6 +514,12 @@ Completed:
 1. **Interval block duration**: **Resolved** — 20 min starting block, growing to 25 min max at graduation.
    Total session: 30 min → 35 min.
 
+2. **Android toolchain update**: AGP 9.2.0 was attempted with Gradle 9.4.1, Kotlin 2.3.21,
+   Android 16 compile/target SDK 36, and NDK 28.2.13676358, but it is blocked for now because
+   `sparkling-navigation` still applies `org.jetbrains.kotlin.android` and is not AGP 9-ready.
+   We are staying on the working AGP 8.9.2 / Gradle 8.11.1 line until that dependency is patched
+   or forked.
+
 ---
 
 ## Verification

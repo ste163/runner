@@ -44,6 +44,8 @@ export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 ```
 
+In Android Studio's SDK Manager, install the Android 15 platform, Build Tools 35.0.0, and NDK 27.x or newer.
+
 - `bun`
 - `npm install -g typescript typescript-language-server` — required for LSP code intelligence in Copilot CLI (see `.github/lsp.json`)
 - Android Studio, with Android SDK, platform-tools, and emulator

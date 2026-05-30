@@ -46,7 +46,7 @@ class SparklingApplication : Application() {
 
     private fun initHybridKit() {
         HybridKit.init(this)
-        val baseInfoConfig = BaseInfoConfig(isDebug = BuildConfig.DEBUG)
+        val baseInfoConfig = BaseInfoConfig(isDebug = isDebuggable)
         val lynxConfig = SparklingLynxConfig.build(this) {
             addBehaviors(listOf(
                 object : Behavior("input", false) {
