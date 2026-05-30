@@ -22,6 +22,7 @@ Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
 - `test-writing` — Vitest + `@lynx-js/react/testing-library` conventions
 - `coding-standards` — TypeScript style: arrow functions, SRP, non-mutability, no lint suppression
 - `app-domain` — Runner app business rules: session mechanics, progression algorithm, data model
+- `caveman` — compressed writing mode for token-efficient `.github/` file edits
 
 ## Agents
 
