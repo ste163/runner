@@ -146,7 +146,7 @@ on first session of new window:
 
 ## Pages & Screens
 
-### Page 1: Home (`main`)
+### Page 1: Home (`home`)
 
 Repurpose existing `main` page. Shows:
 
@@ -157,9 +157,9 @@ Repurpose existing `main` page. Shows:
 - **Start Workout** — primary CTA button
 - **Manual level adjustment** — increase/decrease buttons (10% per tap, same as auto-progression; run min: 15s, walk min: 10s)
 
-### Page 2: Workout (`workout`) ← repurpose existing `second` page
+### Page 2: Workout (`workout`) ← repurpose existing workout page
 
-Repurpose existing `second` page (rename/replace). Full-screen workout experience:
+Repurpose existing workout page (rename/replace). Full-screen workout experience:
 
 - **Phase label** (large, prominent): `WARMUP` / `RUN` / `WALK` / `COOLDOWN`
 - **Countdown timer**: time remaining in current interval
@@ -407,16 +407,31 @@ Completed:
 - `src/domain/profile.ts` + `src/domain/profile.spec.ts`
 - Domain-only verification passes; repo-wide verification is still blocked by the existing Lynx page test runtime issue in `src/pages/main/App.spec.tsx`
 
-### Phase 2 — Home screen + onboarding
+### Phase 2 — Home screen + onboarding ✅ Complete
 
-- Onboarding "How It Works" screen (shown once on first launch)
-- Repurpose `main` page: 3-session tracker, current intervals, next suggested date, Start button,
-  manual level adjustment buttons
-- Wire to domain state (stub persistence for now)
+- Home screen with weekly progress, current interval display, suggested next session, manual
+  level adjustment, and Start Workout CTA
+- First-launch onboarding "How It Works" screen
+- Stub profile persistence/bootstrap for first-launch flow
+- Router/config updates for the onboarding page
+- Page tests for Home and onboarding interactions
+- Page folders renamed to match files: `home`, `onboarding`, and `workout`
+
+Completed:
+
+- `src/pages/home/Home.tsx` + `src/pages/home/Home.spec.tsx`
+- `src/pages/home/Home.css`
+- `src/pages/onboarding/Onboarding.tsx` + `src/pages/onboarding/Onboarding.spec.tsx`
+- `src/pages/onboarding/Onboarding.css`
+- `src/pages/workout/Workout.tsx`
+- `src/pages/workout/Workout.css`
+- `src/domain/profile.ts`
+- `app.config.ts`
+- `src/global.css`
 
 ### Phase 3 — Workout screen
 
-- Repurpose `second` page as `workout` (update `app.config.ts`)
+- Workout screen (already renamed to `workout`; `app.config.ts` points at the new folder)
 - Warmup + interval block + cooldown timer
 - Phase labels (WARMUP / RUN / WALK / COOLDOWN), countdown, next-up preview
 - Haptic pulses in last 5 seconds of each interval; single pulse on workout start
