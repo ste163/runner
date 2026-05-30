@@ -9,10 +9,21 @@ import { sharedProfileStore } from '../../domain/profile.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn(), close: vi.fn() }))
 
-const onboardingScheme =
-  'hybrid://lynxview_page?bundle=onboarding.lynx.bundle&title=How%20It%20Works&screen_orientation=portrait'
-const workoutScheme =
-  'hybrid://lynxview_page?bundle=second.lynx.bundle&title=Workout&screen_orientation=portrait'
+const buildPageScheme = (bundle: string, title: string): string => {
+  return (
+    `hybrid://lynxview_page?bundle=${bundle}` +
+    '&container_bg_color=%23000000' +
+    '&force_theme_style=dark' +
+    '&hide_nav_bar=1' +
+    '&nav_bar_color=%23000000' +
+    '&screen_orientation=portrait' +
+    `&title=${encodeURIComponent(title)}` +
+    '&trans_status_bar=0'
+  )
+}
+
+const onboardingScheme = buildPageScheme('onboarding.lynx.bundle', 'How It Works')
+const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
 
 describe('Home', () => {
   beforeEach(() => {

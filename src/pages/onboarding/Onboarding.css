@@ -1,6 +1,1 @@
-@import '../../global.css';
-
-.page-scroll {
-  height: 100vh;
-  width: 100%;
-}
+@import url('../../global.css');

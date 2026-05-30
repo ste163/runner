@@ -7,9 +7,9 @@ import type { AppConfig } from 'sparkling-app-cli'
 const lynxConfig = defineConfig({
   source: {
     entry: {
-      main: './src/pages/home/index.tsx',
+      home: './src/pages/home/index.tsx',
       onboarding: './src/pages/onboarding/index.tsx',
-      second: './src/pages/workout/index.tsx',
+      workout: './src/pages/workout/index.tsx',
     },
   },
   output: {
@@ -19,6 +19,7 @@ const lynxConfig = defineConfig({
     },
   },
   plugins: [
+    // TODO: what is this? I don't need QR codes in my app
     pluginQRCode({
       schema(url: string): string {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
@@ -34,7 +35,7 @@ const config: AppConfig = {
   appName: 'runner',
   platform: {
     android: {
-      packageName: 'com.example.sparkling.go',
+      packageName: 'com.example.sparkling.go', // TODO: i need a new name, probably reference github?
     },
   },
   dev: {
@@ -45,21 +46,21 @@ const config: AppConfig = {
   },
   appIcon: './resource/app_icon.png',
   router: {
-    main: {
-      path: './lynxPages/main',
+    home: {
+      path: './lynxPages/home',
     },
     onboarding: {
       path: './lynxPages/onboarding',
     },
-    second: {
-      path: './lynxPages/second',
+    workout: {
+      path: './lynxPages/workout',
     },
   },
   plugin: [
     [
       'splash-screen',
       {
-        backgroundColor: '#232323',
+        backgroundColor: '#000000',
         image: './resource/app_icon.png',
         dark: {
           image: './resource/app_icon.png',

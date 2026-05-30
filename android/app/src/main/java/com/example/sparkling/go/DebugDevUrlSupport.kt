@@ -5,6 +5,6 @@ package com.example.sparkling.go
 
 object DebugDevUrlSupport {
     fun buildMainPageScheme(): String {
-        return "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
+        return "hybrid://lynxview_page?bundle=home.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
     }
 }

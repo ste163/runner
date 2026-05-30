@@ -23,7 +23,7 @@ class SplashActivity : AppCompatActivity() {
         val launchScheme = if (isDebuggable) {
             DebugDevUrlSupport.buildMainPageScheme()
         } else {
-            "hybrid://lynxview_page?bundle=main.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
+            "hybrid://lynxview_page?bundle=home.lynx.bundle&hide_nav_bar=1&screen_orientation=portrait"
         }
 
         val context = SparklingContext()
