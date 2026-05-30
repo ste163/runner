@@ -50,6 +50,46 @@ describe('evaluateWindows', () => {
     expect(secondMiss.window.consecutiveMissed).toBe(3)
   })
 
+  it('keeps the profile unchanged before the window starts', () => {
+    const profile = createProfile()
+    const updated = evaluateWindows(profile, new Date('2023-12-31T23:59:59.000Z'))
+
+    expect(updated).toBe(profile)
+  })
+
+  it('keeps the profile unchanged while the window is still active', () => {
+    const profile = createProfile()
+    const updated = evaluateWindows(profile, new Date('2024-01-03T00:00:00.000Z'))
+
+    expect(updated).toBe(profile)
+  })
+
+  it('keeps the profile unchanged when the window is unset', () => {
+    const profile = createProfile({
+      window: {
+        windowStart: '',
+        consecutiveMissed: 1,
+      },
+    })
+
+    expect(evaluateWindows(profile, new Date('2024-01-08T00:00:00.000Z'))).toBe(profile)
+  })
+
+  it('counts sessions only inside each expired window', () => {
+    const updated = evaluateWindows(
+      createProfile({
+        sessions: [createSession('2024-01-10T00:00:00.000Z')],
+      }),
+      new Date('2024-01-15T00:00:00.000Z')
+    )
+
+    expect(updated.level).toEqual({ runSeconds: 27, walkSeconds: 132, intervalBlockSeconds: 1200 })
+    expect(updated.window).toEqual({
+      windowStart: '2024-01-15T00:00:00.000Z',
+      consecutiveMissed: 2,
+    })
+  })
+
   it('progresses after a successful 7-day window', () => {
     const updated = evaluateWindows(
       createProfile({

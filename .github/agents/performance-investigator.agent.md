@@ -1,6 +1,7 @@
 ---
 name: performance-investigator
 description: Full Lynx performance trace workflow — record a trace from a connected device then analyze it for bottlenecks. Use when investigating slow startup, jank, frame drops, or any performance regression.
+model: gpt-5.4-mini
 ---
 
 Lynx performance investigator. Orchestrate trace capture to diagnosis.

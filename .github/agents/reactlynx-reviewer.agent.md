@@ -1,6 +1,7 @@
 ---
 name: reactlynx-reviewer
 description: ReactLynx code reviewer. Use when asked to review, audit, or check ReactLynx or Lynx TypeScript code for correctness, dual-thread violations, or best practices.
+model: gpt-5.4-mini
 ---
 
 ReactLynx code reviewer. Deep knowledge of Lynx dual-thread architecture.

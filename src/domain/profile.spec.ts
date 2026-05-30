@@ -16,7 +16,25 @@ describe('createDefaultProfile', () => {
 describe('InMemoryProfileStorage', () => {
   it('returns null before save and deep clones profiles', () => {
     const storage = new InMemoryProfileStorage()
-    const profile = createDefaultProfile()
+    const profile = {
+      ...createDefaultProfile(),
+      sessions: [
+        {
+          id: 'session-1',
+          completedAt: '2024-01-01T00:00:00.000Z',
+          level: createDefaultProfile().level,
+          intervals: [
+            {
+              type: 'run' as const,
+              durationSeconds: 30,
+              distanceMiles: 0.25,
+              avgPaceMinPerMile: 8,
+            },
+          ],
+          totalDistanceMiles: 0.25,
+        },
+      ],
+    }
 
     expect(storage.load()).toBeNull()
     storage.save(profile)
@@ -26,7 +44,10 @@ describe('InMemoryProfileStorage', () => {
     expect(loaded).toEqual(profile)
     expect(loaded).not.toBe(profile)
     expect(loaded).not.toBeNull()
+    expect(loaded!.sessions[0]).not.toBe(profile.sessions[0])
+    expect(loaded!.sessions[0]?.intervals[0]).not.toBe(profile.sessions[0]?.intervals[0])
     loaded!.level.runSeconds = 999
+    loaded!.sessions[0]!.intervals[0]!.durationSeconds = 999
 
     expect(storage.load()).toEqual(profile)
   })

@@ -1,6 +1,7 @@
 ---
 name: test-generator
 description: ReactLynx test generator. Use when asked to write, add, or generate tests for components or pages in this repo.
+model: gpt-5.4-mini
 ---
 
 Test generator for this ReactLynx app. Writes Vitest unit tests using `@lynx-js/react/testing-library`.
