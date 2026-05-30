@@ -1,1 +1,1 @@
-PATH="$HOME/.bun/bin:$PATH" bun run typecheck && PATH="$HOME/.bun/bin:$PATH" bunx lint-staged
+PATH="$HOME/.bun/bin:$PATH" bun run typecheck && PATH="$HOME/.bun/bin:$PATH" bunx lint-staged && PATH="$HOME/.bun/bin:$PATH" bun run verify-docs

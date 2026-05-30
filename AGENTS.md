@@ -6,7 +6,7 @@ Use `lynx-docs` MCP if available — read `lynx-docs://llms.txt` first. Fallback
 
 ## What This Repo Is
 
-`runner` is an Android app built with ReactLynx and `sparkling-app-cli`. Two Lynx pages (`main`, `second`) run inside a native Android shell. Stack: bun, Lynx, ReactLynx, Rspeedy, Vitest, oxlint, oxfmt.
+`runner` is an Android app built with ReactLynx and `sparkling-app-cli`. Three Lynx pages (`home`, `workout`, `onboarding`) run inside a native Android shell. Stack: bun, Lynx, ReactLynx, Rspeedy, Vitest, oxlint, oxfmt.
 
 ## Skills
 
@@ -39,3 +39,4 @@ Custom agents live in `.github/agents/`. Use them for multi-step workflows:
 - Ask before deleting files, changing package versions, or modifying Android native code.
 - Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt without them.
 - Tests live next to source: `src/pages/<name>/App.spec.tsx`.
+- After substantial tasks, finish with `bun run verify-docs`.

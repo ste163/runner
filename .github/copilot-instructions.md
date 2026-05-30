@@ -11,3 +11,5 @@ bun · ReactLynx · Lynx · Rspeedy · Vitest · oxlint · oxfmt · sparkling-ap
 ```sh
 bun typecheck && bun test && bun lint
 ```
+
+After substantial tasks, run `bun run verify-docs` last.

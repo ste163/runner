@@ -20,7 +20,7 @@ This is slower than HMR, but it is stable and matches the actual working path.
 
 - `android-dev.sh` sets Android and Java env, starts emulator if needed, then launches the dev loop.
 - `android-dev.ts` watches source files, rebuilds, and reinstalls the app.
-- `verify-docs.ts` verifies that documented commands in AGENTS.md match `package.json` scripts.
+- `verify-docs.ts` verifies that documented commands in AGENTS.md match `package.json` scripts. Run it after lint-staged and after substantial agent work.
 
 ---
 

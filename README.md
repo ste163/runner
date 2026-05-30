@@ -11,7 +11,7 @@ This project is set up for agentic development with [GitHub Copilot CLI](https:/
 ```
 .github/
   agents/           # Custom agents (reactlynx-reviewer, test-generator)
-  hooks/            # Agent lifecycle hooks (verification on agentStop)
+  hooks/            # Hook scripts and helpers
   mcp.json          # Lynx Docs MCP — auto-loaded, provides Lynx API docs
   skills/           # Project-specific skills (see below)
   workflows/        # CI workflows (including doc-sync gate)
@@ -19,7 +19,7 @@ This project is set up for agentic development with [GitHub Copilot CLI](https:/
 
 ### Doc Sync
 
-`scripts/verify-docs.ts` checks that `repo-navigation/SKILL.md` stays in sync with the actual codebase (pages, commands). Runs on every PR as a hard gate and at the end of every agent session.
+`scripts/verify-docs.ts` checks that `repo-navigation/SKILL.md` stays in sync with the actual codebase (pages, commands). Run it after any substantial change.
 
 ```bash
 bun run verify-docs

@@ -16,8 +16,9 @@ description: Layout of the runner repo — where source, pages, tests, scripts, 
 ```
 src/
   pages/
-    main/         # index.tsx (entry), App.tsx (component), App.spec.tsx (tests), App.css
-    second/       # same structure
+    home/         # index.tsx (entry), Home.tsx (component), Home.spec.tsx (tests), Home.css
+    workout/      # same structure
+    onboarding/   # same structure
   assets/         # Static images (png)
   rspeedy-env.d.ts
   typing.d.ts
