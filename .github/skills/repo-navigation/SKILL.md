@@ -5,43 +5,30 @@ description: Layout of the runner repo — where source, pages, tests, scripts, 
 
 # repo-navigation
 
-## What This Repo Is
+`runner` — ReactLynx Android app, two Lynx pages (`main`, `second`) in a native Android shell.
 
-`runner` is a Lynx/ReactLynx Android app built with `sparkling-app-cli`. It has two Lynx pages (`main`, `second`) rendered inside a native Android shell.
-
-## Directory Layout
+## Layout
 
 ```
 src/
   pages/
-    main/         # Main Lynx page — index.tsx (entry), App.tsx (component), App.spec.tsx (tests), App.css
-    second/       # Second Lynx page — same structure
+    main/         # index.tsx (entry), App.tsx (component), App.spec.tsx (tests), App.css
+    second/       # same structure
   assets/         # Static images (png)
   rspeedy-env.d.ts
   typing.d.ts
-android/          # Native Android shell (Gradle project)
-  app/src/main/assets/  # Built Lynx bundles copied here by `bun run build`
+android/          # Native Android shell (Gradle) — do not modify without asking
+  app/src/main/assets/  # Built Lynx bundles (copied by `bun run build`)
 resource/         # App icon and splash screen images
 scripts/          # Shell scripts (android-dev.sh used by `bun dev`)
 dist/             # Build output (gitignored)
 ```
 
-## Entry Points
+## Config Files
 
-- `app.config.ts` — sparkling-app-cli config: pages, routes, Android package name, splash screen, icon
-- `lynx.config.ts` — Rspeedy/Rsbuild config: entries, output, plugins (used standalone without Android shell)
-- `vitest.config.ts` — Vitest config
-- `tsconfig.json` — TypeScript config
-- `oxlintrc.json` — oxlint config
-
-## Pages
-
-Each page under `src/pages/<name>/` follows this pattern:
-
-- `index.tsx` — Rspeedy bundle entry point
-- `App.tsx` — Root ReactLynx component
-- `App.css` — Page styles
-- `App.spec.tsx` — Vitest unit tests
+- `app.config.ts` — sparkling-app-cli: pages, routes, package name, splash, icon
+- `lynx.config.ts` — Rspeedy/Rsbuild: entries, output, plugins
+- `vitest.config.ts`, `tsconfig.json`, `oxlintrc.json`
 
 ## Commands
 
@@ -62,16 +49,4 @@ Each page under `src/pages/<name>/` follows this pattern:
 | `bun run log`        | Tail Android logcat                                    |
 | `bun run log:app`    | Tail only app process logs                             |
 
-## Verification Order
-
-Run in this order after changes:
-
-```sh
-bun typecheck && bun test && bun lint
-```
-
 `bun run build` and `bun dev` require macOS + Android SDK + emulator — not available in cloud agent.
-
-## Test Locations
-
-Tests live alongside source: `src/pages/<name>/App.spec.tsx`. No separate `__tests__` directory.

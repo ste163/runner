@@ -1,16 +1,8 @@
 # AGENTS.md
 
-You are an expert in ReactLynx, TypeScript, and Lynx application development.
+## Lynx Docs
 
-## Read in Advance
-
-For any Lynx-related task, use the `lynx-docs` MCP server if available:
-
-1. Use the "List Resources Tool" to list all resources in MCP `lynx-docs`.
-2. Read `lynx-docs://llms.txt` first — it is the entry point for all Lynx docs.
-3. Use "Read MCP Resources Tool" to fetch specific docs as needed.
-
-If the MCP server is unavailable, fall back to: [https://lynxjs.org/next/llms.txt](https://lynxjs.org/next/llms.txt)
+Use `lynx-docs` MCP if available — read `lynx-docs://llms.txt` first. Fallback: [https://lynxjs.org/next/llms.txt](https://lynxjs.org/next/llms.txt)
 
 ## What This Repo Is
 
@@ -38,14 +30,6 @@ Custom agents live in `.github/agents/`. Use them for multi-step workflows:
 - `reactlynx-reviewer` — review ReactLynx/Lynx TypeScript code for correctness and dual-thread violations
 - `test-generator` — generate Vitest tests for components or pages
 - `performance-investigator` — full trace workflow: record → analyze → report
-
-## Verification
-
-Always verify changes with:
-
-```sh
-bun typecheck && bun test && bun lint
-```
 
 ## Behavior Rules
 

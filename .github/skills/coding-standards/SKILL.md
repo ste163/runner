@@ -7,7 +7,7 @@ description: TypeScript coding standards for this repo — arrow functions, SRP,
 
 ## Arrow Functions
 
-Always use arrow functions. Never use `function` declarations or expressions.
+Always arrow functions. Never `function` declarations or expressions.
 
 ```ts
 // ✅
@@ -26,15 +26,15 @@ function add(a: number, b: number) {
 
 ## Single Responsibility Principle (SRP)
 
-Each function does one thing. If a function needs a comment to explain what a block inside it does, that block should be its own function.
+Each function does one thing. Split when a block needs a comment to explain itself.
 
 ```ts
-// ✅ Each function has one job
+// ✅
 const parseIds = (raw: string[]) => raw.map((s) => s.trim()).filter(Boolean)
 const fetchItems = async (ids: string[]) => Promise.all(ids.map(api.get))
 const processRaw = async (raw: string[]) => fetchItems(parseIds(raw))
 
-// ❌ One function doing multiple unrelated things
+// ❌
 const processRaw = async (raw: string[]) => {
   // parse
   const ids = raw.map((s) => s.trim()).filter(Boolean)
@@ -46,21 +46,16 @@ const processRaw = async (raw: string[]) => {
 
 ## Non-Mutability
 
-Prefer immutable data patterns. Use `const` everywhere. Use `.map`, `.filter`, `.reduce`, and spread instead of `let` + mutation.
+`const` everywhere. Use `.map`, `.filter`, `.reduce`, spread — no `let` + mutation.
 
 ```ts
 // ✅
 const doubled = numbers.map((n) => n * 2)
-
 const evens = numbers.filter((n) => n % 2 === 0)
-
 const sum = numbers.reduce((acc, n) => acc + n, 0)
 
 const totals = items.reduce<Record<string, number>>(
-  (acc, item) => ({
-    ...acc,
-    [item.id]: item.value,
-  }),
+  (acc, item) => ({ ...acc, [item.id]: item.value }),
   {}
 )
 
@@ -74,21 +69,12 @@ const updated = { ...user, name: 'new name' }
 
 // ❌
 let doubled = []
-for (const n of numbers) {
-  doubled.push(n * 2)
-}
-
-let sum = 0
-for (const n of numbers) {
-  sum += n
-}
+for (const n of numbers) doubled.push(n * 2)
 ```
 
-## General Rules
+## Rules
 
-- `const` by default. Only use `let` when reassignment is genuinely required (rare).
-- No `var`.
-- No `any` unless unavoidable — prefer `unknown` + type narrowing.
+- No `var`. No `any` — prefer `unknown` + type narrowing.
 - Explicit return types on exported functions.
-- Prefer `.reduce` over `Set` or mutable accumulation patterns.
-- **Never disable lint rules** (no `// eslint-disable`, `// oxlint-disable`, or similar suppression comments). If a rule is difficult to satisfy, surface the problem to the developer — do not silence it.
+- Prefer `.reduce` over `Set` or mutable accumulation.
+- **Never disable lint rules.** Surface the problem to the developer instead.
