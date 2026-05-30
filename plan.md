@@ -389,7 +389,7 @@ Calls `HybridActivityStackManager.getTopActivity().runOnUiThread { window.addFla
 
 ## Implementation Phases
 
-### Phase 1 — Core domain logic (no UI)
+### Phase 1 — Core domain logic (no UI) ✅ Complete
 
 - Interval calculation utilities (run/walk cycles for the interval block duration)
 - Progression rules (rolling 7-day window evaluation, +10%/−10% math, window cap at 3)
@@ -398,6 +398,14 @@ Calls `HybridActivityStackManager.getTopActivity().runOnUiThread { window.addFla
 - Session storage abstraction (interface + in-memory stub, swap in real persistence later)
 - Default `TrainingProfile` initialization (for first-time users)
 - Full unit test coverage for all domain logic
+
+Completed:
+
+- `src/domain/types.ts`
+- `src/domain/intervals.ts` + `src/domain/intervals.spec.ts`
+- `src/domain/progression.ts` + `src/domain/progression.spec.ts`
+- `src/domain/profile.ts` + `src/domain/profile.spec.ts`
+- Domain-only verification passes; repo-wide verification is still blocked by the existing Lynx page test runtime issue in `src/pages/main/App.spec.tsx`
 
 ### Phase 2 — Home screen + onboarding
 
