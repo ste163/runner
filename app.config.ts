@@ -7,9 +7,9 @@ import type { AppConfig } from 'sparkling-app-cli'
 const lynxConfig = defineConfig({
   source: {
     entry: {
-      main: './src/pages/main/index.tsx',
+      main: './src/pages/home/index.tsx',
       onboarding: './src/pages/onboarding/index.tsx',
-      second: './src/pages/second/index.tsx',
+      second: './src/pages/workout/index.tsx',
     },
   },
   output: {
