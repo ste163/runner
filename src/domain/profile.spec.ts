@@ -14,7 +14,7 @@ describe('createDefaultProfile', () => {
 })
 
 describe('InMemoryProfileStorage', () => {
-  it('stores and returns cloned profiles', () => {
+  it('returns null before save and deep clones profiles', () => {
     const storage = new InMemoryProfileStorage()
     const profile = createDefaultProfile()
 
@@ -25,8 +25,8 @@ describe('InMemoryProfileStorage', () => {
 
     expect(loaded).toEqual(profile)
     expect(loaded).not.toBe(profile)
-
-    if (loaded !== null) loaded.level.runSeconds = 999
+    expect(loaded).not.toBeNull()
+    loaded!.level.runSeconds = 999
 
     expect(storage.load()).toEqual(profile)
   })

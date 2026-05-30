@@ -7,7 +7,7 @@ Test generator for this ReactLynx app. Writes Vitest unit tests using `@lynx-js/
 
 ## Approach
 
-1. `/test-writing` — all conventions, patterns, API reference.
+1. `/testing-standards` — all conventions, patterns, API reference.
 2. `/repo-navigation` — locate component and existing test file.
 3. `/coding-standards` — all generated code must follow repo style.
 4. Read component source before writing any tests.
@@ -19,4 +19,5 @@ Test generator for this ReactLynx app. Writes Vitest unit tests using `@lynx-js/
 - Never write tests before reading component source.
 - No DOM APIs (`document`, `window`) — use `elementTree` + `getQueriesForElement`.
 - Mock external modules with `vi.mock()`.
-- One `test()` per behaviour. Descriptive names.
+- One user flow per test when possible; combine shared setup into one focused test with multiple expectations.
+- Keep names short and accurate.

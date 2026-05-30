@@ -32,6 +32,24 @@ const createSession = (completedAt: string): TrainingProfile['sessions'][number]
 })
 
 describe('evaluateWindows', () => {
+  it('regresses across missed windows', () => {
+    const firstMiss = evaluateWindows(createProfile(), new Date('2024-01-15T00:00:00.000Z'))
+    const secondMiss = evaluateWindows(createProfile(), new Date('2024-01-22T00:00:00.000Z'))
+
+    expect(firstMiss.level).toEqual({
+      runSeconds: 27,
+      walkSeconds: 132,
+      intervalBlockSeconds: 1200,
+    })
+    expect(firstMiss.window).toEqual({
+      windowStart: '2024-01-15T00:00:00.000Z',
+      consecutiveMissed: 2,
+    })
+    expect(secondMiss.level.runSeconds).toBeCloseTo(24.3)
+    expect(secondMiss.level.walkSeconds).toBeCloseTo(145.2)
+    expect(secondMiss.window.consecutiveMissed).toBe(3)
+  })
+
   it('progresses after a successful 7-day window', () => {
     const updated = evaluateWindows(
       createProfile({
@@ -50,24 +68,6 @@ describe('evaluateWindows', () => {
       consecutiveMissed: 0,
     })
   })
-
-  it('regresses on the second consecutive missed window', () => {
-    const updated = evaluateWindows(createProfile(), new Date('2024-01-15T00:00:00.000Z'))
-
-    expect(updated.level).toEqual({ runSeconds: 27, walkSeconds: 132, intervalBlockSeconds: 1200 })
-    expect(updated.window).toEqual({
-      windowStart: '2024-01-15T00:00:00.000Z',
-      consecutiveMissed: 2,
-    })
-  })
-
-  it('applies regression for every missed window after the first miss', () => {
-    const updated = evaluateWindows(createProfile(), new Date('2024-01-22T00:00:00.000Z'))
-
-    expect(updated.level.runSeconds).toBeCloseTo(24.3)
-    expect(updated.level.walkSeconds).toBeCloseTo(145.2)
-    expect(updated.window.consecutiveMissed).toBe(3)
-  })
 })
 
 describe('adjustLevelManually', () => {
@@ -82,6 +82,19 @@ describe('adjustLevelManually', () => {
         'up'
       )
     ).toEqual({ runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 })
+  })
+
+  it('decreases run and increases walk', () => {
+    expect(
+      adjustLevelManually(
+        {
+          runSeconds: 30,
+          walkSeconds: 120,
+          intervalBlockSeconds: 1200,
+        },
+        'down'
+      )
+    ).toEqual({ runSeconds: 27, walkSeconds: 132, intervalBlockSeconds: 1200 })
   })
 
   it('clamps levels to bounds when decreasing', () => {

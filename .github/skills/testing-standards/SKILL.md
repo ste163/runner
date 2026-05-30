@@ -1,9 +1,9 @@
 ---
-name: test-writing
-description: Conventions for writing Vitest unit tests in this ReactLynx repo. Use when writing, reviewing, or generating tests for components or pages.
+name: testing-standards
+description: Testing standards for Vitest unit tests in this ReactLynx repo. Use when writing, reviewing, or generating tests for components or pages.
 ---
 
-# test-writing
+# testing-standards
 
 ## Stack
 
@@ -12,7 +12,7 @@ description: Conventions for writing Vitest unit tests in this ReactLynx repo. U
 
 ## File Conventions
 
-- Test files alongside component: `src/pages/<name>/App.spec.tsx`
+- Page/component tests live alongside the source file and use the component name: `src/pages/<name>/<Name>.spec.tsx`
 - Pure domain/unit tests for non-React code use `*.spec.ts`
 - Import with `.js` extension: `import { App } from './App.js'`
 
@@ -20,7 +20,7 @@ description: Conventions for writing Vitest unit tests in this ReactLynx repo. U
 
 ```tsx
 import '@testing-library/jest-dom'
-import { expect, test, vi } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { render, getQueriesForElement } from '@lynx-js/react/testing-library'
 
 render(<App />)
@@ -49,11 +49,14 @@ render(<App onMounted={onMounted} />)
 expect(onMounted).toBeCalledTimes(1)
 ```
 
-## Test Structure
+## Test Design
 
+- Test user flows first. Prefer what the user sees and does over implementation details.
+- Treat components as black boxes. Assert rendered output and callbacks, not internal state.
+- Order coverage with failure/error flows first, then success scenarios.
+- If several checks share the same setup, keep them in one focused test with multiple expectations.
+- Keep test names short, plain, and accurate.
 - Use `it()` instead of `test()`.
 - One `describe()` for each component/page spec.
 - For domain/function specs, wrap each function under test in its own `describe()`.
-- Names: plain English, expected outcome. Example: `'App renders hero content'`
-- Test what the user sees or what callbacks fire — not implementation details.
-- Run: `bun test` / `bun run test:watch`
+- Run: `bun run test` / `bun run test:watch`

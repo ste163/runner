@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { calculateIntervals, isGraduated } from './intervals.js'
 
+describe('isGraduated', () => {
+  it('returns true when walkSeconds is 10 or less', () => {
+    expect(isGraduated({ runSeconds: 45, walkSeconds: 10, intervalBlockSeconds: 1200 })).toBe(true)
+  })
+})
+
 describe('calculateIntervals', () => {
   it('builds warmup, alternating intervals, and cooldown', () => {
     expect(
@@ -23,7 +29,6 @@ describe('calculateIntervals', () => {
   })
 
   it('switches to continuous running when graduated', () => {
-    expect(isGraduated({ runSeconds: 45, walkSeconds: 10, intervalBlockSeconds: 1200 })).toBe(true)
     expect(
       calculateIntervals({
         runSeconds: 45,

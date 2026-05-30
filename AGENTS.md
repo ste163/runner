@@ -19,7 +19,7 @@ Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
 - `lynx-trace-record` — record Lynx performance traces
 - `debug-info-remapping` — remap `function_id:pc_index` errors to source positions
 - `repo-navigation` — repo layout, commands, test locations
-- `test-writing` — Vitest + `@lynx-js/react/testing-library` conventions
+- `testing-standards` — Vitest + `@lynx-js/react/testing-library` conventions
 - `coding-standards` — TypeScript style: arrow functions, SRP, non-mutability, no lint suppression
 - `app-domain` — Runner app business rules: session mechanics, progression algorithm, data model
 - `caveman` — compressed writing mode for token-efficient `.github/` file edits

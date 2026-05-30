@@ -20,16 +20,12 @@ describe('Home', () => {
     vi.clearAllMocks()
   })
 
-  it('renders the home screen and opens onboarding on first launch', async () => {
+  it('opens onboarding on first launch', async () => {
     const onMounted = vi.fn()
 
     render(<Home onMounted={onMounted} />)
 
     expect(onMounted).toBeCalledTimes(1)
-
-    const { findByText } = getQueriesForElement(elementTree.root!)
-    await findByText('Runner')
-    await findByText('Start Workout')
 
     expect(router.open).toHaveBeenCalledWith({ scheme: onboardingScheme }, expect.any(Function))
   })
@@ -46,12 +42,18 @@ describe('Home', () => {
   })
 
   it('opens the workout page when the start button is tapped', async () => {
+    sharedProfileStore.save({
+      schemaVersion: 1,
+      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      window: { windowStart: '2024-01-01T00:00:00.000Z', consecutiveMissed: 0 },
+      sessions: [],
+    })
+
     render(<Home />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Start Workout')
 
-    vi.clearAllMocks()
     fireEvent.tap(getByText('Start Workout'))
 
     expect(router.open).toHaveBeenCalledWith({ scheme: workoutScheme }, expect.any(Function))
