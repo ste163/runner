@@ -448,9 +448,7 @@ Completed:
 ### Phase 4 — Native bridge (start with haptics)
 
 - **JS wrapper namespace**: use a dedicated `src/native/` area for JS-facing NativeModules wrappers.
-- **Haptics first**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission.
-  Keep the JS adapter tiny, wire workout start + last 5 seconds only, and test this piece in isolation
-  before touching storage/GPS/timer work.
+- COMPLETED: **Haptics**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission.
 - **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
   atomic write pattern; SAF export/import; replace in-memory stub
 - **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
