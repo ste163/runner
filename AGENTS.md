@@ -31,6 +31,14 @@ Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
 - `coding-standards` — TypeScript style: arrow functions, SRP, non-mutability, no lint suppression
 - `app-domain` — Runner app business rules: session mechanics, progression algorithm, data model
 
+## Agents
+
+Custom agents live in `.github/agents/`. Use them for multi-step workflows:
+
+- `reactlynx-reviewer` — review ReactLynx/Lynx TypeScript code for correctness and dual-thread violations
+- `test-generator` — generate Vitest tests for components or pages
+- `performance-investigator` — full trace workflow: record → analyze → report
+
 ## Verification
 
 Always verify changes with:

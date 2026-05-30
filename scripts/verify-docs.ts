@@ -5,16 +5,22 @@
  *   1. Every directory under src/pages/ is mentioned in repo-navigation/SKILL.md
  *   2. Every command in the SKILL.md Commands table exists as a package.json script
  *   3. Every .ts/.tsx file directly in src/ (non-spec) is mentioned in repo-navigation/SKILL.md
+ *   4. Every skill directory under .github/skills/ is mentioned in AGENTS.md
+ *   5. Every agent file under .github/agents/ is mentioned in AGENTS.md
  */
 
 import { readdirSync, readFileSync } from 'fs'
 
 const SKILL_PATH = '.github/skills/repo-navigation/SKILL.md'
+const AGENTS_PATH = 'AGENTS.md'
 const PAGES_DIR = 'src/pages'
 const SRC_DIR = 'src'
+const SKILLS_DIR = '.github/skills'
+const AGENTS_DIR = '.github/agents'
 const PKG_PATH = 'package.json'
 
 const readSkill = () => readFileSync(SKILL_PATH, 'utf-8')
+const readAgentsMd = () => readFileSync(AGENTS_PATH, 'utf-8')
 
 const readPages = () =>
   readdirSync(PAGES_DIR, { withFileTypes: true })
@@ -25,6 +31,16 @@ const readRootSrcFiles = () =>
   readdirSync(SRC_DIR, { withFileTypes: true })
     .filter((f) => f.isFile() && /\.(ts|tsx)$/.test(f.name) && !f.name.includes('.spec.'))
     .map((f) => f.name)
+
+const readSkillNames = () =>
+  readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+
+const readAgentNames = () =>
+  readdirSync(AGENTS_DIR, { withFileTypes: true })
+    .filter((f) => f.isFile() && f.name.endsWith('.agent.md'))
+    .map((f) => f.name.replace(/\.agent\.md$/, ''))
 
 const readScripts = () =>
   (JSON.parse(readFileSync(PKG_PATH, 'utf-8')) as { scripts: Record<string, string> }).scripts
@@ -58,6 +74,26 @@ const checkRootSrcFiles = (skill: string, files: readonly string[]) =>
         }
   )
 
+const checkSkills = (agentsMd: string, skills: readonly string[]) =>
+  skills.map((skill) =>
+    agentsMd.includes(skill)
+      ? { ok: true, msg: `Skill '${skill}' found in ${AGENTS_PATH}` }
+      : {
+          ok: false,
+          msg: `Skill '${skill}' exists in ${SKILLS_DIR}/ but is missing from ${AGENTS_PATH}`,
+        }
+  )
+
+const checkAgents = (agentsMd: string, agents: readonly string[]) =>
+  agents.map((agent) =>
+    agentsMd.includes(agent)
+      ? { ok: true, msg: `Agent '${agent}' found in ${AGENTS_PATH}` }
+      : {
+          ok: false,
+          msg: `Agent '${agent}' exists in ${AGENTS_DIR}/ but is missing from ${AGENTS_PATH}`,
+        }
+  )
+
 const checkCommands = (commands: readonly string[], scripts: Readonly<Record<string, string>>) =>
   commands.map((cmd) =>
     scripts[cmd]
@@ -70,9 +106,12 @@ const checkCommands = (commands: readonly string[], scripts: Readonly<Record<str
 
 const run = () => {
   const skill = readSkill()
+  const agentsMd = readAgentsMd()
   const results = [
     ...checkPages(skill, readPages()),
     ...checkRootSrcFiles(skill, readRootSrcFiles()),
+    ...checkSkills(agentsMd, readSkillNames()),
+    ...checkAgents(agentsMd, readAgentNames()),
     ...checkCommands(parseDocumentedCommands(skill), readScripts()),
   ]
 
