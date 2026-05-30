@@ -34,6 +34,7 @@ Custom agents live in `.github/agents/`. Use them for multi-step workflows:
 
 ## Behavior Rules
 
+- Use `/plan` before multi-file or multi-step tasks.
 - Make minimal, targeted changes. Do not refactor unrelated code.
 - Ask before deleting files, changing package versions, or modifying Android native code.
 - Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt without them.
