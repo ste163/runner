@@ -2,9 +2,9 @@ import { useCallback, useEffect } from '@lynx-js/react'
 
 import { close } from 'sparkling-navigation'
 
-import './App.css'
+import './Workout.css'
 
-export function App(props: { onMounted?: () => void }) {
+export function Workout(props: { onMounted?: () => void }) {
   useEffect(() => {
     console.info('Hello, Sparkling second page')
     console.info('lynx.__globalProps', lynx.__globalProps)

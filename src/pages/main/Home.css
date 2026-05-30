@@ -1,4 +1,4 @@
-@import '../../App.css';
+@import url('../../global.css');
 
 .page-scroll {
   height: 100vh;

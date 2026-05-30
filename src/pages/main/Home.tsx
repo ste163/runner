@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
-import './App.css'
+import './Home.css'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
@@ -67,7 +67,7 @@ const buildSuggestedSessionLabel = (profile: TrainingProfile, referenceDate: Dat
   return `Next suggested session: ${weekdayNames[suggestedDate.getDay()]}`
 }
 
-export function App(props: { onMounted?: () => void }): JSX.Element {
+export function Home(props: { onMounted?: () => void }): JSX.Element {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
   const hasOpenedOnboardingRef = useRef(false)
 

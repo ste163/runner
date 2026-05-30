@@ -40,3 +40,4 @@ android/app/src/main/assets/
 
 # Sparkling/lynx recreates this on build
 ios/
+.xcode-version

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as router from 'sparkling-navigation'
 
-import { App } from './App.js'
+import { Home } from './Home.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn(), close: vi.fn() }))
@@ -14,7 +14,7 @@ const onboardingScheme =
 const workoutScheme =
   'hybrid://lynxview_page?bundle=second.lynx.bundle&title=Workout&screen_orientation=portrait'
 
-describe('App', () => {
+describe('Home', () => {
   beforeEach(() => {
     sharedProfileStore.reset()
     vi.clearAllMocks()
@@ -23,7 +23,7 @@ describe('App', () => {
   it('renders the home screen and opens onboarding on first launch', async () => {
     const onMounted = vi.fn()
 
-    render(<App onMounted={onMounted} />)
+    render(<Home onMounted={onMounted} />)
 
     expect(onMounted).toBeCalledTimes(1)
 
@@ -35,7 +35,7 @@ describe('App', () => {
   })
 
   it('updates the current interval when the user taps increase', async () => {
-    render(<App />)
+    render(<Home />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Run 30s · Walk 2m 0s')
@@ -46,7 +46,7 @@ describe('App', () => {
   })
 
   it('opens the workout page when the start button is tapped', async () => {
-    render(<App />)
+    render(<Home />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Start Workout')

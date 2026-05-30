@@ -4,15 +4,15 @@ import { describe, expect, it, vi } from 'vitest'
 
 import * as router from 'sparkling-navigation'
 
-import { App } from './App.js'
+import { Onboarding } from './Onboarding.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn(), close: vi.fn() }))
 
-describe('App', () => {
+describe('Onboarding', () => {
   it('renders onboarding guidance', async () => {
     const onMounted = vi.fn()
 
-    render(<App onMounted={onMounted} />)
+    render(<Onboarding onMounted={onMounted} />)
 
     expect(onMounted).toBeCalledTimes(1)
 
@@ -22,7 +22,7 @@ describe('App', () => {
   })
 
   it('closes when the user taps Got it', async () => {
-    render(<App />)
+    render(<Onboarding />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Got it')

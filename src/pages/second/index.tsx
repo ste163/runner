@@ -1,8 +1,8 @@
 import { root } from '@lynx-js/react'
 
-import { App } from './App.js'
+import { Workout } from './Workout.js'
 
-root.render(<App />)
+root.render(<Workout />)
 
 if (import.meta.webpackHot) {
   import.meta.webpackHot.accept()
