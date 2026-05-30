@@ -1,19 +1,21 @@
 import '@testing-library/jest-dom'
-import { expect, test, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, getQueriesForElement } from '@lynx-js/react/testing-library'
 
 import { App } from './App.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn() }))
 
-test('App renders hero content', async () => {
-  const onMounted = vi.fn()
+describe('App', () => {
+  it('renders hero content', async () => {
+    const onMounted = vi.fn()
 
-  render(<App onMounted={onMounted} />)
+    render(<App onMounted={onMounted} />)
 
-  expect(onMounted).toBeCalledTimes(1)
+    expect(onMounted).toBeCalledTimes(1)
 
-  const { findByText } = getQueriesForElement(elementTree.root!)
-  const title = await findByText('Sparkling Starter')
-  expect(title).toBeInTheDocument()
+    const { findByText } = getQueriesForElement(elementTree.root!)
+    const title = await findByText('Sparkling Starter')
+    expect(title).toBeInTheDocument()
+  })
 })

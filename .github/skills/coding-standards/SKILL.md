@@ -78,3 +78,5 @@ for (const n of numbers) doubled.push(n * 2)
 - Explicit return types on exported functions.
 - Prefer `.reduce` over `Set` or mutable accumulation.
 - **Never disable lint rules.** Surface the problem to the developer instead.
+- Prefer one-line expressions when they stay readable.
+- Avoid `I`-prefixed interface names; use the domain noun directly.

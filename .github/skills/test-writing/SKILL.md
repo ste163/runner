@@ -13,6 +13,7 @@ description: Conventions for writing Vitest unit tests in this ReactLynx repo. U
 ## File Conventions
 
 - Test files alongside component: `src/pages/<name>/App.spec.tsx`
+- Pure domain/unit tests for non-React code use `*.spec.ts`
 - Import with `.js` extension: `import { App } from './App.js'`
 
 ## Rendering
@@ -50,7 +51,9 @@ expect(onMounted).toBeCalledTimes(1)
 
 ## Test Structure
 
-- One `test()` per behaviour. `describe()` only when grouping related behaviours.
+- Use `it()` instead of `test()`.
+- One `describe()` for each component/page spec.
+- For domain/function specs, wrap each function under test in its own `describe()`.
 - Names: plain English, expected outcome. Example: `'App renders hero content'`
 - Test what the user sees or what callbacks fire — not implementation details.
 - Run: `bun test` / `bun run test:watch`
