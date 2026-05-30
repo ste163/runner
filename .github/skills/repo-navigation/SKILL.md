@@ -5,11 +5,11 @@ description: Layout of the runner repo — where source, pages, tests, scripts, 
 
 ## Session Start
 
-Fired automatically via `sessionStart` hook. No task implied — orient silently, no output.
+`sessionStart` hook. No task — orient silently, no output.
 
 # repo-navigation
 
-`runner` — ReactLynx Android app, two Lynx pages (`main`, `second`) in a native Android shell.
+`runner` — ReactLynx Android app, two Lynx pages (`main`, `second`) in native Android shell.
 
 ## Layout
 
@@ -24,7 +24,7 @@ src/
 android/          # Native Android shell (Gradle) — do not modify without asking
   app/src/main/assets/  # Built Lynx bundles (copied by `bun run build`)
 resource/         # App icon and splash screen images
-scripts/          # Shell scripts (android-dev.sh used by `bun dev`)
+scripts/          # android-dev.sh, real device setup docs in README.md
 dist/             # Build output (gitignored)
 ```
 
@@ -36,21 +36,23 @@ dist/             # Build output (gitignored)
 
 ## Commands
 
-| Command              | What it does                                           |
-| -------------------- | ------------------------------------------------------ |
-| `bun install`        | Install dependencies                                   |
-| `bun dev`            | Start Android emulator + rebuild/reinstall watch loop  |
-| `bun run build`      | Build bundles → copy to `android/app/src/main/assets/` |
-| `bun run smoke`      | One-shot build + install + launch on Android           |
-| `bun typecheck`      | TypeScript typecheck only (no emit)                    |
-| `bun test`           | Run Vitest unit tests once                             |
-| `bun run test:watch` | Run Vitest in watch mode                               |
-| `bun lint`           | Run oxlint                                             |
-| `bun lint:fix`       | Auto-fix lint issues                                   |
-| `bun fmt`            | Format with oxfmt                                      |
-| `bun fmt:check`      | Check formatting                                       |
-| `bun run clean`      | Remove `dist/`, Android build caches                   |
-| `bun run log`        | Tail Android logcat                                    |
-| `bun run log:app`    | Tail only app process logs                             |
+| Command                | What it does                                                    |
+| ---------------------- | --------------------------------------------------------------- |
+| `bun install`          | Install dependencies                                            |
+| `bun dev`              | Rebuild/reinstall watch loop — uses emulator or real ADB device |
+| `bun run build`        | Build bundles → copy to `android/app/src/main/assets/`          |
+| `bun run smoke`        | One-shot build + install + launch on Android                    |
+| `bun typecheck`        | TypeScript typecheck only (no emit)                             |
+| `bun test`             | Run Vitest unit tests once                                      |
+| `bun run test:watch`   | Run Vitest in watch mode                                        |
+| `bun lint`             | Run oxlint                                                      |
+| `bun lint:fix`         | Auto-fix lint issues                                            |
+| `bun fmt`              | Format with oxfmt                                               |
+| `bun fmt:check`        | Check formatting                                                |
+| `bun run clean`        | Remove `dist/`, Android build caches                            |
+| `bun run log`          | Tail Android logcat                                             |
+| `bun run log:app`      | Tail only app process logs                                      |
+| `bun run device:check` | Show connected ADB devices                                      |
 
-`bun run build` and `bun dev` require macOS + Android SDK + emulator — not available in cloud agent.
+`bun run build` and `bun dev` require macOS + Android SDK — not available in cloud agent.
+Real device setup: `scripts/README.md`.
