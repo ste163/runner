@@ -1,7 +1,7 @@
 // Copyright (c) 2025 TikTok Pte. Ltd.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-package com.example.sparkling.go
+package com.ste163.runner
 
 import android.app.Application
 
@@ -21,8 +21,8 @@ import com.tiktok.sparkling.method.registry.core.SparklingBridgeManager
 import com.tiktok.sparkling.method.router.close.RouterCloseMethod
 import com.tiktok.sparkling.method.router.open.RouterOpenMethod
 import com.tiktok.sparkling.method.router.utils.RouterProvider
-import com.example.sparkling.go.LynxInputComponent
-import com.example.sparkling.go.BuiltinTemplateProvider
+import com.ste163.runner.LynxInputComponent
+import com.ste163.runner.BuiltinTemplateProvider
 
 
 class SparklingApplication : Application() {

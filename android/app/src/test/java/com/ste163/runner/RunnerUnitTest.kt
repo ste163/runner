@@ -1,7 +1,7 @@
 // Copyright (c) 2025 TikTok Pte. Ltd.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-package com.example.sparkling.go
+package com.ste163.runner
 
 import org.junit.Test
 
@@ -12,7 +12,7 @@ import org.junit.Assert.*
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
-class SparklingGoUnitTest {
+class RunnerUnitTest {
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)

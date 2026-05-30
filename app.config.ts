@@ -35,7 +35,7 @@ const config: AppConfig = {
   appName: 'runner',
   platform: {
     android: {
-      packageName: 'com.example.sparkling.go', // TODO: i need a new name, probably reference github?
+      packageName: 'com.ste163.runner',
     },
   },
   dev: {

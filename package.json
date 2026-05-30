@@ -13,7 +13,7 @@
     "dev": "sh ./scripts/android-dev.sh",
     "clean": "rm -rf dist android/app/build android/.gradle android/app/src/main/assets",
     "log": "adb logcat",
-    "log:app": "sh -c 'adb logcat --pid=$(adb shell pidof -s com.example.sparkling.go)'",
+    "log:app": "sh -c 'adb logcat --pid=$(adb shell pidof -s com.ste163.runner)'",
     "device:check": "adb devices",
     "smoke": "bun run build && sparkling-app-cli run:android",
     "typecheck": "tsc --noEmit",

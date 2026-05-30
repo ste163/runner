@@ -1,4 +1,4 @@
-package com.example.sparkling.go
+package com.ste163.runner
 
 data class SparklingAutolinkModule(val name: String, val androidPackage: String?, val className: String?)
 

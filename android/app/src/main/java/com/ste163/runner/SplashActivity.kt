@@ -1,15 +1,15 @@
 // Copyright (c) 2025 TikTok Pte. Ltd.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-package com.example.sparkling.go
+package com.ste163.runner
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tiktok.sparkling.Sparkling
 import com.tiktok.sparkling.SparklingContext
 import com.tiktok.sparkling.method.registry.core.utils.JsonUtils
-import com.example.sparkling.go.DebugDevUrlSupport
-import com.example.sparkling.go.DebugSparklingUiProvider
+import com.ste163.runner.DebugDevUrlSupport
+import com.ste163.runner.DebugSparklingUiProvider
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

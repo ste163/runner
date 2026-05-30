@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.sparkling.go"
+    namespace = "com.ste163.runner"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.sparkling.go"
+        applicationId = "com.ste163.runner"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
