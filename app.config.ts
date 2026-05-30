@@ -19,7 +19,6 @@ const lynxConfig = defineConfig({
     },
   },
   plugins: [
-    // TODO: what is this? I don't need QR codes in my app
     pluginQRCode({
       schema(url: string): string {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode

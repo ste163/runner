@@ -14,8 +14,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
         }
@@ -56,9 +54,6 @@ android {
     dependencies {
         implementation(libs.androidx.core.ktx)
         implementation(libs.androidx.appcompat)
-        testImplementation(libs.junit)
-        androidTestImplementation(libs.androidx.junit)
-        androidTestImplementation(libs.androidx.espresso.core)
 
         implementation("com.tiktok.sparkling:sparkling:2.0.1")
         implementation("com.tiktok.sparkling:sparkling-method:2.0.1")
