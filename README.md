@@ -17,20 +17,6 @@ This project is set up for agentic development with [GitHub Copilot CLI](https:/
   workflows/        # CI workflows (including doc-sync gate)
 ```
 
-### Skills
-
-| Skill                      | Purpose                                                |
-| -------------------------- | ------------------------------------------------------ |
-| `repo-navigation`          | Repo layout, commands, test locations                  |
-| `test-writing`             | Vitest + `@lynx-js/react/testing-library` conventions  |
-| `coding-standards`         | TypeScript style: arrow functions, SRP, non-mutability |
-| `reactlynx-best-practices` | Dual-thread patterns, static analysis                  |
-| `lynx-typescript`          | TypeScript issues in Lynx development                  |
-| `lynx-devtool`             | Inspect and debug running Lynx apps                    |
-| `lynx-trace-analysis`      | Analyze `.ptrace` performance traces                   |
-| `lynx-trace-record`        | Record Lynx performance traces                         |
-| `debug-info-remapping`     | Remap `function_id:pc_index` errors to source          |
-
 ### Doc Sync
 
 `scripts/verify-docs.ts` checks that `repo-navigation/SKILL.md` stays in sync with the actual codebase (pages, commands). Runs on every PR as a hard gate and at the end of every agent session.
