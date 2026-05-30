@@ -526,6 +526,14 @@ Completed:
    We are staying on the working AGP 8.9.2 / Gradle 8.11.1 line until that dependency is patched
    or forked.
 
+3. **Android system bars**: The following attempts did not change the visible overlap or the white
+   navigation bar, so do not retry them without a new hypothesis:
+   - shared CSS safe-area padding in `src/global.css`
+   - theme/manifest updates for black system bars and edge-to-edge opt-out
+   - `SplashActivity` window tweaks with `WindowCompat` / `WindowInsetsControllerCompat`
+   - `activity_main.xml` background and `fitsSystemWindows`
+   - dark launch-scheme params in `DebugDevUrlSupport.kt`
+
 ---
 
 ## Verification
