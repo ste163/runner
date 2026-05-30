@@ -5,7 +5,7 @@
     "": {
       "name": "runner",
       "dependencies": {
-        "@lynx-js/lynx-ui": "^3.133.1",
+        "@lynx-js/lynx-ui": "3.133.1",
         "@lynx-js/react": "0.121.0",
         "sparkling-navigation": "2.0.1",
       },
@@ -17,7 +17,7 @@
         "@testing-library/jest-dom": "6.9.1",
         "@types/node": "22.15.29",
         "@types/react": "18.3.29",
-        "@vitest/coverage-v8": "4.1.7",
+        "@vitest/coverage-v8": "^4.1.7",
         "husky": "9.1.7",
         "jsdom": "28.1.0",
         "lint-staged": "16.4.0",

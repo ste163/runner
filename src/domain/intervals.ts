@@ -26,12 +26,10 @@ const buildWorkoutIntervals = (
       : (() => {
           const durationSeconds = Math.min(level.walkSeconds, remainingSeconds)
 
-          return durationSeconds <= 0
-            ? []
-            : [
-                { type: 'walk', durationSeconds },
-                ...buildWorkoutIntervals(level, remainingSeconds - durationSeconds, 'run'),
-              ]
+          return [
+            { type: 'walk', durationSeconds },
+            ...buildWorkoutIntervals(level, remainingSeconds - durationSeconds, 'run'),
+          ]
         })()
 
 export const calculateIntervals = (

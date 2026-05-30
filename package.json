@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "oxlint src app.config.ts vitest.config.ts",
     "lint:fix": "oxlint --fix src app.config.ts vitest.config.ts",
     "fmt": "oxfmt",

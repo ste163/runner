@@ -55,6 +55,7 @@ expect(onMounted).toBeCalledTimes(1)
 - Treat components as black boxes. Assert rendered output and callbacks, not internal state.
 - Order coverage with failure/error flows first, then success scenarios.
 - If several checks share the same setup, keep them in one focused test with multiple expectations.
+- Check for dead code and dead branches while reviewing test targets; if found, tell the dev to decide whether to keep or remove them.
 - Keep test names short, plain, and accurate.
 - Use `it()` instead of `test()`.
 - One `describe()` for each component/page spec.

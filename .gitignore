@@ -6,6 +6,7 @@ dist/
 
 # Test coverage
 coverage/
+.nyc_output/
 *__tests__/
 
 # TypeScript
