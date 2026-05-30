@@ -1,6 +1,12 @@
 {
   "version": 1,
   "hooks": {
+    "sessionStart": [
+      {
+        "type": "prompt",
+        "prompt": "/repo-navigation"
+      }
+    ],
     "preToolUse": [
       {
         "type": "command",

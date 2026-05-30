@@ -28,6 +28,7 @@ bun run verify-docs
 ## MacOS Install
 
 - `bun`
+- `npm install -g typescript typescript-language-server` — required for LSP code intelligence in Copilot CLI (see `.github/lsp.json`)
 - Android Studio, with Android SDK, platform-tools, and emulator
 - `brew install --cask android-studio`
 - `brew install openjdk@17`

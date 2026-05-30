@@ -4,12 +4,14 @@
  * Checks:
  *   1. Every directory under src/pages/ is mentioned in repo-navigation/SKILL.md
  *   2. Every command in the SKILL.md Commands table exists as a package.json script
+ *   3. Every .ts/.tsx file directly in src/ (non-spec) is mentioned in repo-navigation/SKILL.md
  */
 
 import { readdirSync, readFileSync } from 'fs'
 
 const SKILL_PATH = '.github/skills/repo-navigation/SKILL.md'
 const PAGES_DIR = 'src/pages'
+const SRC_DIR = 'src'
 const PKG_PATH = 'package.json'
 
 const readSkill = () => readFileSync(SKILL_PATH, 'utf-8')
@@ -18,6 +20,11 @@ const readPages = () =>
   readdirSync(PAGES_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
+
+const readRootSrcFiles = () =>
+  readdirSync(SRC_DIR, { withFileTypes: true })
+    .filter((f) => f.isFile() && /\.(ts|tsx)$/.test(f.name) && !f.name.includes('.spec.'))
+    .map((f) => f.name)
 
 const readScripts = () =>
   (JSON.parse(readFileSync(PKG_PATH, 'utf-8')) as { scripts: Record<string, string> }).scripts
@@ -41,6 +48,16 @@ const checkPages = (skill: string, pages: readonly string[]) =>
         }
   )
 
+const checkRootSrcFiles = (skill: string, files: readonly string[]) =>
+  files.map((file) =>
+    skill.includes(file)
+      ? { ok: true, msg: `Source file '${file}' found in ${SKILL_PATH}` }
+      : {
+          ok: false,
+          msg: `Source file '${file}' exists in ${SRC_DIR}/ but is missing from ${SKILL_PATH}`,
+        }
+  )
+
 const checkCommands = (commands: readonly string[], scripts: Readonly<Record<string, string>>) =>
   commands.map((cmd) =>
     scripts[cmd]
@@ -55,6 +72,7 @@ const run = () => {
   const skill = readSkill()
   const results = [
     ...checkPages(skill, readPages()),
+    ...checkRootSrcFiles(skill, readRootSrcFiles()),
     ...checkCommands(parseDocumentedCommands(skill), readScripts()),
   ]
 
