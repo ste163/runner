@@ -9,9 +9,16 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
+      skipFull: true,
       reporter: ['text'],
       include: ['src/**/*.ts', 'src/**/*.tsx'],
-      exclude: ['src/**/*.spec.ts', 'src/**/*.spec.tsx', 'src/**/*.d.ts'],
+      exclude: [
+        'src/**/*.spec.ts',
+        'src/**/*.spec.tsx',
+        'src/**/*.d.ts',
+        'src/**/index.tsx',
+        'src/**/types.ts',
+      ],
     },
   },
 })
