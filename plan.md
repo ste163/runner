@@ -445,8 +445,12 @@ Completed:
 - `src/pages/workout/Workout.spec.tsx`
 - Workout flow now stays idle until the user taps `Start Workout`
 
-### Phase 4 — Native bridge (storage + GPS + timer + feedback)
+### Phase 4 — Native bridge (start with haptics)
 
+- **JS wrapper namespace**: use a dedicated `src/native/` area for JS-facing NativeModules wrappers.
+- **Haptics first**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission.
+  Keep the JS adapter tiny, wire workout start + last 5 seconds only, and test this piece in isolation
+  before touching storage/GPS/timer work.
 - **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
   atomic write pattern; SAF export/import; replace in-memory stub
 - **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
@@ -455,8 +459,6 @@ Completed:
   `android:foregroundServiceType="health"` in manifest (Android 14 / API 34 required)
 - **Native → JS events**: Investigate `GlobalEventEmitter` or callback pattern for foreground service
   to push timer ticks to Lynx page
-- **Haptic**: Haptics only — `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE`
-  normal permission. Triggers: workout start + last 5 sec of each interval.
 - **Screen wake lock**: `RunnerScreenModule` (`keepScreenOn(bool)`), called on workout start/end.
   No permission needed.
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`

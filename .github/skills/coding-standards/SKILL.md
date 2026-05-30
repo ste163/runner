@@ -77,6 +77,8 @@ for (const n of numbers) doubled.push(n * 2)
 - No `var`. No `any` — prefer `unknown` + type narrowing.
 - Explicit return types on exported functions.
 - Prefer `.reduce` over `Set` or mutable accumulation.
+- Use `if (!value) return` for single-return guard clauses. No braces.
+- Do not compare `undefined` or `null` for presence. Use truthy guard clauses when presence is implied.
 - **Never disable lint rules.** Surface the problem to the developer instead.
 - Prefer one-line expressions when they stay readable.
 - Avoid `I`-prefixed interface names; use the domain noun directly.

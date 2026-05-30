@@ -19,7 +19,9 @@ src/
     home/         # index.tsx (entry), Home.tsx (component), Home.spec.tsx (tests), Home.css
     workout/      # same structure
     onboarding/   # same structure
+  native/         # JS bridge wrappers for NativeModules
   assets/         # Static images (png)
+  native-modules.d.ts
   rspeedy-env.d.ts
   typing.d.ts
 android/          # Native Android shell (Gradle) — do not modify without asking

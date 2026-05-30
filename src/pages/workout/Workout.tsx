@@ -7,13 +7,9 @@ import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
 import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingLevel, TrainingProfile } from '../../domain/types.js'
+import type { WorkoutHaptics } from '../../native/haptics.js'
 
 type WorkoutInterval = ReturnType<typeof calculateIntervals>[number]
-
-interface WorkoutHaptics {
-  vibrate: (durationMs: number) => void
-  cancel: () => void
-}
 
 interface WorkoutSummary {
   session: Session
@@ -22,12 +18,7 @@ interface WorkoutSummary {
 
 interface WorkoutProps {
   onMounted?: () => void
-  haptics?: WorkoutHaptics
-}
-
-const noOpHaptics: WorkoutHaptics = {
-  cancel: () => undefined,
-  vibrate: () => undefined,
+  haptics: WorkoutHaptics
 }
 
 const formatDuration = (seconds: number): string => {
@@ -81,9 +72,9 @@ const buildCompletedProfile = (
 const buildNextUpLabel = (intervals: WorkoutInterval[], nextIndex: number): string => {
   const nextInterval = intervals[nextIndex]
 
-  return nextInterval === undefined
-    ? 'Next up: complete'
-    : `Next up: ${nextInterval.type.toUpperCase()} ${formatDuration(nextInterval.durationSeconds)}`
+  return nextInterval
+    ? `Next up: ${nextInterval.type.toUpperCase()} ${formatDuration(nextInterval.durationSeconds)}`
+    : 'Next up: complete'
 }
 
 const buildElapsedSeconds = (
@@ -96,9 +87,9 @@ const buildElapsedSeconds = (
     .reduce((total, interval) => total + interval.durationSeconds, 0)
   const currentInterval = intervals[phaseIndex]
 
-  return currentInterval === undefined
-    ? intervals.reduce((total, interval) => total + interval.durationSeconds, 0)
-    : completedBeforeCurrent + currentInterval.durationSeconds - remainingSeconds
+  return currentInterval
+    ? completedBeforeCurrent + currentInterval.durationSeconds - remainingSeconds
+    : intervals.reduce((total, interval) => total + interval.durationSeconds, 0)
 }
 
 const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean =>
@@ -106,8 +97,7 @@ const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean 
   previous.walkSeconds !== next.walkSeconds ||
   previous.intervalBlockSeconds !== next.intervalBlockSeconds
 
-export function Workout(props: WorkoutProps): JSX.Element {
-  const haptics = props.haptics ?? noOpHaptics
+export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const [sessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
   )
@@ -126,9 +116,7 @@ export function Workout(props: WorkoutProps): JSX.Element {
   const completionHandledRef = useRef(false)
 
   const completeWorkout = useCallback((): void => {
-    if (completionHandledRef.current) {
-      return
-    }
+    if (completionHandledRef.current) return
 
     completionHandledRef.current = true
 
@@ -168,18 +156,14 @@ export function Workout(props: WorkoutProps): JSX.Element {
   }, [])
 
   useEffect(() => {
-    if (hasStartedRef.current) {
-      return
-    }
+    if (hasStartedRef.current) return
 
     hasStartedRef.current = true
-    props.onMounted?.()
-  }, [props.onMounted])
+    onMounted?.()
+  }, [onMounted])
 
   useEffect(() => {
-    if (!isStarted || summary !== null || isPaused || remainingSeconds <= 0) {
-      return
-    }
+    if (!isStarted || summary !== null || isPaused || remainingSeconds <= 0) return
 
     const timeoutId = setTimeout(() => {
       setRemainingSeconds((currentRemaining) => Math.max(currentRemaining - 1, 0))
@@ -189,34 +173,25 @@ export function Workout(props: WorkoutProps): JSX.Element {
   }, [isPaused, isStarted, remainingSeconds, summary])
 
   useEffect(() => {
-    if (
-      !isStarted ||
-      summary !== null ||
-      isPaused ||
-      remainingSeconds <= 0 ||
-      remainingSeconds > 5
-    ) {
+    if (!isStarted || summary !== null || isPaused || remainingSeconds <= 0 || remainingSeconds > 5)
       return
-    }
 
     haptics.vibrate(200)
   }, [haptics, isPaused, isStarted, remainingSeconds, summary])
 
   useEffect(() => {
-    if (!isStarted || summary !== null || isPaused || remainingSeconds !== 0) {
-      return
-    }
+    if (!isStarted || summary !== null || isPaused || remainingSeconds !== 0) return
 
     const nextIndex = phaseIndex + 1
     const nextInterval = workoutIntervals[nextIndex]
 
-    if (nextInterval === undefined) {
-      completeWorkout()
+    if (nextInterval) {
+      setPhaseIndex(nextIndex)
+      setRemainingSeconds(nextInterval.durationSeconds)
       return
     }
 
-    setPhaseIndex(nextIndex)
-    setRemainingSeconds(nextInterval.durationSeconds)
+    completeWorkout()
   }, [
     completeWorkout,
     isPaused,

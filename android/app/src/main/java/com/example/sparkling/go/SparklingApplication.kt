@@ -16,6 +16,7 @@ import com.tiktok.sparkling.hybridkit.HybridKit
 import com.tiktok.sparkling.hybridkit.config.BaseInfoConfig
 import com.tiktok.sparkling.hybridkit.config.SparklingHybridConfig
 import com.tiktok.sparkling.hybridkit.config.SparklingLynxConfig
+import com.tiktok.sparkling.hybridkit.lynx.SparklingLynxModuleWrapper
 import com.tiktok.sparkling.method.registry.core.SparklingBridgeManager
 import com.tiktok.sparkling.method.router.close.RouterCloseMethod
 import com.tiktok.sparkling.method.router.open.RouterOpenMethod
@@ -55,6 +56,11 @@ class SparklingApplication : Application() {
                     }
                 }
             ))
+            addLynxModules(
+                mapOf(
+                    "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java)
+                )
+            )
             setTemplateProvider(BuiltinTemplateProvider(this@SparklingApplication))
         }
         val hybridConfig = SparklingHybridConfig.build(baseInfoConfig) {
