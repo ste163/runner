@@ -451,7 +451,6 @@ Completed:
 - COMPLETED: **Haptics**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission.
 - COMPLETED: **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
   atomic write pattern; SAF export/import; replace in-memory stub
-- **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
 - **Foreground service**: Android foreground service owning the workout timer; persistent notification;
   tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission;
   `android:foregroundServiceType="health"` in manifest (Android 14 / API 34 required)
@@ -462,7 +461,8 @@ Completed:
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
 - **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
   if unavailable
-- **Testing UI**: Home now exposes export/import controls for current profile JSON via a URI field so
+- **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
+- **Testing UI**: Home now exposes export/import controls for current profile JSON via an android-native file picker
   the storage flow can be exercised from the app itself.
 
 ### Phase 5 — Polish & edge cases
