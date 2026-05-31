@@ -1,21 +1,23 @@
 # Runner
 
-This project is set up for agentic development with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli). Project skills and instructions live in `.github/skills/` and `.github/copilot-instructions.md`.
+Beginner-friendly running app that meets you where you are, adapting to how often you use it. Follows the approach of: don't increase intensity by more than 10%.
+The application follow simple logic:
+
+1. Five minute warm-up walk
+2. Walk/run interval for 20 minutes
+3. Five minute cool-down walk
+
+The intervals change dynamically based on how often you complete a full seven-day period with three workouts. Complete three, and intensity increase by 10%. Don't complete three, and you stay the same. If you're unable to complete a workout period, then intensity decreases automatically.
+
+The goal is that every exercise is successful, creating healthy habits, and eventually get you to the goal of running for the full 20 minutes.
+
+This is not a Couch to 5k program with huge intensity bursts. This is a gradual, gentle program for long-term success.
 
 ## Agentic Development
 
+This project is set up for agentic development with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli). Project skills and instructions live in `.github/skills/` and `.github/copilot-instructions.md`.
+
 `AGENTS.md` is the entry point for all agents (CLI, IDE, cloud). It describes the repo, how to use the Lynx Docs MCP, and the verification commands.
-
-### Structure
-
-```
-.github/
-  agents/           # Custom agents (debug, performance-investigator, reactlynx-reviewer, test-generator)
-  hooks/            # Hook scripts and helpers
-  mcp.json          # Lynx Docs MCP — auto-loaded, provides Lynx API docs
-  skills/           # Project-specific skills (see below)
-  workflows/        # CI workflows (including doc-sync gate)
-```
 
 ### Doc Sync
 
