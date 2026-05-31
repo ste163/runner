@@ -10,7 +10,7 @@ import com.lynx.jsbridge.LynxModule
 class RunnerHapticModule(context: Context) : LynxModule(context) {
 
     private fun resolveVibrator(): Vibrator? {
-        return mContext.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        return mContext.getSystemService(Vibrator::class.java)
     }
 
     @LynxMethod

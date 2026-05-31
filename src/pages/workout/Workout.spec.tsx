@@ -48,6 +48,13 @@ const buildWorkoutProfile = (): TrainingProfile => ({
   window: { consecutiveMissed: 0, windowStart: '' },
 })
 
+const buildCountdownProfile = (): TrainingProfile => ({
+  schemaVersion: 1,
+  level: { intervalBlockSeconds: 24, runSeconds: 12, walkSeconds: 12 },
+  sessions: [],
+  window: { consecutiveMissed: 0, windowStart: '' },
+})
+
 const buildTimerState = (overrides: Partial<WorkoutTimerState> = {}): WorkoutTimerState => ({
   isComplete: false,
   isPaused: false,
@@ -170,6 +177,66 @@ describe('Workout', () => {
     expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
     expect(haptics.vibrate).toHaveBeenCalledTimes(2)
     expect(haptics.cancel).toHaveBeenCalledTimes(1)
+  })
+
+  it('pulses countdown haptics with the rendered timer', async () => {
+    sharedProfileStore.reset()
+    sharedProfileStore.save(buildCountdownProfile())
+    workoutTimerMock.setState(buildTimerState())
+    render(<Workout haptics={haptics} />)
+
+    const queries = getWorkoutQueries()
+    await queries.findByText('Start Workout')
+
+    fireEvent.tap(queries.getByText('Start Workout'))
+    await queries.findByText('WARMUP')
+
+    const countdownPhases = [
+      {
+        phaseIndex: 0,
+        phaseLabel: 'WARMUP',
+        phaseType: 'warmup' as const,
+        phaseDurationSeconds: 300,
+      },
+      { phaseIndex: 1, phaseLabel: 'RUN', phaseType: 'run' as const, phaseDurationSeconds: 12 },
+      { phaseIndex: 2, phaseLabel: 'WALK', phaseType: 'walk' as const, phaseDurationSeconds: 12 },
+      {
+        phaseIndex: 3,
+        phaseLabel: 'COOLDOWN',
+        phaseType: 'cooldown' as const,
+        phaseDurationSeconds: 300,
+      },
+    ]
+    const countdownSeconds = [5.4, 4.4, 3.4, 2.4, 1.4]
+    const countdownStates = countdownPhases.flatMap((phase) =>
+      countdownSeconds.map((phaseRemainingSeconds) => ({
+        ...phase,
+        phaseRemainingSeconds,
+        timerText: `${Math.round(phaseRemainingSeconds)}s`,
+      }))
+    )
+
+    let expectedCalls = 1
+    for (const state of countdownStates) {
+      workoutTimerMock.setState(
+        buildTimerState({
+          isRunning: true,
+          phaseDurationSeconds: state.phaseDurationSeconds,
+          phaseIndex: state.phaseIndex,
+          phaseLabel: state.phaseLabel,
+          phaseRemainingSeconds: state.phaseRemainingSeconds,
+          phaseType: state.phaseType,
+          totalElapsedSeconds: 0,
+          totalRemainingSeconds: 0,
+        })
+      )
+
+      await vi.advanceTimersByTimeAsync(1000)
+      await queries.findByText(state.timerText)
+
+      expectedCalls += 1
+      expect(haptics.vibrate).toHaveBeenCalledTimes(expectedCalls)
+    }
   })
 
   it('pauses and resumes the countdown', async () => {

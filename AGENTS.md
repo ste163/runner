@@ -31,6 +31,7 @@ Custom agents live in `.github/agents/`. Use them for multi-step workflows:
 - `reactlynx-reviewer` — review ReactLynx/Lynx TypeScript code for correctness and dual-thread violations
 - `test-generator` — generate Vitest tests for components or pages
 - `performance-investigator` — full trace workflow: record → analyze → report
+- `debug` — logs-first TDD triage for frontend vs Android issues
 
 ## Behavior Rules
 

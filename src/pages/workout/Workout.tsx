@@ -48,6 +48,16 @@ const buildSessionId = (): string => {
 
 const buildWorkoutIntervals = (level: TrainingLevel): WorkoutInterval[] => calculateIntervals(level)
 
+const countdownHapticDurationMs = 150
+
+const buildCountdownPulseKey = (
+  phaseIndex: number,
+  displayedRemainingSeconds: number
+): string | null =>
+  displayedRemainingSeconds >= 1 && displayedRemainingSeconds <= 5
+    ? `${phaseIndex}:${displayedRemainingSeconds}`
+    : null
+
 const buildCompletedProfile = (
   profile: TrainingProfile,
   session: Session,
@@ -100,6 +110,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
+  const countdownPulseKeyRef = useRef<string | null>(null)
 
   const completeWorkout = useCallback((): void => {
     'background only'
@@ -205,6 +216,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   )
   const remainingSeconds =
     timerState?.phaseRemainingSeconds ?? currentInterval?.durationSeconds ?? 0
+  const displayedRemainingSeconds = Math.max(Math.round(remainingSeconds), 0)
   const isPaused = timerState?.isPaused ?? false
   const elapsedSeconds = timerState?.totalElapsedSeconds ?? 0
   const nextUpLabel = buildNextUpLabel(workoutIntervals, currentPhaseIndex + 1)
@@ -212,6 +224,27 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const workoutLevelMessage = hasLevelChanged(sessionProfile.level, workoutLevel)
     ? `New level: ${levelLabel(workoutLevel)}`
     : `Current level: ${levelLabel(workoutLevel)}`
+
+  useEffect(() => {
+    if (!isStarted || summary !== null) {
+      countdownPulseKeyRef.current = null
+      return
+    }
+
+    if (isPaused) return
+
+    const nextPulseKey = buildCountdownPulseKey(currentPhaseIndex, displayedRemainingSeconds)
+
+    if (!nextPulseKey) {
+      countdownPulseKeyRef.current = null
+      return
+    }
+
+    if (countdownPulseKeyRef.current === nextPulseKey) return
+
+    countdownPulseKeyRef.current = nextPulseKey
+    haptics.vibrate(countdownHapticDurationMs)
+  }, [currentPhaseIndex, displayedRemainingSeconds, haptics, isPaused, isStarted, summary])
 
   return (
     <scroll-view className='page-scroll' scroll-orientation='vertical'>
@@ -280,7 +313,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
                   </text>
                 </view>
 
-                <text className='timer'>{formatDuration(remainingSeconds)}</text>
+                <text className='timer'>{formatDuration(displayedRemainingSeconds)}</text>
 
                 <view className='timer-card__meta'>
                   <text className='copy'>

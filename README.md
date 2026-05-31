@@ -10,7 +10,7 @@ This project is set up for agentic development with [GitHub Copilot CLI](https:/
 
 ```
 .github/
-  agents/           # Custom agents (reactlynx-reviewer, test-generator)
+  agents/           # Custom agents (debug, performance-investigator, reactlynx-reviewer, test-generator)
   hooks/            # Hook scripts and helpers
   mcp.json          # Lynx Docs MCP — auto-loaded, provides Lynx API docs
   skills/           # Project-specific skills (see below)
@@ -24,6 +24,40 @@ This project is set up for agentic development with [GitHub Copilot CLI](https:/
 ```bash
 bun run verify-docs
 ```
+
+## Architecture
+
+The Lynx pages own UI state and user interaction. Android owns the long-lived app state and native capabilities.
+
+```mermaid
+flowchart TB
+  subgraph Frontend[Lynx frontend]
+    UI[Pages + React state]
+    Stores[sharedProfileStore]
+    Bridges[NativeModules wrappers]
+  end
+
+  subgraph Backend[Android backend]
+    Storage[RunnerStorageModule\npersists profile.json]
+    TimerSvc[RunnerWorkoutTimerService\nsource of truth for workout state]
+    TimerState[RunnerWorkoutTimerStateStore]
+    HapticModule[RunnerHapticModule\nvibration]
+  end
+
+  UI --> Stores
+  UI --> Bridges
+  Bridges --> Storage
+  Bridges --> TimerSvc
+  TimerSvc --> TimerState
+  TimerSvc --> HapticModule
+  Stores --> Storage
+```
+
+### State ownership
+
+- **Frontend**: React state drives page UI. `sharedProfileStore` keeps the in-memory profile snapshot, and `src/pages/*/index.tsx` wires `NativeModules` into the frontend bridge wrappers.
+- **Android backend**: `RunnerStorageModule` persists the profile JSON; `RunnerWorkoutTimerService` is the source of truth for the live workout timer state and countdown haptics.
+- **Bridge layer**: `runnerWorkoutTimer` and `runnerHaptics` forward frontend calls into Android modules.
 
 ## macOS Install
 
