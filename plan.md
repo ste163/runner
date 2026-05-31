@@ -226,32 +226,16 @@ the live file, just copied).
 **Import safety**: Before overwriting, rename current file to `training_profile.json.bak`. If the
 incoming JSON fails validation, restore the backup.
 
-JS interface additions for GPS (added to `RunnerStorageModule` or a separate `RunnerGpsModule`):
+Current JS bridge surface:
 
-```typescript
-declare let NativeModules: {
-  RunnerStorageModule: {
-    saveProfile(json: string): void
-    loadProfile(callback: (json: string | null) => void): void
-    exportProfile(callback: (success: boolean) => void): void
-    importProfile(callback: (json: string | null) => void): void
-  }
-  RunnerGpsModule: {
-    requestPermission(callback: (granted: boolean) => void): void
-    startInterval(type: 'warmup' | 'run' | 'walk' | 'cooldown'): void
-    endInterval(callback: (distanceMiles: number, avgPaceMinPerMile: number) => void): void
-    stopTracking(): void
-  }
-  RunnerHapticModule: {
-    vibrate(durationMs: number): void
-    cancel(): void
-  }
-  RunnerScreenModule: {
-    keepScreenOn(enabled: boolean): void
-  }
-  // Timer/tick module TBD — mechanism under investigation (GlobalEventEmitter or callback pattern)
-}
-```
+- `RunnerWorkoutTimerModule`: `getWorkoutTimerState()`, `startWorkout(...)`, `pauseWorkout()`,
+  `resumeWorkout()`, `stopWorkout()`
+- `RunnerGpsModule`: `getWorkoutGpsState()`, `setWorkoutTrackingEnabled(enabled)`,
+  `openLocationSettings()`
+- `RunnerHapticModule`: `vibrate(durationMs)`, `cancel()`
+- `RunnerScreenModule`: `keepScreenOn(enabled)`
+
+Timer state is polled from JS while the workout is active; no event-emitter layer is needed.
 
 **Privacy**: Raw GPS coordinates are never stored or persisted. Only computed stats per interval are
 kept. Location updates run only during an active workout. Fallback: if permission denied or GPS
@@ -271,77 +255,31 @@ SAF is permission-free by design on modern Android.
 
 ### GPS / Location Tracking
 
-**Confirmed feasible** via Lynx `NativeModules` using Android's `LocationManager` and `GPS_PROVIDER` only.
+Implemented with a dedicated `RunnerGpsModule` backed by Android `LocationManager` and
+`GPS_PROVIDER` only.
 
-**Context access**: `LynxModule` provides `mContext` (a `LynxContext` → application context). For runtime
-permission requests, `HybridActivityStackManager.getTopActivity()` is already used by sparkling's router
-bridge and is available here too.
-
-**Permission**: `ACCESS_FINE_LOCATION` declared in `AndroidManifest.xml`. Runtime permission requested
-at **app launch in `SplashActivity`** — one-and-done before any Lynx page opens and chained independently of notification permission. If denied, GPS stats
-are silently omitted; the app works normally.
-
-**`LocationManager`** works with application context once permission is granted; when GPS services are disabled,
-the workout screen prompts the user to open location settings.
-
-**Per-interval collection design** — JS drives the interval lifecycle:
-
-- `startInterval(type: string)` → module records start timestamp + position, begins accumulating GPS
-- `endInterval(callback)` → module computes distance (miles) + avg pace (min/mile) for that interval,
-  returns stats to JS
-
-No continuous GPS stream to JS. Module accumulates silently during each interval.
-
-**GPS cleanup on workout end**: Whether the workout completes normally or is abandoned mid-interval,
-`stopTracking()` is always called. If abandoned mid-interval, `endInterval()` is skipped (that
-interval's partial data is discarded) and `stopTracking()` is called directly. This prevents GPS
-location updates from leaking after the workout ends.
-
-**`sessions` array is unbounded by design** — all sessions are retained forever for the future
-history screen (Phase 5). At ~2.5MB max after 10 years of perfect consistency, storage is not
-a concern.
-
-**SAF (export/import Activity intents)** uses the same `HybridActivityStackManager.getTopActivity()`
-pattern — no additional infrastructure needed.
+- `ACCESS_FINE_LOCATION` is requested at app launch in `SplashActivity`, before any Lynx page opens
+- The workout screen prompts the user to open location settings when GPS services are off
+- JS reads a pollable GPS state object (`distanceMiles`, `hasPermission`, `isLocationEnabled`,
+  `isTracking`)
+- `setWorkoutTrackingEnabled(true/false)` starts and stops tracking around workout lifecycle changes
+- Raw coordinates are never persisted; only computed distance is exposed to JS
+- GPS is active only during a workout and is cleared on stop/complete/unmount
 
 ### Interval Timer & Foreground Service
 
-The workout timer must survive screen-off and app-switching for 30–35 minute sessions. A plain
-`setInterval` in the ReactLynx background thread is **not sufficient** — Android will throttle and
-kill it.
+Implemented with `RunnerWorkoutTimerService` and `RunnerWorkoutTimerModule`.
 
-**Required**: Android **foreground service** that owns the timer and posts a persistent notification
-(e.g., "Runner · RUN · 14:23 remaining"). The foreground service:
-
-- Starts when the workout begins
-- Maintains the interval clock independently of the JS thread
-- Sends tick events to the Lynx page via the native bridge
-- Stops when workout completes or user stops/abandons early
-- Requires `FOREGROUND_SERVICE` permission in `AndroidManifest.xml`
-- Requires `FOREGROUND_SERVICE_HEALTH` permission in `AndroidManifest.xml`
-  (**Android 14 / API 34 requirement** — required alongside `FOREGROUND_SERVICE` for health-type services;
-  omitting it prevents the service from starting on API 34+)
-- Requires `android:foregroundServiceType="health"` in the `<service>` manifest declaration
-  (**Android 14 / API 34 requirement** — our `targetSdk = 34`; omitting this prevents the service
-  from starting on modern Android)
-
-**Pause**: Pausing freezes the foreground service timer. The session clock stops; GPS accumulation
-pauses. Duration of pause is irrelevant — the session still counts when resumed. Pause is not
-equivalent to stop.
-
-**Native → JS event communication — Needs Investigation**: `NativeModules` is JS-calls-native only.
-Sending timer tick events _from_ the foreground service _to_ the Lynx page requires a different
-mechanism. Options to investigate:
-
-- Lynx `GlobalEventEmitter` (background thread)
-- A JS-registered callback stored in the native module
-- Lynx's event bridge / `postMessage` equivalent
-  Resolve before Phase 4.
+- The service owns the workout clock and posts the persistent workout notification
+- JS starts, pauses, resumes, and stops the service through the native module
+- The service persists timer snapshots in `RunnerWorkoutTimerStateStore`
+- The workout page polls `getWorkoutTimerState()` while active, so the UI stays in sync without a
+  custom event bridge
+- Pausing freezes both the session clock and GPS accumulation; stopping clears the stored state
 
 ### Haptic Feedback
 
-Lynx has **no built-in haptic API** (confirmed: `@lynx-js/types` has no haptic/vibration types;
-Lynx docs have no haptic built-ins). Requires a custom `RunnerHapticModule` (`LynxContextModule`).
+Implemented with a custom `RunnerHapticModule`; Lynx has no built-in haptic API.
 
 **Android implementation:**
 
@@ -358,12 +296,10 @@ RunnerHapticModule: {
 }
 ```
 
-**Timing design**: JS controls when to call `vibrate()`. The foreground service sends timer ticks to
-the Lynx page:
+**Timing design**: JS controls when to call `vibrate()`.
 
-- **Workout start**: single `vibrate(500)` to signal "go"
-- **Last 5 seconds of each interval**: `vibrate(200)` once per second as countdown warning
-  No native-side timer needed.
+- Workout start: single `vibrate(500)` to signal "go"
+- Last 5 seconds of each interval: `vibrate(200)` once per second as countdown warning
 
 **Registration**: `SparklingLynxConfig.Builder` exposes `addLynxModules(Map<String, SparklingLynxModuleWrapper>)`.
 Confirmed by inspecting `sparkling-2.0.1.aar` bytecode. Register in `SparklingApplication.kt`:
@@ -376,9 +312,7 @@ addLynxModules(mapOf(
 
 ### Screen Wake Lock
 
-The screen must stay on for the full 30–35 minute workout. Android's default auto-lock would obscure the phase label and timer.
-
-**Solution**: Set `FLAG_KEEP_SCREEN_ON` on the Activity's window when the workout screen becomes active; clear it when the workout ends (complete, stop, or pause — actually keep it on during pause too since the user may be checking the screen). Implemented via a `RunnerScreenModule` NativeModule:
+Implemented via `RunnerScreenModule` by setting `FLAG_KEEP_SCREEN_ON` on the active Activity window.
 
 ```typescript
 RunnerScreenModule: {
@@ -398,7 +332,7 @@ Calls `HybridActivityStackManager.getTopActivity().runOnUiThread { window.addFla
 - Progression rules (rolling 7-day window evaluation, +10%/−10% math, window cap at 3)
 - Walk graduation trigger (`walkSeconds ≤ 10` → no more walk intervals)
 - Manual level adjustment with bounds (run min: 15s, walk min: 10s, run max: `intervalBlockSeconds`)
-- Session storage abstraction (interface + in-memory stub, swap in real persistence later)
+- Session storage abstraction and JSON-backed persistence
 - Default `TrainingProfile` initialization (for first-time users)
 - Full unit test coverage for all domain logic
 
@@ -408,7 +342,7 @@ Completed:
 - `src/domain/intervals.ts` + `src/domain/intervals.spec.ts`
 - `src/domain/progression.ts` + `src/domain/progression.spec.ts`
 - `src/domain/profile.ts` + `src/domain/profile.spec.ts`
-- Domain-only verification passes; repo-wide verification is still blocked by the existing Lynx page test runtime issue in `src/pages/main/App.spec.tsx`
+- Domain-only verification passes, and repo verification is green
 
 ### Phase 2 — Home screen + onboarding ✅ Complete
 
@@ -448,25 +382,19 @@ Completed:
 - `src/pages/workout/Workout.spec.tsx`
 - Workout flow now stays idle until the user taps `Start Workout`
 
-### Phase 4 — Native bridge
+### Phase 4 — Native bridge ✅ Complete
 
-- COMPLETED: **JS wrapper namespace**: use a dedicated `src/native-bridge/` area for JS-facing NativeModules wrappers.
-- COMPLETED: **Haptics**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission.
-- COMPLETED: **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
-  atomic write pattern; SAF export/import; replace in-memory stub
-- COMPLETED: **Foreground service**: Android foreground service owning the workout timer; persistent notification;
-  tick events to Lynx page via native bridge; `FOREGROUND_SERVICE` permission;
-  `android:foregroundServiceType="health"` in manifest (Android 14 / API 34 required)
-- COMPLETED: **Native → JS events**: Investigate `GlobalEventEmitter` or callback pattern for foreground service
-  to push timer ticks to Lynx page
-- COMPLETED: **Screen wake lock**: `RunnerScreenModule` (`keepScreenOn(bool)`), called on workout start/end.
-  No permission needed.
-- COMPLETED: **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
-  if unavailable
-- **Permissions at launch**: `ACCESS_FINE_LOCATION` requested in `SplashActivity` independently of notification permission
-- **GPS**: `RunnerGpsModule` — `LocationManager`, GPS-only accumulation, location-services prompt
-- **Testing UI**: Home now exposes export/import controls for current profile JSON via an android-native file picker
-  the storage flow can be exercised from the app itself.
+- COMPLETED: **JS wrapper namespace**: dedicated `src/native-bridge/` area for JS-facing NativeModules
+- COMPLETED: **Haptics**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission
+- COMPLETED: **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend,
+  atomic write pattern, SAF export/import, and app-exposed import/export controls
+- COMPLETED: **Foreground service**: `RunnerWorkoutTimerService` owns the workout timer and persists
+  state snapshots; `RunnerWorkoutTimerModule` exposes start/pause/resume/stop/get-state
+- COMPLETED: **Native → JS sync**: workout page polls native timer state while active; no event emitter layer needed
+- COMPLETED: **Screen wake lock**: `RunnerScreenModule` (`keepScreenOn(bool)`), called on workout start/stop/complete/unmount
+- COMPLETED: **Session ID**: `crypto.randomUUID()` with fallback string generation
+- COMPLETED: **Permissions at launch**: `ACCESS_FINE_LOCATION` requested in `SplashActivity` independently of notification permission
+- COMPLETED: **GPS**: `RunnerGpsModule` — `LocationManager`, GPS-only accumulation, location-services prompt
 
 ### Phase 5 — Polish & edge cases
 
@@ -513,7 +441,7 @@ Completed:
     mid-interval → skip `endInterval()`, call `stopTracking()` directly.
 21. **`sessions` unbounded**: All sessions retained forever (intentional — needed for future history screen).
     ~2.5MB max after 10 years; no performance concern.
-22. **Native → JS timer events**: Mechanism TBD — investigate `GlobalEventEmitter` or callback pattern before Phase 4.
+22. **Native → JS timer sync**: Implemented by polling `RunnerWorkoutTimerStateStore` from `RunnerWorkoutTimerModule`.
 23. **`windowStart` timestamp**: Full ISO timestamp (not date-only) to ensure precise 7-day window calculation.
 24. **Schema versioning**: `TrainingProfile.schemaVersion` starts at 1; increment on any breaking data model change to enable future migrations.
 25. **Import confirmation**: Before restoring an imported file, show a confirmation dialog ("This will replace your current progress. Continue?").
