@@ -58,7 +58,8 @@ class SparklingApplication : Application() {
             ))
             addLynxModules(
                 mapOf(
-                    "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java)
+                    "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java),
+                    "RunnerStorageModule" to SparklingLynxModuleWrapper(RunnerStorageModule::class.java),
                 )
             )
             setTemplateProvider(BuiltinTemplateProvider(this@SparklingApplication))

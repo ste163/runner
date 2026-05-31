@@ -462,6 +462,8 @@ Completed:
 - **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
 - **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
   if unavailable
+- **Testing UI**: Home now exposes export/import controls for current profile JSON via a URI field so
+  the storage flow can be exercised from the app itself.
 
 ### Phase 5 — Polish & edge cases
 
@@ -525,14 +527,6 @@ Completed:
    `sparkling-navigation` still applies `org.jetbrains.kotlin.android` and is not AGP 9-ready.
    We are staying on the working AGP 8.9.2 / Gradle 8.11.1 line until that dependency is patched
    or forked.
-
-3. **Android system bars**: The following attempts did not change the visible overlap or the white
-   navigation bar, so do not retry them without a new hypothesis:
-   - shared CSS safe-area padding in `src/global.css`
-   - theme/manifest updates for black system bars and edge-to-edge opt-out
-   - `SplashActivity` window tweaks with `WindowCompat` / `WindowInsetsControllerCompat`
-   - `activity_main.xml` background and `fitsSystemWindows`
-   - dark launch-scheme params in `DebugDevUrlSupport.kt`
 
 ---
 

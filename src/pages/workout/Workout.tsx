@@ -304,6 +304,9 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
                 <view className='primary' bindtap={handlePauseToggle}>
                   <text className='primary__text'>{isPaused ? 'Resume' : 'Pause'}</text>
                 </view>
+                <view className='secondary' bindtap={completeWorkout}>
+                  <text className='secondary__text'>Debug: complete workout</text>
+                </view>
                 <view className='secondary' bindtap={handleStop}>
                   <text className='secondary__text'>Stop</text>
                 </view>

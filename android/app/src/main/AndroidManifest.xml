@@ -23,6 +23,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".RunnerStoragePickerActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Runner" />
     </application>
 
 </manifest>

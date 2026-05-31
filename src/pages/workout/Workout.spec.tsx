@@ -113,7 +113,7 @@ describe('Workout', () => {
 
     await findByText('WARMUP')
 
-    await vi.advanceTimersByTimeAsync(601_000)
+    fireEvent.tap(getByText('Debug: complete workout'))
     await findByText('Workout complete')
     await findByText('Session saved. Close to return home.')
     await findByText('GPS unavailable yet. No interval breakdown recorded.')

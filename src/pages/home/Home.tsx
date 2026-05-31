@@ -80,6 +80,8 @@ const buildSuggestedSessionLabel = (profile: TrainingProfile, referenceDate: Dat
 
 export function Home(props: { onMounted?: () => void }): JSX.Element {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
+  const [storageStatus, setStorageStatus] = useState('')
+  const [debugJson, setDebugJson] = useState('')
   const hasOpenedOnboardingRef = useRef(false)
 
   const openOnboarding = useCallback((): void => {
@@ -91,7 +93,7 @@ export function Home(props: { onMounted?: () => void }): JSX.Element {
   }, [])
 
   useEffect(() => {
-    const next = sharedProfileStore.loadOrCreate()
+    const next = sharedProfileStore.hydrate()
 
     setProfile(next.profile)
     props.onMounted?.()
@@ -122,6 +124,45 @@ export function Home(props: { onMounted?: () => void }): JSX.Element {
   const handleIncreaseLevel = useCallback((): void => {
     handleLevelAdjustment('up')
   }, [handleLevelAdjustment])
+
+  const handleExportProfile = useCallback((): void => {
+    setStorageStatus('Choose where to save the JSON file.')
+    sharedProfileStore.exportProfile((result) => {
+      if (result.status === 'success') {
+        setStorageStatus('Exported current profile.')
+        return
+      }
+
+      if (result.status === 'cancelled') {
+        setStorageStatus('Export cancelled.')
+        return
+      }
+
+      setStorageStatus(result.message)
+    })
+  }, [])
+
+  const handleImportProfile = useCallback((): void => {
+    setStorageStatus('Choose the JSON file from your device.')
+    sharedProfileStore.importProfile((result) => {
+      if (result.status === 'success') {
+        setProfile(result.profile)
+        setStorageStatus('Imported profile from device.')
+        return
+      }
+
+      if (result.status === 'cancelled') {
+        setStorageStatus('Import cancelled.')
+        return
+      }
+
+      setStorageStatus(result.message)
+    })
+  }, [])
+
+  const handleShowCurrentJson = useCallback((): void => {
+    setDebugJson(JSON.stringify(profile, null, 2))
+  }, [profile])
 
   const currentWindowSessions = countWindowSessions(profile)
   const currentProgress = Math.min(currentWindowSessions, 3)
@@ -155,6 +196,26 @@ export function Home(props: { onMounted?: () => void }): JSX.Element {
             ))}
           </view>
           <text className='copy'>{progressMessage}</text>
+        </view>
+
+        <view className='card'>
+          <text className='label'>Backup & restore</text>
+          <view className='stack'>
+            <text className='copy'>
+              Use Android pickers to export or import the current profile JSON.
+            </text>
+            <view className='secondary' bindtap={handleExportProfile}>
+              <text className='secondary__text'>Export JSON</text>
+            </view>
+            <view className='secondary' bindtap={handleImportProfile}>
+              <text className='secondary__text'>Import JSON</text>
+            </view>
+            <view className='secondary' bindtap={handleShowCurrentJson}>
+              <text className='secondary__text'>Show current JSON</text>
+            </view>
+          </view>
+          <text className='copy'>{storageStatus}</text>
+          {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
         </view>
 
         <view className='card'>

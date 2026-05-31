@@ -213,6 +213,8 @@ body,
   background: var(--color-danger-soft);
   color: var(--color-text);
   line-height: 20px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .stack {
