@@ -3,8 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 package com.ste163.runner
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.tiktok.sparkling.Sparkling
 import com.tiktok.sparkling.SparklingContext
 import com.tiktok.sparkling.method.registry.core.utils.JsonUtils
@@ -12,9 +16,26 @@ import com.ste163.runner.DebugDevUrlSupport
 import com.ste163.runner.DebugSparklingUiProvider
 
 class SplashActivity : AppCompatActivity() {
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            gotoSparklingPage()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        gotoSparklingPage()
+
+        if (hasNotificationPermission()) {
+            gotoSparklingPage()
+        } else {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun hasNotificationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun gotoSparklingPage() {

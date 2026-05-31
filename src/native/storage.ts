@@ -1,62 +1,36 @@
 import type { TrainingProfile } from '../domain/types.js'
 
-export type ExportProfileResult =
-  | { destinationUri: string; status: 'success' }
-  | { status: 'cancelled' }
-  | { message: string; status: 'error' }
+type StorageCompletionStatus = 'success' | 'cancelled' | 'error'
+type StorageCompletionCallback = (status: StorageCompletionStatus, detail: string | null) => void
+type StorageCancelledResult = { status: 'cancelled' }
+type StorageErrorResult = { message: string; status: 'error' }
+type StorageSuccessResult<T> = { status: 'success' } & T
+type StorageResult<T> = StorageSuccessResult<T> | StorageCancelledResult | StorageErrorResult
 
-export type ImportProfileResult =
-  | { profile: TrainingProfile; status: 'success' }
-  | { status: 'cancelled' }
-  | { message: string; status: 'error' }
-
-export interface RunnerStorageModule {
-  exportProfile: (callback: (status: string, detail: string | null) => void) => void
-  importProfile: (callback: (status: string, detail: string | null) => void) => void
+export type ExportProfileResult = StorageResult<{ destinationUri: string }>
+export type ImportProfileResult = StorageResult<{ profile: TrainingProfile }>
+export type RunnerStorageModule = {
+  exportProfile: (callback: StorageCompletionCallback) => void
+  importProfile: (callback: StorageCompletionCallback) => void
   loadProfileJson: () => string | null
   resetProfile: () => void
   saveProfileJson: (profileJson: string) => void
 }
 
-export interface RunnerProfileStorage {
-  exportProfile: (onComplete: (result: ExportProfileResult) => void) => void
-  importProfile: (onComplete: (result: ImportProfileResult) => void) => void
-  load: () => TrainingProfile | null
-  reset: () => void
-  save: (profile: TrainingProfile) => void
-}
-
-const resolveRunnerStorageModule = (): RunnerStorageModule | null => {
-  'background only'
-
-  if (typeof NativeModules === 'undefined') return null
-
-  return NativeModules.RunnerStorageModule ?? null
-}
-
 const parseProfileJson = (profileJson: string): TrainingProfile =>
   JSON.parse(profileJson) as TrainingProfile
 
-const resolveExportResult = (status: string, detail: string | null): ExportProfileResult => {
+const resolveStorageResult = <T extends object>(
+  status: StorageCompletionStatus,
+  detail: string | null,
+  buildSuccess: (detail: string | null) => T,
+  errorMessage: string
+): StorageResult<T> => {
+  if (status === 'cancelled') return { status: 'cancelled' }
+
   if (status === 'success') {
-    return { destinationUri: detail ?? '', status: 'success' }
-  }
-
-  if (status === 'cancelled') {
-    return { status: 'cancelled' }
-  }
-
-  return { message: detail ?? 'Export failed.', status: 'error' }
-}
-
-const resolveImportResult = (status: string, detail: string | null): ImportProfileResult => {
-  if (status === 'success') {
-    if (detail === null) {
-      return { message: 'Import failed.', status: 'error' }
-    }
-
     try {
-      return { profile: parseProfileJson(detail), status: 'success' }
+      return { ...buildSuccess(detail), status: 'success' }
     } catch (error) {
       return {
         message: error instanceof Error ? error.message : 'Invalid profile data.',
@@ -65,81 +39,90 @@ const resolveImportResult = (status: string, detail: string | null): ImportProfi
     }
   }
 
-  if (status === 'cancelled') {
-    return { status: 'cancelled' }
+  return { message: detail ?? errorMessage, status: 'error' }
+}
+
+const resolveExportResult = (
+  status: StorageCompletionStatus,
+  detail: string | null
+): ExportProfileResult =>
+  resolveStorageResult(
+    status,
+    detail,
+    (destinationUri) => ({ destinationUri: destinationUri ?? '' }),
+    'Export failed.'
+  )
+
+const resolveImportResult = (
+  status: StorageCompletionStatus,
+  detail: string | null
+): ImportProfileResult =>
+  resolveStorageResult(
+    status,
+    detail,
+    (profileJson) => {
+      if (!profileJson) throw new Error('Import failed.')
+      return { profile: parseProfileJson(profileJson) }
+    },
+    'Import failed.'
+  )
+
+class RunnerProfileStorageSingleton {
+  private module: RunnerStorageModule | null = null
+
+  configure = (module: RunnerStorageModule | null): void => {
+    this.module = module
   }
 
-  return { message: detail ?? 'Import failed.', status: 'error' }
-}
+  exportProfile = (onComplete: (result: ExportProfileResult) => void): void => {
+    'background only'
 
-const loadProfile = (): TrainingProfile | null => {
-  'background only'
+    if (!this.module) {
+      onComplete({ status: 'cancelled' })
+      return
+    }
 
-  const module = resolveRunnerStorageModule()
-
-  if (!module) return null
-
-  const profileJson = module.loadProfileJson()
-
-  if (!profileJson) return null
-
-  return parseProfileJson(profileJson)
-}
-
-const saveProfile = (profile: TrainingProfile): void => {
-  'background only'
-
-  const module = resolveRunnerStorageModule()
-
-  if (!module) return
-
-  module.saveProfileJson(JSON.stringify(profile))
-}
-
-const resetProfile = (): void => {
-  'background only'
-
-  const module = resolveRunnerStorageModule()
-
-  if (!module) return
-
-  module.resetProfile()
-}
-
-const exportProfile = (onComplete: (result: ExportProfileResult) => void): void => {
-  'background only'
-
-  const module = resolveRunnerStorageModule()
-
-  if (!module) {
-    onComplete({ status: 'cancelled' })
-    return
+    this.module.exportProfile((status, detail) => {
+      onComplete(resolveExportResult(status, detail))
+    })
   }
 
-  module.exportProfile((status, detail) => {
-    onComplete(resolveExportResult(status, detail))
-  })
-}
+  importProfile = (onComplete: (result: ImportProfileResult) => void): void => {
+    'background only'
 
-const importProfile = (onComplete: (result: ImportProfileResult) => void): void => {
-  'background only'
+    if (!this.module) {
+      onComplete({ status: 'cancelled' })
+      return
+    }
 
-  const module = resolveRunnerStorageModule()
-
-  if (!module) {
-    onComplete({ status: 'cancelled' })
-    return
+    this.module.importProfile((status, detail) => {
+      onComplete(resolveImportResult(status, detail))
+    })
   }
 
-  module.importProfile((status, detail) => {
-    onComplete(resolveImportResult(status, detail))
-  })
+  load = (): TrainingProfile | null => {
+    'background only'
+
+    if (!this.module) return null
+    const profileJson = this.module.loadProfileJson()
+    if (!profileJson) return null
+
+    return parseProfileJson(profileJson)
+  }
+
+  reset = (): void => {
+    'background only'
+
+    if (!this.module) return
+    this.module.resetProfile()
+  }
+
+  save = (profile: TrainingProfile): void => {
+    'background only'
+
+    if (!this.module) return
+    this.module.saveProfileJson(JSON.stringify(profile))
+  }
 }
 
-export const runnerProfileStorage: RunnerProfileStorage = {
-  exportProfile,
-  importProfile,
-  load: loadProfile,
-  reset: resetProfile,
-  save: saveProfile,
-}
+export const runnerProfileStorage = new RunnerProfileStorageSingleton()

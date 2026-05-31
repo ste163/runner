@@ -178,6 +178,39 @@ describe('SharedProfileStore', () => {
     expect(store.loadOrCreate()).toEqual({ profile: importedProfile, isFirstLaunch: false })
   })
 
+  it('forwards failed imports without changing the cached profile', () => {
+    const storage = {
+      exportProfile: vi.fn(),
+      importProfile: vi.fn((callback: (result: ImportProfileResult) => void) => {
+        callback({ message: 'Import failed.', status: 'error' })
+      }),
+      load: vi.fn(() => null),
+      reset: vi.fn(),
+      save: vi.fn(),
+    }
+    const store = new SharedProfileStore(storage)
+    const importResults: unknown[] = []
+
+    store.save({
+      ...createDefaultProfile(),
+      level: { runSeconds: 36, walkSeconds: 108, intervalBlockSeconds: 1200 },
+    })
+
+    store.importProfile((result) => {
+      importResults.push(result)
+    })
+
+    expect(storage.importProfile).toHaveBeenCalledTimes(1)
+    expect(importResults).toEqual([{ message: 'Import failed.', status: 'error' }])
+    expect(store.loadOrCreate()).toEqual({
+      isFirstLaunch: false,
+      profile: {
+        ...createDefaultProfile(),
+        level: { runSeconds: 36, walkSeconds: 108, intervalBlockSeconds: 1200 },
+      },
+    })
+  })
+
   it('keeps saved profiles in memory until reset', () => {
     const storage = {
       exportProfile: vi.fn(),

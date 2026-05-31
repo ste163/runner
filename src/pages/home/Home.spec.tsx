@@ -7,6 +7,7 @@ import * as router from 'sparkling-navigation'
 import { Home } from './Home.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
+import { runnerProfileStorage, type RunnerStorageModule } from '../../native/storage.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn(), close: vi.fn() }))
 
@@ -36,10 +37,12 @@ const buildProfile = (): TrainingProfile => ({
 describe('Home', () => {
   beforeEach(() => {
     sharedProfileStore.reset()
+    runnerProfileStorage.configure(null)
     vi.clearAllMocks()
   })
 
   afterEach(() => {
+    runnerProfileStorage.configure(null)
     vi.unstubAllGlobals()
   })
 
@@ -82,22 +85,22 @@ describe('Home', () => {
       ...buildProfile(),
       level: { runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 },
     }
-    const exportProfile = vi.fn((callback: (status: string, detail: string | null) => void) => {
+    const exportProfile = vi.fn((callback) => {
       callback('success', 'content://runner-profile.json')
     })
-    const importProfile = vi.fn((callback: (status: string, detail: string | null) => void) => {
+    const importProfile = vi.fn((callback) => {
       callback('success', JSON.stringify(importedProfile))
     })
 
-    vi.stubGlobal('NativeModules', {
-      RunnerStorageModule: {
-        exportProfile,
-        importProfile,
-        loadProfileJson: vi.fn(() => JSON.stringify(buildProfile())),
-        resetProfile: vi.fn(),
-        saveProfileJson: vi.fn(),
-      },
-    })
+    const module: RunnerStorageModule = {
+      exportProfile,
+      importProfile,
+      loadProfileJson: vi.fn(() => JSON.stringify(buildProfile())),
+      resetProfile: vi.fn(),
+      saveProfileJson: vi.fn(),
+    }
+
+    runnerProfileStorage.configure(module)
 
     render(<Home />)
 

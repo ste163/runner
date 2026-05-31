@@ -78,6 +78,8 @@ for (const n of numbers) doubled.push(n * 2)
 - Explicit return types on exported functions.
 - Prefer `.reduce` over `Set` or mutable accumulation.
 - Use `if (!value) return` for single-return guard clauses. No braces.
+- Keep short related checks compact; do not add blank lines between them.
+- Do not export types, interfaces, or values unless another file needs them.
 - Do not compare `undefined` or `null` for presence. Use truthy guard clauses when presence is implied.
 - **Never disable lint rules.** Surface the problem to the developer instead.
 - Prefer one-line expressions when they stay readable.

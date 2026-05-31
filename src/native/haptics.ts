@@ -8,7 +8,7 @@ const resolveRunnerHapticModule = (): WorkoutHaptics | null => {
 
   if (typeof NativeModules === 'undefined') return null
 
-  return NativeModules.RunnerHapticModule ?? null
+  return NativeModules['RunnerHapticModule'] ?? null
 }
 
 export const cancelRunnerHaptics = (): void => {

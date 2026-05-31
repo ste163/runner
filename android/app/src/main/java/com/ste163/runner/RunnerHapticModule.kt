@@ -1,7 +1,6 @@
 package com.ste163.runner
 
 import android.content.Context
-import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 
@@ -21,18 +20,12 @@ class RunnerHapticModule(context: Context) : LynxModule(context) {
 
         if (!vibrator.hasVibrator()) return
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(
-                VibrationEffect.createOneShot(
-                    safeDurationMs,
-                    VibrationEffect.DEFAULT_AMPLITUDE,
-                )
+        vibrator.vibrate(
+            VibrationEffect.createOneShot(
+                safeDurationMs,
+                VibrationEffect.DEFAULT_AMPLITUDE,
             )
-            return
-        }
-
-        @Suppress("DEPRECATION")
-        vibrator.vibrate(safeDurationMs)
+        )
     }
 
     @LynxMethod

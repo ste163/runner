@@ -100,10 +100,10 @@ bun dev
 ## Logs
 
 ```bash
-adb logcat | tail -n 200
+bun log:app
 ```
 
-Watch Android logs while `bun dev` is running. Use `Ctrl+C` to stop.
+Watch Android logs while the device is plugged into the machine.
 
 ## Dev Loop
 
@@ -128,12 +128,6 @@ bun run test
 ```
 
 Runs unit tests once.
-
-```bash
-bun run test:watch
-```
-
-Runs unit tests in watch mode.
 
 ```bash
 bun run typecheck

@@ -16,7 +16,7 @@ const cloneProfile = (profile: TrainingProfile): TrainingProfile => ({
   sessions: profile.sessions.map(cloneSession),
 })
 
-export interface ProfilePersistence {
+type ProfilePersistence = {
   exportProfile: (onComplete: (result: ExportProfileResult) => void) => void
   importProfile: (onComplete: (result: ImportProfileResult) => void) => void
   load: () => TrainingProfile | null
@@ -51,7 +51,7 @@ export class InMemoryProfileStorage implements ProfilePersistence {
   }
 }
 
-export interface SharedProfileLoadResult {
+type SharedProfileLoadResult = {
   profile: TrainingProfile
   isFirstLaunch: boolean
 }

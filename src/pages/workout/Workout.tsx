@@ -8,6 +8,14 @@ import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import type { WorkoutHaptics } from '../../native/haptics.js'
+import {
+  loadWorkoutTimerState,
+  pauseRunnerWorkoutTimer,
+  resumeRunnerWorkoutTimer,
+  startRunnerWorkoutTimer,
+  stopRunnerWorkoutTimer,
+} from '../../native/workout-timer.js'
+import type { WorkoutTimerState } from '../../native/workout-timer.js'
 
 type WorkoutInterval = ReturnType<typeof calculateIntervals>[number]
 
@@ -77,21 +85,6 @@ const buildNextUpLabel = (intervals: WorkoutInterval[], nextIndex: number): stri
     : 'Next up: complete'
 }
 
-const buildElapsedSeconds = (
-  intervals: WorkoutInterval[],
-  phaseIndex: number,
-  remainingSeconds: number
-): number => {
-  const completedBeforeCurrent = intervals
-    .slice(0, phaseIndex)
-    .reduce((total, interval) => total + interval.durationSeconds, 0)
-  const currentInterval = intervals[phaseIndex]
-
-  return currentInterval
-    ? completedBeforeCurrent + currentInterval.durationSeconds - remainingSeconds
-    : intervals.reduce((total, interval) => total + interval.durationSeconds, 0)
-}
-
 const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean =>
   previous.runSeconds !== next.runSeconds ||
   previous.walkSeconds !== next.walkSeconds ||
@@ -105,20 +98,20 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     () => buildWorkoutIntervals(sessionProfile.level),
     [sessionProfile.level]
   )
-  const [phaseIndex, setPhaseIndex] = useState(0)
-  const [remainingSeconds, setRemainingSeconds] = useState(
-    workoutIntervals[0]?.durationSeconds ?? 0
-  )
-  const [isPaused, setIsPaused] = useState(false)
   const [isStarted, setIsStarted] = useState(false)
+  const [timerState, setTimerState] = useState<WorkoutTimerState | null>(null)
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
 
   const completeWorkout = useCallback((): void => {
+    'background only'
+
     if (completionHandledRef.current) return
 
     completionHandledRef.current = true
+
+    stopRunnerWorkoutTimer()
 
     const completedAt = new Date()
     const session: Session = {
@@ -132,22 +125,47 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
 
     sharedProfileStore.save(nextProfile)
     setSummary({ profile: nextProfile, session })
-    setIsPaused(false)
-    setRemainingSeconds(0)
+    setIsStarted(false)
+    setTimerState(null)
     haptics.cancel()
   }, [haptics, sessionProfile])
 
+  const syncWorkoutState = useCallback((): void => {
+    const nextTimerState = loadWorkoutTimerState()
+
+    if (!nextTimerState) return
+
+    setTimerState(nextTimerState)
+    setIsStarted(!nextTimerState.isComplete && nextTimerState.isRunning)
+
+    if (nextTimerState.isComplete) {
+      completeWorkout()
+    }
+  }, [completeWorkout])
+
   const handlePauseToggle = useCallback((): void => {
-    setIsPaused((currentPaused) => !currentPaused)
-  }, [])
+    if (timerState?.isPaused) {
+      resumeRunnerWorkoutTimer()
+      syncWorkoutState()
+      return
+    }
+
+    pauseRunnerWorkoutTimer()
+    syncWorkoutState()
+  }, [syncWorkoutState, timerState])
 
   const handleStart = useCallback((): void => {
     setIsStarted(true)
+    startRunnerWorkoutTimer(sessionProfile.level)
     haptics.vibrate(500)
-  }, [haptics])
+    syncWorkoutState()
+  }, [haptics, sessionProfile.level, syncWorkoutState])
 
   const handleStop = useCallback((): void => {
+    stopRunnerWorkoutTimer()
     haptics.cancel()
+    setTimerState(null)
+    setIsStarted(false)
     close()
   }, [haptics])
 
@@ -163,52 +181,28 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   }, [onMounted])
 
   useEffect(() => {
-    if (!isStarted || summary !== null || isPaused || remainingSeconds <= 0) return
+    if (!isStarted || summary !== null) return
 
-    const timeoutId = setTimeout(() => {
-      setRemainingSeconds((currentRemaining) => Math.max(currentRemaining - 1, 0))
+    syncWorkoutState()
+
+    const intervalId = setInterval(() => {
+      syncWorkoutState()
     }, 1000)
 
-    return () => clearTimeout(timeoutId)
-  }, [isPaused, isStarted, remainingSeconds, summary])
+    return () => clearInterval(intervalId)
+  }, [isStarted, summary, syncWorkoutState])
 
-  useEffect(() => {
-    if (!isStarted || summary !== null || isPaused || remainingSeconds <= 0 || remainingSeconds > 5)
-      return
-
-    haptics.vibrate(200)
-  }, [haptics, isPaused, isStarted, remainingSeconds, summary])
-
-  useEffect(() => {
-    if (!isStarted || summary !== null || isPaused || remainingSeconds !== 0) return
-
-    const nextIndex = phaseIndex + 1
-    const nextInterval = workoutIntervals[nextIndex]
-
-    if (nextInterval) {
-      setPhaseIndex(nextIndex)
-      setRemainingSeconds(nextInterval.durationSeconds)
-      return
-    }
-
-    completeWorkout()
-  }, [
-    completeWorkout,
-    isPaused,
-    isStarted,
-    phaseIndex,
-    remainingSeconds,
-    summary,
-    workoutIntervals,
-  ])
-
-  const currentInterval = workoutIntervals[phaseIndex]
+  const currentPhaseIndex = timerState?.phaseIndex ?? 0
+  const currentInterval = workoutIntervals[currentPhaseIndex]
   const totalSeconds = useMemo(
     () => workoutIntervals.reduce((total, interval) => total + interval.durationSeconds, 0),
     [workoutIntervals]
   )
-  const elapsedSeconds = buildElapsedSeconds(workoutIntervals, phaseIndex, remainingSeconds)
-  const nextUpLabel = buildNextUpLabel(workoutIntervals, phaseIndex + 1)
+  const remainingSeconds =
+    timerState?.phaseRemainingSeconds ?? currentInterval?.durationSeconds ?? 0
+  const isPaused = timerState?.isPaused ?? false
+  const elapsedSeconds = timerState?.totalElapsedSeconds ?? 0
+  const nextUpLabel = buildNextUpLabel(workoutIntervals, currentPhaseIndex + 1)
   const workoutLevel = summary === null ? sessionProfile.level : summary.profile.level
   const workoutLevelMessage = hasLevelChanged(sessionProfile.level, workoutLevel)
     ? `New level: ${levelLabel(workoutLevel)}`

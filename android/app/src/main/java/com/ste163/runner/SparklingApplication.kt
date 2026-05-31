@@ -60,6 +60,8 @@ class SparklingApplication : Application() {
                 mapOf(
                     "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java),
                     "RunnerStorageModule" to SparklingLynxModuleWrapper(RunnerStorageModule::class.java),
+                    "RunnerWorkoutTimerModule" to
+                        SparklingLynxModuleWrapper(RunnerWorkoutTimerModule::class.java),
                 )
             )
             setTemplateProvider(BuiltinTemplateProvider(this@SparklingApplication))

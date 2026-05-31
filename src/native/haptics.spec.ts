@@ -12,6 +12,13 @@ describe('haptics bridge', () => {
     expect(() => vibrateRunnerHaptics(200)).not.toThrow()
   })
 
+  it('does nothing when NativeModules exists without the haptic module', () => {
+    vi.stubGlobal('NativeModules', {})
+
+    expect(() => cancelRunnerHaptics()).not.toThrow()
+    expect(() => vibrateRunnerHaptics(200)).not.toThrow()
+  })
+
   it('calls through to the native runner haptics module', () => {
     const module = {
       cancel: vi.fn(),
