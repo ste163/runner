@@ -7,7 +7,9 @@ import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
 import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingLevel, TrainingProfile } from '../../domain/types.js'
+import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
 import type { WorkoutHaptics } from '../../native-bridge/haptics.js'
+import { runnerScreen } from '../../native-bridge/screen.js'
 import { runnerWorkoutTimer, type WorkoutTimerState } from '../../native-bridge/workout-timer.js'
 
 type WorkoutInterval = ReturnType<typeof calculateIntervals>[number]
@@ -34,6 +36,9 @@ const formatDistance = (miles: number): string => `${miles.toFixed(2)} mi`
 
 const formatPace = (paceMinPerMile: number): string =>
   paceMinPerMile <= 0 ? 'No pace' : `${paceMinPerMile.toFixed(2)} min/mi`
+
+const buildCurrentPace = (elapsedSeconds: number, distanceMiles: number): number =>
+  distanceMiles <= 0 ? 0 : elapsedSeconds / 60 / distanceMiles
 
 const levelLabel = (level: TrainingLevel): string =>
   isGraduated(level)
@@ -96,6 +101,45 @@ const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean 
 const isPendingNativeStartState = (timerState: WorkoutTimerState): boolean =>
   !timerState.isRunning && !timerState.isPaused && !timerState.isComplete
 
+const setScreenWakeLock = (enabled: boolean): void => {
+  runnerScreen.keepScreenOn(enabled)
+}
+
+const setWorkoutGpsTracking = (enabled: boolean): void => {
+  runnerGps.setWorkoutTrackingEnabled(enabled)
+}
+
+const openLocationSettings = (): void => {
+  runnerGps.openLocationSettings()
+}
+
+const buildLocationPromptLabel = (gpsState: WorkoutGpsState | null): string | null => {
+  if (!gpsState) return null
+  if (!gpsState.hasPermission)
+    return 'Location permission is required for pace and distance tracking.'
+  if (!gpsState.isLocationEnabled) return 'Turn on location services to track pace and distance.'
+
+  return null
+}
+
+const buildDistanceLabel = (gpsState: WorkoutGpsState | null): string =>
+  !gpsState
+    ? 'Distance: N/A'
+    : !gpsState.hasPermission
+      ? 'Distance: N/A'
+      : !gpsState.isLocationEnabled
+        ? 'Distance: Location services off'
+        : `Distance: ${formatDistance(gpsState.distanceMiles)}`
+
+const buildPaceLabel = (gpsState: WorkoutGpsState | null, elapsedSeconds: number): string => {
+  if (!gpsState?.hasPermission) return 'Pace: N/A'
+  if (!gpsState.isLocationEnabled) return 'Pace: Location services off'
+
+  const paceMinPerMile = buildCurrentPace(elapsedSeconds, gpsState.distanceMiles)
+
+  return gpsState.distanceMiles <= 0 ? 'Pace: No pace yet' : `Pace: ${formatPace(paceMinPerMile)}`
+}
+
 export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const [sessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
@@ -106,11 +150,15 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   )
   const [isStarted, setIsStarted] = useState(false)
   const [timerState, setTimerState] = useState<WorkoutTimerState | null>(null)
+  const [gpsState, setGpsState] = useState<WorkoutGpsState | null>(() => runnerGps.loadState())
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
   const countdownPulseKeyRef = useRef<string | null>(null)
+  const locationPromptLabel = buildLocationPromptLabel(gpsState)
+  const shouldShowLocationSettingsButton =
+    gpsState?.hasPermission === true && gpsState?.isLocationEnabled === false
 
   const completeWorkout = useCallback((): void => {
     'background only'
@@ -120,7 +168,10 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     completionHandledRef.current = true
     startRequestedRef.current = false
 
+    const completedGpsState = runnerGps.loadState()
+    setWorkoutGpsTracking(false)
     runnerWorkoutTimer.stop()
+    setScreenWakeLock(false)
 
     const completedAt = new Date()
     const session: Session = {
@@ -128,7 +179,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
       completedAt: completedAt.toISOString(),
       intervals: [],
       level: { ...sessionProfile.level },
-      totalDistanceMiles: 0,
+      totalDistanceMiles: completedGpsState?.distanceMiles ?? 0,
     }
     const nextProfile = buildCompletedProfile(sessionProfile, session, completedAt)
 
@@ -136,6 +187,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     setSummary({ profile: nextProfile, session })
     setIsStarted(false)
     setTimerState(null)
+    setGpsState(completedGpsState)
     haptics.cancel()
   }, [haptics, sessionProfile])
 
@@ -146,6 +198,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     if (startRequestedRef.current && isPendingNativeStartState(nextTimerState)) return
 
     setTimerState(nextTimerState)
+    setGpsState(runnerGps.loadState())
 
     if (nextTimerState.isComplete) {
       startRequestedRef.current = false
@@ -159,11 +212,13 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
 
   const handlePauseToggle = useCallback((): void => {
     if (timerState?.isPaused) {
+      setWorkoutGpsTracking(true)
       runnerWorkoutTimer.resume()
       syncWorkoutState()
       return
     }
 
+    setWorkoutGpsTracking(false)
     runnerWorkoutTimer.pause()
     syncWorkoutState()
   }, [syncWorkoutState, timerState])
@@ -171,6 +226,8 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const handleStart = useCallback((): void => {
     startRequestedRef.current = true
     setIsStarted(true)
+    setWorkoutGpsTracking(true)
+    setScreenWakeLock(true)
     runnerWorkoutTimer.start(sessionProfile.level)
     haptics.vibrate(500)
     syncWorkoutState()
@@ -178,15 +235,22 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
 
   const handleStop = useCallback((): void => {
     startRequestedRef.current = false
+    setWorkoutGpsTracking(false)
+    setScreenWakeLock(false)
     runnerWorkoutTimer.stop()
     haptics.cancel()
     setTimerState(null)
     setIsStarted(false)
+    setGpsState(runnerGps.loadState())
     close()
   }, [haptics])
 
   const handleDone = useCallback((): void => {
     close()
+  }, [])
+
+  const handleOpenLocationSettings = useCallback((): void => {
+    openLocationSettings()
   }, [])
 
   useEffect(() => {
@@ -195,6 +259,13 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     hasStartedRef.current = true
     onMounted?.()
   }, [onMounted])
+
+  useEffect(() => {
+    return () => {
+      setWorkoutGpsTracking(false)
+      setScreenWakeLock(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isStarted || summary !== null) return
@@ -219,6 +290,8 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const displayedRemainingSeconds = Math.max(Math.round(remainingSeconds), 0)
   const isPaused = timerState?.isPaused ?? false
   const elapsedSeconds = timerState?.totalElapsedSeconds ?? 0
+  const currentDistanceLabel = buildDistanceLabel(gpsState)
+  const currentPaceLabel = buildPaceLabel(gpsState, elapsedSeconds)
   const nextUpLabel = buildNextUpLabel(workoutIntervals, currentPhaseIndex + 1)
   const workoutLevel = summary === null ? sessionProfile.level : summary.profile.level
   const workoutLevelMessage = hasLevelChanged(sessionProfile.level, workoutLevel)
@@ -278,6 +351,20 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
                 </view>
               </view>
 
+              {locationPromptLabel ? (
+                <view className='card'>
+                  <text className='label'>Location</text>
+                  <view className='stack'>
+                    <text className='copy'>{locationPromptLabel}</text>
+                    {shouldShowLocationSettingsButton ? (
+                      <view className='secondary' bindtap={handleOpenLocationSettings}>
+                        <text className='secondary__text'>Open Location Settings</text>
+                      </view>
+                    ) : null}
+                  </view>
+                </view>
+              ) : null}
+
               <view className='card'>
                 <text className='label'>Session flow</text>
                 <view className='stack'>
@@ -316,12 +403,28 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
                 <text className='timer'>{formatDuration(displayedRemainingSeconds)}</text>
 
                 <view className='timer-card__meta'>
+                  <text className='copy'>{currentDistanceLabel}</text>
+                  <text className='copy'>{currentPaceLabel}</text>
                   <text className='copy'>
                     Elapsed {formatDuration(elapsedSeconds)} / {formatDuration(totalSeconds)}
                   </text>
                   <text className='copy'>{nextUpLabel}</text>
                 </view>
               </view>
+
+              {locationPromptLabel ? (
+                <view className='card'>
+                  <text className='label'>Location</text>
+                  <view className='stack'>
+                    <text className='copy'>{locationPromptLabel}</text>
+                    {shouldShowLocationSettingsButton ? (
+                      <view className='secondary' bindtap={handleOpenLocationSettings}>
+                        <text className='secondary__text'>Open Location Settings</text>
+                      </view>
+                    ) : null}
+                  </view>
+                </view>
+              ) : null}
 
               <view className='card'>
                 <text className='label'>Session flow</text>
@@ -360,9 +463,11 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
                   Total distance: {formatDistance(summary.session.totalDistanceMiles)}
                 </text>
                 <text className='copy'>
-                  {summary.session.intervals.length === 0
-                    ? 'GPS unavailable yet. No interval breakdown recorded.'
-                    : 'Interval breakdown recorded below.'}
+                  {summary.session.totalDistanceMiles > 0
+                    ? 'GPS metrics recorded. No interval breakdown recorded.'
+                    : summary.session.intervals.length === 0
+                      ? 'GPS unavailable yet. No interval breakdown recorded.'
+                      : 'Interval breakdown recorded below.'}
                 </text>
                 <text className='copy'>{workoutLevelMessage}</text>
               </view>

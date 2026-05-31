@@ -59,6 +59,8 @@ class SparklingApplication : Application() {
             addLynxModules(
                 mapOf(
                     "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java),
+                    "RunnerGpsModule" to SparklingLynxModuleWrapper(RunnerGpsModule::class.java),
+                    "RunnerScreenModule" to SparklingLynxModuleWrapper(RunnerScreenModule::class.java),
                     "RunnerStorageModule" to SparklingLynxModuleWrapper(RunnerStorageModule::class.java),
                     "RunnerWorkoutTimerModule" to
                         SparklingLynxModuleWrapper(RunnerWorkoutTimerModule::class.java),

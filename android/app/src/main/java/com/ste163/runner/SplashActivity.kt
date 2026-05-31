@@ -18,16 +18,33 @@ import com.ste163.runner.DebugSparklingUiProvider
 class SplashActivity : AppCompatActivity() {
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            ensureLocationPermission()
+        }
+
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             gotoSparklingPage()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        ensureNotificationPermission()
+    }
+
+    private fun ensureNotificationPermission() {
         if (hasNotificationPermission()) {
-            gotoSparklingPage()
+            ensureLocationPermission()
         } else {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun ensureLocationPermission() {
+        if (hasLocationPermission()) {
+            gotoSparklingPage()
+        } else {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -35,6 +52,13 @@ class SplashActivity : AppCompatActivity() {
         return ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
     }
 

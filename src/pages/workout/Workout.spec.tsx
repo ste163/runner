@@ -7,10 +7,12 @@ import * as router from 'sparkling-navigation'
 import { Workout } from './Workout.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
+import type { WorkoutGpsState } from '../../native-bridge/gps.js'
 import type { WorkoutTimerState } from '../../native-bridge/workout-timer.js'
 
 const workoutTimerMock = vi.hoisted(() => {
   let state: WorkoutTimerState | null = null
+  let gpsState: WorkoutGpsState | null = null
 
   return {
     runnerWorkoutTimer: {
@@ -21,17 +23,39 @@ const workoutTimerMock = vi.hoisted(() => {
       start: vi.fn(),
       stop: vi.fn(),
     },
+    runnerGps: {
+      configure: vi.fn(),
+      loadState: vi.fn(() => gpsState),
+      openLocationSettings: vi.fn(),
+      setWorkoutTrackingEnabled: vi.fn(),
+    },
+    runnerScreen: {
+      configure: vi.fn(),
+      keepScreenOn: vi.fn(),
+    },
     reset: () => {
       state = null
+      gpsState = null
     },
     setState: (nextState: WorkoutTimerState | null) => {
       state = nextState
+    },
+    setGpsState: (nextState: WorkoutGpsState | null) => {
+      gpsState = nextState
     },
   }
 })
 
 vi.mock('../../native-bridge/workout-timer.js', () => ({
   runnerWorkoutTimer: workoutTimerMock.runnerWorkoutTimer,
+}))
+
+vi.mock('../../native-bridge/gps.js', () => ({
+  runnerGps: workoutTimerMock.runnerGps,
+}))
+
+vi.mock('../../native-bridge/screen.js', () => ({
+  runnerScreen: workoutTimerMock.runnerScreen,
 }))
 
 vi.mock('sparkling-navigation', () => ({ close: vi.fn() }))
@@ -98,6 +122,8 @@ describe('Workout', () => {
 
     expect(workoutTimerMock.runnerWorkoutTimer.start).toHaveBeenCalledTimes(1)
     expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerScreen.keepScreenOn).toHaveBeenNthCalledWith(1, true)
+    expect(workoutTimerMock.runnerScreen.keepScreenOn).toHaveBeenNthCalledWith(2, false)
     expect(haptics.cancel).toHaveBeenCalledTimes(1)
 
     const profile = sharedProfileStore.loadOrCreate().profile
@@ -106,7 +132,8 @@ describe('Workout', () => {
 
   it('shows warmup phase and start pulse', async () => {
     const onMounted = vi.fn()
-    workoutTimerMock.setState(buildTimerState())
+    workoutTimerMock.setState(buildTimerState({ totalElapsedSeconds: 300 }))
+    workoutTimerMock.setGpsState(buildGpsState({ distanceMiles: 0.25 }))
 
     render(<Workout haptics={haptics} onMounted={onMounted} />)
 
@@ -122,11 +149,40 @@ describe('Workout', () => {
       buildWorkoutProfile().level
     )
 
-    await queries.findByText('WARMUP')
-    await queries.findByText('5m 0s')
-    await queries.findByText('Next up: RUN 1s')
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(queries.getByText('WARMUP')).toBeInTheDocument()
+    expect(queries.getByText('Distance: 0.25 mi')).toBeInTheDocument()
+    expect(queries.getByText('Pace: 20.00 min/mi')).toBeInTheDocument()
+    expect(
+      queries.getByText(
+        (_, element) => element?.className === 'timer' && element.textContent === '5m 0s'
+      )
+    ).toBeInTheDocument()
+    expect(queries.getByText('Next up: RUN 1s')).toBeInTheDocument()
 
     expect(haptics.vibrate).toHaveBeenCalledWith(500)
+    expect(workoutTimerMock.runnerGps.setWorkoutTrackingEnabled).toHaveBeenCalledWith(true)
+    expect(workoutTimerMock.runnerScreen.keepScreenOn).toHaveBeenCalledWith(true)
+  })
+
+  it('prompts to open location settings when GPS services are off', async () => {
+    workoutTimerMock.setGpsState(
+      buildGpsState({
+        isLocationEnabled: false,
+      })
+    )
+
+    render(<Workout haptics={haptics} />)
+
+    const queries = getWorkoutQueries()
+    await queries.findByText('Start Workout')
+    expect(
+      queries.getByText('Turn on location services to track pace and distance.')
+    ).toBeInTheDocument()
+
+    fireEvent.tap(queries.getByText('Open Location Settings'))
+
+    expect(workoutTimerMock.runnerGps.openLocationSettings).toHaveBeenCalledTimes(1)
   })
 
   it('keeps the workout started while the native timer catches up', async () => {
@@ -145,7 +201,7 @@ describe('Workout', () => {
 
     fireEvent.tap(queries.getByText('Start Workout'))
 
-    await queries.findByText('Pause')
+    expect(workoutTimerMock.runnerGps.setWorkoutTrackingEnabled).toHaveBeenCalledWith(true)
 
     workoutTimerMock.setState(buildTimerState())
     await vi.advanceTimersByTimeAsync(1000)
@@ -175,6 +231,7 @@ describe('Workout', () => {
 
     expect(workoutTimerMock.runnerWorkoutTimer.start).toHaveBeenCalledTimes(2)
     expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerGps.setWorkoutTrackingEnabled).toHaveBeenCalledWith(false)
     expect(haptics.vibrate).toHaveBeenCalledTimes(2)
     expect(haptics.cancel).toHaveBeenCalledTimes(1)
   })
@@ -261,6 +318,7 @@ describe('Workout', () => {
 
     fireEvent.tap(queries.getByText('Pause'))
     expect(workoutTimerMock.runnerWorkoutTimer.pause).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerGps.setWorkoutTrackingEnabled).toHaveBeenCalledWith(false)
 
     workoutTimerMock.setState(
       buildTimerState({
@@ -275,6 +333,7 @@ describe('Workout', () => {
 
     fireEvent.tap(queries.getByText('Resume'))
     expect(workoutTimerMock.runnerWorkoutTimer.resume).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerGps.setWorkoutTrackingEnabled).toHaveBeenCalledWith(true)
 
     workoutTimerMock.setState(
       buildTimerState({
@@ -289,6 +348,11 @@ describe('Workout', () => {
 
   it('completes the workout, saves the session, and closes from the summary', async () => {
     workoutTimerMock.setState(buildTimerState())
+    workoutTimerMock.setGpsState(
+      buildGpsState({
+        distanceMiles: 0.47,
+      })
+    )
     render(<Workout haptics={haptics} />)
 
     const queries = getWorkoutQueries()
@@ -312,16 +376,31 @@ describe('Workout', () => {
     await vi.advanceTimersByTimeAsync(1000)
     await queries.findByText('Workout complete')
     await queries.findByText('Session saved. Close to return home.')
-    await queries.findByText('GPS unavailable yet. No interval breakdown recorded.')
+    expect(
+      queries.getByText((_, element) => element?.textContent === 'Total distance: 0.47 mi')
+    ).toBeInTheDocument()
+    expect(
+      queries.getByText('GPS metrics recorded. No interval breakdown recorded.')
+    ).toBeInTheDocument()
 
     const profile = sharedProfileStore.loadOrCreate().profile
     expect(profile.sessions).toHaveLength(1)
     expect(profile.sessions[0]?.intervals).toHaveLength(0)
+    expect(profile.sessions[0]?.totalDistanceMiles).toBe(0.47)
     expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerGps.setWorkoutTrackingEnabled).toHaveBeenCalledWith(false)
     expect(haptics.cancel).toHaveBeenCalledTimes(1)
 
     fireEvent.tap(queries.getByText('Done'))
 
     expect(router.close).toHaveBeenCalledTimes(1)
   })
+})
+
+const buildGpsState = (overrides: Partial<WorkoutGpsState> = {}): WorkoutGpsState => ({
+  distanceMiles: 0.5,
+  hasPermission: true,
+  isLocationEnabled: true,
+  isTracking: true,
+  ...overrides,
 })

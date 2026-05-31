@@ -268,18 +268,18 @@ SAF is permission-free by design on modern Android.
 
 ### GPS / Location Tracking
 
-**Confirmed feasible** via Lynx `NativeModules` using Android's `FusedLocationProviderClient`.
+**Confirmed feasible** via Lynx `NativeModules` using Android's `LocationManager` and `GPS_PROVIDER` only.
 
 **Context access**: `LynxModule` provides `mContext` (a `LynxContext` → application context). For runtime
 permission requests, `HybridActivityStackManager.getTopActivity()` is already used by sparkling's router
 bridge and is available here too.
 
 **Permission**: `ACCESS_FINE_LOCATION` declared in `AndroidManifest.xml`. Runtime permission requested
-at **app launch in `SplashActivity`** — one-and-done before any Lynx page opens. If denied, GPS stats
+at **app launch in `SplashActivity`** — one-and-done before any Lynx page opens and chained independently of notification permission. If denied, GPS stats
 are silently omitted; the app works normally.
 
-**`FusedLocationProviderClient`** works with application context — no Activity needed for location
-updates once permission is granted.
+**`LocationManager`** works with application context once permission is granted; when GPS services are disabled,
+the workout screen prompts the user to open location settings.
 
 **Per-interval collection design** — JS drives the interval lifecycle:
 
@@ -456,12 +456,12 @@ Completed:
   `android:foregroundServiceType="health"` in manifest (Android 14 / API 34 required)
 - COMPLETED: **Native → JS events**: Investigate `GlobalEventEmitter` or callback pattern for foreground service
   to push timer ticks to Lynx page
-- **Screen wake lock**: `RunnerScreenModule` (`keepScreenOn(bool)`), called on workout start/end.
+- COMPLETED: **Screen wake lock**: `RunnerScreenModule` (`keepScreenOn(bool)`), called on workout start/end.
   No permission needed.
-- **Permissions at launch**: `ACCESS_FINE_LOCATION` + `FOREGROUND_SERVICE` requested in `SplashActivity`
-- **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
+- COMPLETED: **Session ID**: Investigate `crypto.randomUUID()` availability in Lynx background thread; use `nanoid`
   if unavailable
-- **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
+- **Permissions at launch**: `ACCESS_FINE_LOCATION` requested in `SplashActivity` independently of notification permission
+- **GPS**: `RunnerGpsModule` — `LocationManager`, GPS-only accumulation, location-services prompt
 - **Testing UI**: Home now exposes export/import controls for current profile JSON via an android-native file picker
   the storage flow can be exercised from the app itself.
 
@@ -486,9 +486,9 @@ Completed:
 6. **Rest day guidance**: Suggest next session in 2 days after each completed session (not enforced).
 7. **Graduation**: When `walkSeconds ≤ 10s`, drop walk intervals entirely — user is a continuous runner.
    Interval block growth toward 25 min max (35 min total session) — **exact mechanic TBD, Phase 5.**
-8. **GPS / location tracking**: `FusedLocationProviderClient` via `RunnerGpsModule` (`LynxModule`).
-   `ACCESS_FINE_LOCATION` permission at **app launch in `SplashActivity`** (one-and-done).
-   Per-interval stats only. Privacy: no coordinates stored. Fallback if denied.
+8. **GPS / location tracking**: `LocationManager` via `RunnerGpsModule` (`LynxModule`).
+   `ACCESS_FINE_LOCATION` permission at **app launch in `SplashActivity`** (one-and-done, independent of notification permission).
+   If GPS services are disabled, the workout screen prompts the user to open location settings. Per-interval stats only. Privacy: no coordinates stored. Fallback if denied.
 9. **Storage**: `context.filesDir/training_profile.json` via Lynx `NativeModules`. Atomic writes via
    write-to-temp + rename. Import safety via `.bak` file. Export/import via Android SAF. No permissions required.
 10. **Foreground service**: Required to keep timer alive when screen off / app backgrounded. Persistent
