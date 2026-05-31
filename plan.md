@@ -449,7 +449,7 @@ Completed:
 
 - **JS wrapper namespace**: use a dedicated `src/native/` area for JS-facing NativeModules wrappers.
 - COMPLETED: **Haptics**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission.
-- **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
+- COMPLETED: **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend;
   atomic write pattern; SAF export/import; replace in-memory stub
 - **GPS**: `RunnerGpsModule` — `FusedLocationProviderClient`, per-interval accumulation, fallback
 - **Foreground service**: Android foreground service owning the workout timer; persistent notification;
