@@ -29,37 +29,40 @@ bun run verify-docs
 
 ## Architecture
 
-The Lynx pages own UI state and user interaction. Android owns the long-lived app state and native capabilities.
+The Lynx pages own UI state and user interaction. Android owns long-lived app state, permissions, and native capabilities.
 
 ```mermaid
-flowchart TB
+flowchart LR
   subgraph Frontend[Lynx frontend]
     UI[Pages + React state]
     Stores[sharedProfileStore]
-    Bridges[NativeModules wrappers]
+    Bridges[Native bridge wrappers]
+    UI --> Stores
+    Stores --> Bridges
   end
 
   subgraph Backend[Android backend]
-    Storage[RunnerStorageModule\npersists profile.json]
-    TimerSvc[RunnerWorkoutTimerService\nsource of truth for workout state]
-    TimerState[RunnerWorkoutTimerStateStore]
-    HapticModule[RunnerHapticModule\nvibration]
+    Permissions[Launch permissions]
+    Storage[Profile storage]
+    Timer[Workout timer service]
+    GPS[GPS tracking]
+    Screen[Screen wake lock]
+    Haptics[Haptic feedback]
   end
 
-  UI --> Stores
-  UI --> Bridges
+  Bridges --> Permissions
   Bridges --> Storage
-  Bridges --> TimerSvc
-  TimerSvc --> TimerState
-  TimerSvc --> HapticModule
-  Stores --> Storage
+  Bridges --> Timer
+  Bridges --> GPS
+  Bridges --> Screen
+  Bridges --> Haptics
 ```
 
 ### State ownership
 
-- **Frontend**: React state drives page UI. `sharedProfileStore` keeps the in-memory profile snapshot, and `src/pages/*/index.tsx` wires `NativeModules` into the frontend bridge wrappers.
-- **Android backend**: `RunnerStorageModule` persists the profile JSON; `RunnerWorkoutTimerService` is the source of truth for the live workout timer state and countdown haptics.
-- **Bridge layer**: `runnerWorkoutTimer` and `runnerHaptics` forward frontend calls into Android modules.
+- **Frontend**: React state drives page UI, with `sharedProfileStore` keeping the in-memory profile snapshot.
+- **Bridge layer**: `src/pages/*/index.tsx` wires `NativeModules` into the Lynx bridge wrappers.
+- **Android backend**: Android handles launch permissions, profile storage, workout timing, GPS tracking, screen wake lock, and haptic feedback.
 
 ## macOS Install
 
