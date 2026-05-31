@@ -67,6 +67,8 @@ android {
 
 //    kapt(libs.lynx.processor)
 
+        testImplementation(libs.junit)
+
         // BEGIN SPARKLING AUTOLINK
         listOf(
             project(":sparkling-navigation")

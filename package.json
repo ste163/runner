@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "android:test": "sh ./scripts/android-test.sh",
     "lint": "oxlint src app.config.ts vitest.config.ts",
     "lint:fix": "oxlint --fix src app.config.ts vitest.config.ts",
     "fmt": "oxfmt",
