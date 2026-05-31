@@ -8,6 +8,10 @@ object RunnerWorkoutTimerStateStore {
         return stateJson
     }
 
+    fun clear() {
+        stateJson = null
+    }
+
     fun save(stateJson: String) {
         this.stateJson = stateJson
     }

@@ -122,6 +122,56 @@ describe('Workout', () => {
     expect(haptics.vibrate).toHaveBeenCalledWith(500)
   })
 
+  it('keeps the workout started while the native timer catches up', async () => {
+    workoutTimerMock.setState(
+      buildTimerState({
+        isComplete: false,
+        isPaused: false,
+        isRunning: false,
+      })
+    )
+
+    render(<Workout haptics={haptics} />)
+
+    const queries = getWorkoutQueries()
+    await queries.findByText('Start Workout')
+
+    fireEvent.tap(queries.getByText('Start Workout'))
+
+    await queries.findByText('Pause')
+
+    workoutTimerMock.setState(buildTimerState())
+    await vi.advanceTimersByTimeAsync(1000)
+
+    await queries.findByText('WARMUP')
+    await queries.findByText('5m 0s')
+
+    expect(workoutTimerMock.runnerWorkoutTimer.start).toHaveBeenCalledTimes(1)
+    expect(haptics.vibrate).toHaveBeenCalledWith(500)
+  })
+
+  it('restarts after stopping and calls the bridges for each start', async () => {
+    workoutTimerMock.setState(buildTimerState())
+    render(<Workout haptics={haptics} />)
+
+    const queries = getWorkoutQueries()
+    await queries.findByText('Start Workout')
+
+    fireEvent.tap(queries.getByText('Start Workout'))
+    await queries.findByText('Pause')
+
+    fireEvent.tap(queries.getByText('Stop'))
+    await queries.findByText('Start Workout')
+
+    fireEvent.tap(queries.getByText('Start Workout'))
+    await queries.findByText('Pause')
+
+    expect(workoutTimerMock.runnerWorkoutTimer.start).toHaveBeenCalledTimes(2)
+    expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
+    expect(haptics.vibrate).toHaveBeenCalledTimes(2)
+    expect(haptics.cancel).toHaveBeenCalledTimes(1)
+  })
+
   it('pauses and resumes the countdown', async () => {
     workoutTimerMock.setState(buildTimerState())
     render(<Workout haptics={haptics} />)

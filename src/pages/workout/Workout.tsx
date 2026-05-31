@@ -83,6 +83,9 @@ const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean 
   previous.walkSeconds !== next.walkSeconds ||
   previous.intervalBlockSeconds !== next.intervalBlockSeconds
 
+const isPendingNativeStartState = (timerState: WorkoutTimerState): boolean =>
+  !timerState.isRunning && !timerState.isPaused && !timerState.isComplete
+
 export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const [sessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
@@ -96,6 +99,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
+  const startRequestedRef = useRef(false)
 
   const completeWorkout = useCallback((): void => {
     'background only'
@@ -103,6 +107,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     if (completionHandledRef.current) return
 
     completionHandledRef.current = true
+    startRequestedRef.current = false
 
     runnerWorkoutTimer.stop()
 
@@ -127,13 +132,18 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
     const nextTimerState = runnerWorkoutTimer.loadState()
 
     if (!nextTimerState) return
+    if (startRequestedRef.current && isPendingNativeStartState(nextTimerState)) return
 
     setTimerState(nextTimerState)
-    setIsStarted(!nextTimerState.isComplete && nextTimerState.isRunning)
 
     if (nextTimerState.isComplete) {
+      startRequestedRef.current = false
       completeWorkout()
+      return
     }
+
+    startRequestedRef.current = false
+    setIsStarted(nextTimerState.isRunning)
   }, [completeWorkout])
 
   const handlePauseToggle = useCallback((): void => {
@@ -148,6 +158,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   }, [syncWorkoutState, timerState])
 
   const handleStart = useCallback((): void => {
+    startRequestedRef.current = true
     setIsStarted(true)
     runnerWorkoutTimer.start(sessionProfile.level)
     haptics.vibrate(500)
@@ -155,6 +166,7 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
   }, [haptics, sessionProfile.level, syncWorkoutState])
 
   const handleStop = useCallback((): void => {
+    startRequestedRef.current = false
     runnerWorkoutTimer.stop()
     haptics.cancel()
     setTimerState(null)

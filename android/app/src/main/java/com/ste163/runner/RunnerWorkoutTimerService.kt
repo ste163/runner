@@ -96,6 +96,7 @@ class RunnerWorkoutTimerService : Service() {
         if (level == null) return
 
         cancelTick()
+        RunnerWorkoutTimerStateStore.clear()
         intervals = buildWorkoutIntervals(level)
         totalWorkoutDurationMs = intervals.fold(0L) { total, interval -> total + interval.durationMs }
         phaseIndex = 0
@@ -137,6 +138,7 @@ class RunnerWorkoutTimerService : Service() {
 
     private fun stopWorkoutInternal() {
         if (!isRunning) {
+            RunnerWorkoutTimerStateStore.clear()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return
@@ -146,6 +148,7 @@ class RunnerWorkoutTimerService : Service() {
         isRunning = false
         isPaused = false
         pausedRemainingMs = 0L
+        RunnerWorkoutTimerStateStore.clear()
         val state = buildState()
 
         updateNotification(state)
@@ -266,6 +269,7 @@ class RunnerWorkoutTimerService : Service() {
             )
             .setContentTitle("Runner · ${state.phaseLabel}")
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -280,7 +284,7 @@ class RunnerWorkoutTimerService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Workout timer",
-            NotificationManager.IMPORTANCE_DEFAULT,
+            NotificationManager.IMPORTANCE_LOW,
         ).apply {
             description = "Persistent workout timer notification"
         }
