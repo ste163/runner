@@ -1,7 +1,7 @@
 import { root } from '@lynx-js/react'
 
 import { Home } from './Home.js'
-import { runnerProfileStorage, type RunnerStorageModule } from '../../native/storage.js'
+import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
 
 const resolveRunnerStorageModule = (): RunnerStorageModule | null => {
   if (typeof NativeModules === 'undefined') return null

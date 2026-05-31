@@ -7,32 +7,31 @@ import * as router from 'sparkling-navigation'
 import { Workout } from './Workout.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
-import type { WorkoutTimerState } from '../../native/workout-timer.js'
+import type { WorkoutTimerState } from '../../native-bridge/workout-timer.js'
 
 const workoutTimerMock = vi.hoisted(() => {
   let state: WorkoutTimerState | null = null
 
   return {
-    loadWorkoutTimerState: vi.fn(() => state),
-    pauseRunnerWorkoutTimer: vi.fn(),
+    runnerWorkoutTimer: {
+      configure: vi.fn(),
+      loadState: vi.fn(() => state),
+      pause: vi.fn(),
+      resume: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+    },
     reset: () => {
       state = null
     },
-    resumeRunnerWorkoutTimer: vi.fn(),
     setState: (nextState: WorkoutTimerState | null) => {
       state = nextState
     },
-    startRunnerWorkoutTimer: vi.fn(),
-    stopRunnerWorkoutTimer: vi.fn(),
   }
 })
 
-vi.mock('../../native/workout-timer.js', () => ({
-  loadWorkoutTimerState: workoutTimerMock.loadWorkoutTimerState,
-  pauseRunnerWorkoutTimer: workoutTimerMock.pauseRunnerWorkoutTimer,
-  resumeRunnerWorkoutTimer: workoutTimerMock.resumeRunnerWorkoutTimer,
-  startRunnerWorkoutTimer: workoutTimerMock.startRunnerWorkoutTimer,
-  stopRunnerWorkoutTimer: workoutTimerMock.stopRunnerWorkoutTimer,
+vi.mock('../../native-bridge/workout-timer.js', () => ({
+  runnerWorkoutTimer: workoutTimerMock.runnerWorkoutTimer,
 }))
 
 vi.mock('sparkling-navigation', () => ({ close: vi.fn() }))
@@ -90,8 +89,8 @@ describe('Workout', () => {
 
     fireEvent.tap(queries.getByText('Stop'))
 
-    expect(workoutTimerMock.startRunnerWorkoutTimer).toHaveBeenCalledTimes(1)
-    expect(workoutTimerMock.stopRunnerWorkoutTimer).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerWorkoutTimer.start).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
     expect(haptics.cancel).toHaveBeenCalledTimes(1)
 
     const profile = sharedProfileStore.loadOrCreate().profile
@@ -112,7 +111,7 @@ describe('Workout', () => {
 
     fireEvent.tap(queries.getByText('Start Workout'))
 
-    expect(workoutTimerMock.startRunnerWorkoutTimer).toHaveBeenCalledWith(
+    expect(workoutTimerMock.runnerWorkoutTimer.start).toHaveBeenCalledWith(
       buildWorkoutProfile().level
     )
 
@@ -144,7 +143,7 @@ describe('Workout', () => {
     await queries.findByText('4m 59s')
 
     fireEvent.tap(queries.getByText('Pause'))
-    expect(workoutTimerMock.pauseRunnerWorkoutTimer).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerWorkoutTimer.pause).toHaveBeenCalledTimes(1)
 
     workoutTimerMock.setState(
       buildTimerState({
@@ -158,7 +157,7 @@ describe('Workout', () => {
     await queries.findByText('Resume')
 
     fireEvent.tap(queries.getByText('Resume'))
-    expect(workoutTimerMock.resumeRunnerWorkoutTimer).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerWorkoutTimer.resume).toHaveBeenCalledTimes(1)
 
     workoutTimerMock.setState(
       buildTimerState({
@@ -201,7 +200,7 @@ describe('Workout', () => {
     const profile = sharedProfileStore.loadOrCreate().profile
     expect(profile.sessions).toHaveLength(1)
     expect(profile.sessions[0]?.intervals).toHaveLength(0)
-    expect(workoutTimerMock.stopRunnerWorkoutTimer).toHaveBeenCalledTimes(1)
+    expect(workoutTimerMock.runnerWorkoutTimer.stop).toHaveBeenCalledTimes(1)
     expect(haptics.cancel).toHaveBeenCalledTimes(1)
 
     fireEvent.tap(queries.getByText('Done'))

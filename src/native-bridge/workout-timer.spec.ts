@@ -1,28 +1,40 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  loadWorkoutTimerState,
-  pauseRunnerWorkoutTimer,
-  resumeRunnerWorkoutTimer,
-  startRunnerWorkoutTimer,
-  stopRunnerWorkoutTimer,
+  runnerWorkoutTimer,
+  type RunnerWorkoutTimerModule,
+  type WorkoutTimerState,
 } from './workout-timer.js'
-import type { WorkoutTimerState } from './workout-timer.js'
 import type { TrainingLevel } from '../domain/types.js'
 
 describe('workout timer bridge', () => {
   afterEach(() => {
-    vi.unstubAllGlobals()
+    runnerWorkoutTimer.configure(null)
   })
 
   it('does nothing when the native module is unavailable', () => {
     expect(() =>
-      startRunnerWorkoutTimer({ intervalBlockSeconds: 1, runSeconds: 1, walkSeconds: 1 })
+      runnerWorkoutTimer.start({ intervalBlockSeconds: 1, runSeconds: 1, walkSeconds: 1 })
     ).not.toThrow()
-    expect(() => pauseRunnerWorkoutTimer()).not.toThrow()
-    expect(() => resumeRunnerWorkoutTimer()).not.toThrow()
-    expect(() => stopRunnerWorkoutTimer()).not.toThrow()
-    expect(loadWorkoutTimerState()).toBeNull()
+    expect(() => runnerWorkoutTimer.pause()).not.toThrow()
+    expect(() => runnerWorkoutTimer.resume()).not.toThrow()
+    expect(() => runnerWorkoutTimer.stop()).not.toThrow()
+    expect(runnerWorkoutTimer.loadState()).toBeNull()
+  })
+
+  it('returns null when the native timer state is empty', () => {
+    const module: RunnerWorkoutTimerModule = {
+      getWorkoutTimerState: vi.fn(() => null),
+      pauseWorkout: vi.fn(),
+      resumeWorkout: vi.fn(),
+      startWorkout: vi.fn(),
+      stopWorkout: vi.fn(),
+    }
+
+    runnerWorkoutTimer.configure(module)
+
+    expect(runnerWorkoutTimer.loadState()).toBeNull()
+    expect(module.getWorkoutTimerState).toHaveBeenCalledTimes(1)
   })
 
   it('calls through to the native workout timer module', () => {
@@ -38,7 +50,7 @@ describe('workout timer bridge', () => {
       totalElapsedSeconds: 0,
       totalRemainingSeconds: 1800,
     }
-    const module = {
+    const module: RunnerWorkoutTimerModule = {
       getWorkoutTimerState: vi.fn(() => JSON.stringify(state)),
       pauseWorkout: vi.fn(),
       resumeWorkout: vi.fn(),
@@ -51,15 +63,13 @@ describe('workout timer bridge', () => {
       walkSeconds: 120,
     }
 
-    vi.stubGlobal('NativeModules', {
-      RunnerWorkoutTimerModule: module,
-    })
+    runnerWorkoutTimer.configure(module)
 
-    expect(loadWorkoutTimerState()).toEqual(state)
-    startRunnerWorkoutTimer(level)
-    pauseRunnerWorkoutTimer()
-    resumeRunnerWorkoutTimer()
-    stopRunnerWorkoutTimer()
+    expect(runnerWorkoutTimer.loadState()).toEqual(state)
+    runnerWorkoutTimer.start(level)
+    runnerWorkoutTimer.pause()
+    runnerWorkoutTimer.resume()
+    runnerWorkoutTimer.stop()
 
     expect(module.getWorkoutTimerState).toHaveBeenCalledTimes(1)
     expect(module.startWorkout).toHaveBeenCalledWith(30, 120, 1200)

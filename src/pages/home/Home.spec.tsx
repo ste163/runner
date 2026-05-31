@@ -7,7 +7,7 @@ import * as router from 'sparkling-navigation'
 import { Home } from './Home.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
-import { runnerProfileStorage, type RunnerStorageModule } from '../../native/storage.js'
+import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
 
 vi.mock('sparkling-navigation', () => ({ open: vi.fn(), close: vi.fn() }))
 

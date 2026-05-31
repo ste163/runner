@@ -1,5 +1,5 @@
-import { runnerProfileStorage } from '../native/storage.js'
-import type { ExportProfileResult, ImportProfileResult } from '../native/storage.js'
+import { runnerProfileStorage } from '../native-bridge/storage.js'
+import type { ExportProfileResult, ImportProfileResult } from '../native-bridge/storage.js'
 import type { IntervalRecord, Session, TrainingLevel, TrainingProfile } from './types.js'
 
 const cloneLevel = (level: TrainingLevel): TrainingLevel => ({ ...level })
