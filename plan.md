@@ -209,6 +209,9 @@ Both storage and GPS wire through **Lynx `NativeModules`**: extend `LynxModule`,
 `@LynxMethod`, register in `SparklingLynxConfig`. This is the confirmed approach — the official Lynx docs
 use a storage module as their primary NativeModules example.
 
+**Coverage note**: keep native tests low-friction by targeting pure JVM helpers for permission routing and
+GPS state/serialization. Do not spend test effort on proving Android GPS hardware behavior.
+
 #### Primary Storage: Internal JSON file (`context.filesDir`)
 
 `TrainingProfile` is serialized as a single JSON file at `context.filesDir/training_profile.json`.

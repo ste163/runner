@@ -33,10 +33,12 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun ensureNotificationPermission() {
-        if (hasNotificationPermission()) {
-            ensureLocationPermission()
-        } else {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        when (nextSplashPermissionStep(hasNotificationPermission(), hasLocationPermission())) {
+            SplashPermissionStep.REQUEST_NOTIFICATION -> {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            SplashPermissionStep.REQUEST_LOCATION -> ensureLocationPermission()
+            SplashPermissionStep.LAUNCH_APP -> gotoSparklingPage()
         }
     }
 

@@ -14,14 +14,6 @@ import androidx.core.content.ContextCompat
 import com.lynx.jsbridge.LynxMethod
 import com.lynx.jsbridge.LynxModule
 import android.provider.Settings
-import org.json.JSONObject
-
-private data class WorkoutGpsState(
-    val distanceMiles: Double,
-    val hasPermission: Boolean,
-    val isLocationEnabled: Boolean,
-    val isTracking: Boolean,
-)
 
 private object RunnerWorkoutGpsTracker {
 
@@ -74,8 +66,8 @@ private object RunnerWorkoutGpsTracker {
     }
 
     fun state(context: Context): WorkoutGpsState {
-        return WorkoutGpsState(
-            distanceMiles = distanceMeters / 1609.344,
+        return buildWorkoutGpsState(
+            distanceMeters = distanceMeters,
             hasPermission = hasLocationPermission(context),
             isLocationEnabled = isLocationEnabled(context),
             isTracking = isTracking,
@@ -103,10 +95,9 @@ private object RunnerWorkoutGpsTracker {
     }
 
     private fun startTracking(context: Context) {
-        if (isTracking || !hasLocationPermission(context)) return
+        if (!shouldStartWorkoutGpsTracking(isTracking, hasLocationPermission(context), isLocationEnabled(context))) return
 
         val manager = resolveLocationManager(context) ?: return
-        if (!isLocationEnabled(context)) return
 
         val listener = ensureListener()
 
@@ -164,10 +155,5 @@ class RunnerGpsModule(context: Context) : LynxModule(context) {
 }
 
 private fun WorkoutGpsState.toJson(): String {
-    return JSONObject()
-        .put("distanceMiles", distanceMiles)
-        .put("hasPermission", hasPermission)
-        .put("isLocationEnabled", isLocationEnabled)
-        .put("isTracking", isTracking)
-        .toString()
+    return toJsonString()
 }

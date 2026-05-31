@@ -68,6 +68,7 @@ android {
 //    kapt(libs.lynx.processor)
 
         testImplementation(libs.junit)
+        testImplementation("org.mockito:mockito-inline:5.2.0")
 
         // BEGIN SPARKLING AUTOLINK
         listOf(
