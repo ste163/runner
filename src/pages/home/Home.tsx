@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Home.css'
-import { BarChart } from '../../components/BarChart/index.js'
 import { DotChart } from '../../components/DotChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
+import { CurrentIntervalChart } from './components/CurrentIntervalChart/index.js'
 
 const buildPageScheme = (bundle: string, title: string): string => {
   return (
@@ -35,22 +35,16 @@ const formatDuration = (seconds: number): string => {
 
 const buildIntervalDurationLines = (level: TrainingLevel): [string, string | null] => {
   if (isGraduated(level)) {
-    return [`Run ${formatDuration(level.intervalBlockSeconds)}`, null]
+    return [formatDuration(level.intervalBlockSeconds), null]
   }
 
-  return [`Run ${formatDuration(level.runSeconds)}`, `Walk ${formatDuration(level.walkSeconds)}`]
+  return [formatDuration(level.runSeconds), formatDuration(level.walkSeconds)]
 }
 
 const buildRunPercent = (level: TrainingLevel): number => {
   const totalSeconds = Math.max(level.runSeconds + level.walkSeconds, 1)
 
   return isGraduated(level) ? 100 : (level.runSeconds / totalSeconds) * 100
-}
-
-const buildWalkPercent = (level: TrainingLevel): number => {
-  const totalSeconds = Math.max(level.runSeconds + level.walkSeconds, 1)
-
-  return isGraduated(level) ? 0 : (level.walkSeconds / totalSeconds) * 100
 }
 
 const countWindowSessions = (profile: TrainingProfile): number => {
@@ -67,18 +61,6 @@ const countWindowSessions = (profile: TrainingProfile): number => {
 
     return completedAt >= windowStart && completedAt < windowEnd ? count + 1 : count
   }, 0)
-}
-
-const buildProgressMessage = (profile: TrainingProfile, completedSessions: number): string => {
-  if (isGraduated(profile.level)) {
-    return 'Continuous running mode unlocked.'
-  }
-
-  const remainingSessions = Math.max(3 - completedSessions, 0)
-
-  if (remainingSessions === 0) return 'Completed!'
-  if (remainingSessions === 1) return 'Complete 1 more session this week to progress!'
-  return `Complete ${remainingSessions} more sessions this week to progress!`
 }
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -200,9 +182,7 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
   const currentWindowSessions = countWindowSessions(profile)
   const currentProgress = Math.min(currentWindowSessions, 3)
   const runPercent = buildRunPercent(profile.level)
-  const walkPercent = buildWalkPercent(profile.level)
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
-  const progressMessage = buildProgressMessage(profile, currentWindowSessions)
   const suggestedSessionLabel = buildSuggestedSessionLabel(
     profile,
     currentWindowSessions,
@@ -218,24 +198,19 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
             completedCount={currentProgress}
             label='This Week'
             totalCount={3}
+            {...(currentProgress >= 3 ? { detail: suggestedSessionLabel } : {})}
           />
-          <text className='copy'>{progressMessage}</text>
-          <text className='copy'>{suggestedSessionLabel}</text>
+        </view>
+
+        <view className='home__section home__section--full home__section--center'>
+          <text className='dotChart__label'>Current interval</text>
         </view>
 
         <view className='home__section home__section--full'>
-          <text className='label'>Current interval</text>
-          <BarChart
-            amountValue={runDurationLabel}
-            color='primary'
-            fillPercent={runPercent}
-            label='Run'
-          />
-          <BarChart
-            amountValue={walkDurationLabel ?? 'Graduated'}
-            color='secondary'
-            fillPercent={walkPercent}
-            label='Walk'
+          <CurrentIntervalChart
+            runAmount={runDurationLabel}
+            walkAmount={walkDurationLabel ?? 'Graduated'}
+            runPercent={runPercent}
           />
         </view>
 

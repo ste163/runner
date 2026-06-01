@@ -94,8 +94,8 @@ describe('Home', () => {
     await findByText('Run')
     await findByText('Walk')
     await findByText('0/3 completed')
-    await findByText('Run 30s')
-    await findByText('Walk 2m 0s')
+    await findByText('30s')
+    await findByText('2m 0s')
     await findByText('Adjust')
     expect(queryByText('- Decrease')).toBeNull()
     expect(queryByText('+ Add')).toBeNull()
@@ -111,14 +111,14 @@ describe('Home', () => {
     render(<Home />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
-    await findByText('Run 30s')
+    await findByText('30s')
     await findByText('Adjust')
 
     fireEvent.tap(getByText('Adjust'))
     fireEvent.tap(getByText('+ Add'))
 
-    await findByText('Run 33s')
-    await findByText('Walk 1m 48s')
+    await findByText('33s')
+    await findByText('1m 48s')
   })
 
   it('shows a completed week message and the next cycle day after three sessions', async () => {
@@ -126,10 +126,10 @@ describe('Home', () => {
 
     render(<Home />)
 
-    const { findByText } = getQueriesForElement(elementTree.root!)
+    const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
     await findByText('3/3 completed')
-    await findByText('Completed!')
+    expect(queryByText('Completed!')).toBeNull()
     await findByText('Exercise again on Monday')
   })
 
@@ -177,8 +177,8 @@ describe('Home', () => {
     fireEvent.tap(queries.getByText('Import JSON'))
 
     await queries.findByText('Imported profile from device.')
-    await queries.findByText('Run 33s')
-    await queries.findByText('Walk 1m 48s')
+    await queries.findByText('33s')
+    await queries.findByText('1m 48s')
 
     expect(exportProfile).toHaveBeenCalledTimes(1)
     expect(importProfile).toHaveBeenCalledTimes(1)

@@ -5,6 +5,7 @@ type DotChartColor = 'primary' | 'secondary' | 'tertiary'
 type DotChartProps = {
   label: string
   amountValue: string
+  detail?: string
   completedCount: number
   totalCount: number
   color: DotChartColor
@@ -24,6 +25,7 @@ const buildDotStates = (completedCount: number, totalCount: number): boolean[] =
 
 export const DotChart = ({
   amountValue,
+  detail,
   color,
   completedCount,
   label,
@@ -36,6 +38,7 @@ export const DotChart = ({
       <view className='dotChart__header'>
         <text className='dotChart__label'>{label}</text>
         <text className='dotChart__value'>{amountValue}</text>
+        {detail ? <text className='dotChart__detail'>{detail}</text> : null}
       </view>
       <view className='dotChart__dotLine'>
         {dotStates.map((isFilled, index) => (

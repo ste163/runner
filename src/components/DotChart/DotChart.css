@@ -10,6 +10,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.125rem;
 }
 
 .dotChart__dotLine {
@@ -27,11 +28,17 @@
 }
 
 .dotChart__value,
+.dotChart__detail,
 .dotChart__dotGlyph {
   font-size: 1rem;
   font-weight: 800;
-  margin-top: 0.5rem;
   color: var(--color-text);
+}
+
+.dotChart__detail {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--color-text-muted);
 }
 
 .dotChart__dot {
