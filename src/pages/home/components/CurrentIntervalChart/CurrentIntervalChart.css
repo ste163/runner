@@ -29,7 +29,7 @@
 
 .currentIntervalChart__label,
 .currentIntervalChart__amount {
-  font-size: 0.8125rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--color-text);
 }
@@ -63,6 +63,14 @@
   justify-content: center;
   gap: 0.75rem;
   white-space: nowrap;
+  line-height: 1;
+}
+
+.currentIntervalChart__barStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 0;
 }
 
 .currentIntervalChart__measure {
@@ -75,7 +83,7 @@
 }
 
 .currentIntervalChart__bar {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 900;
   line-height: 1;
   letter-spacing: 0.025rem;

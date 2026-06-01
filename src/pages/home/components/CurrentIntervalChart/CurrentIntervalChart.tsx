@@ -43,10 +43,11 @@ export const CurrentIntervalChart = ({
 
   const estimatedUnits =
     chartWidth > 0 && blockCharWidth > 0
-      ? Math.max(42, Math.floor(chartWidth / blockCharWidth) + 10)
-      : 42
+      ? Math.max(38, Math.floor(chartWidth / blockCharWidth) + 10)
+      : 38
   const runUnits = buildFillUnits(runPercent, estimatedUnits)
   const bar = buildFillBar(estimatedUnits)
+  const barRows = [0, 1, 2]
 
   return (
     <view className='currentIntervalChart' bindlayout={handleChartLayout}>
@@ -57,13 +58,17 @@ export const CurrentIntervalChart = ({
         <text className='currentIntervalChart__label currentIntervalChart__label--run'>Run</text>
         <text className='currentIntervalChart__label currentIntervalChart__label--walk'>Walk</text>
       </view>
-      <view className='currentIntervalChart__barLine'>
-        <text className='currentIntervalChart__bar currentIntervalChart__bar--run'>
-          {bar.slice(0, runUnits)}
-        </text>
-        <text className='currentIntervalChart__bar currentIntervalChart__bar--walk'>
-          {bar.slice(runUnits)}
-        </text>
+      <view className='currentIntervalChart__barStack'>
+        {barRows.map((row) => (
+          <view className='currentIntervalChart__barLine' key={`bar-row-${row}`}>
+            <text className='currentIntervalChart__bar currentIntervalChart__bar--run'>
+              {bar.slice(0, runUnits)}
+            </text>
+            <text className='currentIntervalChart__bar currentIntervalChart__bar--walk'>
+              {bar.slice(runUnits)}
+            </text>
+          </view>
+        ))}
       </view>
       <view className='currentIntervalChart__footer'>
         <text className='currentIntervalChart__amount currentIntervalChart__amount--run'>

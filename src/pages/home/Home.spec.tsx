@@ -96,10 +96,10 @@ describe('Home', () => {
     await findByText('0/3 completed')
     await findByText('30s')
     await findByText('2m 0s')
-    await findByText('Adjust')
+    await findByText('Manually adjust interval')
     expect(queryByText('- Decrease')).toBeNull()
     expect(queryByText('+ Add')).toBeNull()
-    fireEvent.tap(await findByText('Adjust'))
+    fireEvent.tap(await findByText('Manually adjust interval'))
     await findByText('- Decrease')
     await findByText('+ Add')
     await findByText('This month')
@@ -112,9 +112,9 @@ describe('Home', () => {
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('30s')
-    await findByText('Adjust')
+    await findByText('Manually adjust interval')
 
-    fireEvent.tap(getByText('Adjust'))
+    fireEvent.tap(getByText('Manually adjust interval'))
     fireEvent.tap(getByText('+ Add'))
 
     await findByText('33s')

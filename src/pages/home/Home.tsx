@@ -215,8 +215,10 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
         </view>
 
         <view className='home__section home__section--full'>
-          <view className='secondary secondary--compact' bindtap={toggleManualAdjust}>
-            <text className='secondary__text'>{showManualAdjust ? 'Hide adjust' : 'Adjust'}</text>
+          <view className='home__helperToggle' bindtap={toggleManualAdjust}>
+            <text className='home__helperToggleText'>
+              {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
+            </text>
           </view>
           {showManualAdjust ? (
             <view className='actions-row'>

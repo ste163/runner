@@ -25,13 +25,21 @@
   width: 100%;
 }
 
-
 .home__section--center {
   align-items: center;
   text-align: center;
 }
 
-.secondary--compact {
+.home__helperToggle {
   align-self: flex-start;
-  padding: 0.625rem 0.75rem;
+}
+
+.home__helperToggleText {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--color-text-muted);
+}
+
+.home__helperToggleText:active {
+  color: var(--color-text);
 }
