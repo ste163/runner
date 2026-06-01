@@ -3,6 +3,7 @@ import * as router from 'sparkling-navigation'
 
 import './Home.css'
 import { BarChart } from '../../components/BarChart/index.js'
+import { DotChart } from '../../components/DotChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
@@ -103,6 +104,7 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
   const [storageStatus, setStorageStatus] = useState('')
   const [debugJson, setDebugJson] = useState('')
+  const [showManualAdjust, setShowManualAdjust] = useState(false)
   const hasOpenedOnboardingRef = useRef(false)
 
   const openOnboarding = useCallback((): void => {
@@ -185,6 +187,10 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
     setDebugJson(JSON.stringify(profile, null, 2))
   }, [profile])
 
+  const toggleManualAdjust = useCallback((): void => {
+    setShowManualAdjust((currentValue) => !currentValue)
+  }, [])
+
   const currentWindowSessions = countWindowSessions(profile)
   const currentProgress = Math.min(currentWindowSessions, 3)
   const runPercent = buildRunPercent(profile.level)
@@ -192,19 +198,23 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
   const progressMessage = buildProgressMessage(profile, currentWindowSessions)
   const suggestedSessionLabel = buildSuggestedSessionLabel(profile, new Date())
-  const weekComplete = currentProgress >= 3
-
   return (
     <scroll-view className='page-scroll' scroll-orientation='vertical'>
       <view className='app home'>
-        <view className='card card--center'>
-          <text className='label'>Block chart</text>
-          <BarChart
+        <view className='home__section home__section--full'>
+          <DotChart
             amountValue={`${currentProgress}/3 completed`}
-            color={weekComplete ? 'primary' : 'tertiary'}
-            fillPercent={(currentProgress / 3) * 100}
+            color='primary'
+            completedCount={currentProgress}
             label='Week'
+            totalCount={3}
           />
+          <text className='copy'>{progressMessage}</text>
+          <text className='copy'>{suggestedSessionLabel}</text>
+        </view>
+
+        <view className='home__section home__section--full'>
+          <text className='label'>Current interval</text>
           <BarChart
             amountValue={runDurationLabel}
             color='primary'
@@ -217,30 +227,32 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
             fillPercent={walkPercent}
             label='Walk'
           />
-          <text className='copy'>{progressMessage}</text>
-          <text className='copy'>{suggestedSessionLabel}</text>
         </view>
 
-        <view className='card card--center'>
-          <text className='label'>Manual adjust</text>
-          <view className='actions-row'>
-            <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
-              <text className='secondary__text'>Decrease 10%</text>
-            </view>
-            <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
-              <text className='secondary__text'>Increase 10%</text>
-            </view>
+        <view className='home__section home__section--full'>
+          <view className='secondary secondary--compact' bindtap={toggleManualAdjust}>
+            <text className='secondary__text'>{showManualAdjust ? 'Hide adjust' : 'Adjust'}</text>
           </view>
+          {showManualAdjust ? (
+            <view className='actions-row'>
+              <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
+                <text className='secondary__text'>- Decrease</text>
+              </view>
+              <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
+                <text className='secondary__text'>+ Add</text>
+              </view>
+            </view>
+          ) : null}
         </view>
 
-        <view className='card card--center'>
+        <view className='home__section home__section--full'>
           <view className='primary' bindtap={openWorkout}>
             <text className='primary__text'>Start Workout</text>
             <text className='primary__icon'>→</text>
           </view>
         </view>
 
-        <view className='card card--debug'>
+        <view className='home__section home__section--full'>
           <text className='label'>Backup & restore</text>
           <view className='stack'>
             <text className='copy'>

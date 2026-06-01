@@ -62,14 +62,19 @@ describe('Home', () => {
 
     expect(queryByText('Runner')).toBeNull()
     expect(queryByText('3 sessions. 7-day windows.')).toBeNull()
-    await findByText('Block chart')
     await findByText('Week')
+    await findByText('Current interval')
     await findByText('Run')
     await findByText('Walk')
     await findByText('0/3 completed')
     await findByText('Run 30s')
     await findByText('Walk 2m 0s')
-    await findByText('Manual adjust')
+    await findByText('Adjust')
+    expect(queryByText('- Decrease')).toBeNull()
+    expect(queryByText('+ Add')).toBeNull()
+    fireEvent.tap(await findByText('Adjust'))
+    await findByText('- Decrease')
+    await findByText('+ Add')
     await findByText('Backup & restore')
   })
 
@@ -78,8 +83,10 @@ describe('Home', () => {
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Run 30s')
+    await findByText('Adjust')
 
-    fireEvent.tap(getByText('Increase 10%'))
+    fireEvent.tap(getByText('Adjust'))
+    fireEvent.tap(getByText('+ Add'))
 
     await findByText('Run 33s')
     await findByText('Walk 1m 48s')

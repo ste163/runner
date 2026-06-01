@@ -1,0 +1,69 @@
+.dotChart {
+  width: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  text-align: left;
+}
+
+.dotChart__header {
+  width: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.dotChart__dotLine {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.dotChart__label,
+.dotChart__value,
+.dotChart__dotGlyph {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.dotChart__dot {
+  flex: 1 1 0;
+  width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  padding: 0 4px;
+}
+
+.dotChart__dotGlyph {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  font-family: 'Menlo', 'SFMono-Regular', Consolas, monospace;
+}
+
+.dotChart__dotGlyph--muted {
+  color: var(--color-text-soft);
+}
+
+.dotChart__dotGlyph--primary {
+  color: var(--color-primary);
+}
+
+.dotChart__dotGlyph--secondary {
+  color: var(--color-secondary);
+}
+
+.dotChart__dotGlyph--tertiary {
+  color: var(--color-text-muted);
+}
