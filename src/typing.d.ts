@@ -9,6 +9,12 @@ declare module '@lynx-js/types' {
     theme: string
     isNotchScreen: boolean
   }
+
+  interface StandardProps {
+    bindlayout?: (
+      e: BaseEvent<'layout', { x: number; y: number; width: number; height: number }>
+    ) => void
+  }
 }
 
 export interface InputProps extends StandardProps {
@@ -39,6 +45,5 @@ export interface InputProps extends StandardProps {
    */
   'text-color'?: string
 }
-
 export type InputEvent = BaseEvent<'input', { value: string }>
 export type BlurEvent = BaseEvent<'blur', { value: string }>

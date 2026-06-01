@@ -1,1 +1,26 @@
 @import url('../../global.css');
+
+.app {
+  gap: 14px;
+}
+
+.card--center {
+  align-items: center;
+  text-align: center;
+}
+
+.card--debug {
+  align-items: stretch;
+  text-align: left;
+}
+
+.actions-row {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+}
+
+.actions-row__button {
+  flex: 1;
+  min-width: 0;
+}

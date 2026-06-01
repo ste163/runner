@@ -1,5 +1,4 @@
 :root {
-  color-scheme: dark;
   --app-safe-area-top: env(safe-area-inset-top, 32px);
   --app-safe-area-bottom: env(safe-area-inset-bottom, 32px);
   --page-horizontal-gap: 18px;
@@ -17,9 +16,13 @@
   --color-primary: #2dd35f;
   --color-primary-strong: #16a34a;
   --color-primary-soft: rgba(45, 211, 95, 0.14);
+  --color-primary-glow: rgba(45, 211, 95, 0.42);
+  --color-primary-glow-soft: rgba(45, 211, 95, 0.18);
   --color-secondary: #f59e0b;
   --color-secondary-strong: #d97706;
   --color-secondary-soft: rgba(245, 158, 11, 0.14);
+  --color-secondary-glow: rgba(245, 158, 11, 0.42);
+  --color-secondary-glow-soft: rgba(245, 158, 11, 0.18);
   --color-danger: #ef4444;
   --color-danger-strong: #dc2626;
   --color-danger-soft: rgba(239, 68, 68, 0.12);
@@ -227,23 +230,6 @@ body,
   font-size: 14px;
   line-height: 20px;
   color: var(--color-text-muted);
-}
-
-.tracker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tracker__dot {
-  color: var(--color-text-soft);
-  font-size: 18px;
-  line-height: 1;
-}
-
-.tracker__dot--filled {
-  color: var(--color-primary);
 }
 
 .secondary {

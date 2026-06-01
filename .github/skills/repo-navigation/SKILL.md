@@ -46,7 +46,7 @@ dist/             # Build output (gitignored)
 | `bun run build`        | Build bundles → copy to `android/app/src/main/assets/`          |
 | `bun run smoke`        | One-shot build + install + launch on Android                    |
 | `bun typecheck`        | TypeScript typecheck only (no emit)                             |
-| `bun test`             | Run Vitest unit tests once                                      |
+| `bun run test`         | Run Vitest unit tests once                                      |
 | `bun run test:watch`   | Run Vitest in watch mode                                        |
 | `bun lint`             | Run oxlint                                                      |
 | `bun lint:fix`         | Auto-fix lint issues                                            |

@@ -81,6 +81,7 @@ for (const n of numbers) doubled.push(n * 2)
 - Keep short related checks compact; do not add blank lines between them.
 - Do not export types, interfaces, or values unless another file needs them.
 - Do not compare `undefined` or `null` for presence. Use truthy guard clauses when presence is implied.
+- Prefer optional props (`foo?: T`) over `foo: T | undefined`.
 - **Never disable lint rules.** Surface the problem to the developer instead.
 - Prefer one-line expressions when they stay readable.
 - Avoid `I`-prefixed interface names; use the domain noun directly.

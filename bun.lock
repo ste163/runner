@@ -5,19 +5,19 @@
     "": {
       "name": "runner",
       "dependencies": {
-        "@lynx-js/lynx-ui": "3.133.1",
-        "@lynx-js/react": "0.121.0",
+        "@lynx-js/lynx-ui": "3.133.2",
+        "@lynx-js/react": "0.121.1",
         "sparkling-navigation": "2.0.1",
       },
       "devDependencies": {
         "@lynx-js/qrcode-rsbuild-plugin": "0.4.7",
-        "@lynx-js/react-rsbuild-plugin": "0.16.2",
-        "@lynx-js/rspeedy": "0.14.4",
+        "@lynx-js/react-rsbuild-plugin": "0.16.3",
+        "@lynx-js/rspeedy": "0.14.5",
         "@lynx-js/types": "3.9.0",
         "@testing-library/jest-dom": "6.9.1",
         "@types/node": "22.15.29",
         "@types/react": "18.3.29",
-        "@vitest/coverage-v8": "^4.1.7",
+        "@vitest/coverage-v8": "4.1.7",
         "husky": "9.1.7",
         "jsdom": "28.1.0",
         "lint-staged": "16.4.0",
@@ -106,7 +106,7 @@
 
     "@lynx-js/gesture-runtime": ["@lynx-js/gesture-runtime@2.1.1", "", { "peerDependencies": { "@lynx-js/react": "*", "@lynx-js/types": "*" } }, "sha512-zBDOHakuePjw5wPCButExNgcllyFPGqYzqP2CWCWcQaX4gqJmCmYeRKguihyxH6ma6ExxlH/J2x5CHD91ed3bQ=="],
 
-    "@lynx-js/lynx-ui": ["@lynx-js/lynx-ui@3.133.1", "", { "dependencies": { "@lynx-js/lynx-ui-button": "3.133.1", "@lynx-js/lynx-ui-checkbox": "3.133.1", "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/lynx-ui-dialog": "3.133.1", "@lynx-js/lynx-ui-draggable": "3.133.1", "@lynx-js/lynx-ui-feed-list": "3.133.1", "@lynx-js/lynx-ui-form": "3.133.1", "@lynx-js/lynx-ui-input": "3.133.1", "@lynx-js/lynx-ui-lazy-component": "3.133.1", "@lynx-js/lynx-ui-list": "3.133.1", "@lynx-js/lynx-ui-popover": "3.133.1", "@lynx-js/lynx-ui-presence": "3.133.1", "@lynx-js/lynx-ui-radio-group": "3.133.1", "@lynx-js/lynx-ui-scroll-view": "3.133.1", "@lynx-js/lynx-ui-sheet": "3.133.1", "@lynx-js/lynx-ui-slider": "3.133.1", "@lynx-js/lynx-ui-sortable": "3.133.1", "@lynx-js/lynx-ui-swipe-action": "3.133.1", "@lynx-js/lynx-ui-swiper": "3.133.1", "@lynx-js/lynx-ui-switch": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-oF7fT1wcldVK6TCz2QwITa7qC7X9EjNmRvGKJo0HFEQdWafzva4K5kTKXpZA//jv4c22l9B42nTHsnP1T56Qwg=="],
+    "@lynx-js/lynx-ui": ["@lynx-js/lynx-ui@3.133.2", "", { "dependencies": { "@lynx-js/lynx-ui-button": "3.133.1", "@lynx-js/lynx-ui-checkbox": "3.133.1", "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/lynx-ui-dialog": "3.133.1", "@lynx-js/lynx-ui-draggable": "3.133.1", "@lynx-js/lynx-ui-feed-list": "3.133.2", "@lynx-js/lynx-ui-form": "3.133.1", "@lynx-js/lynx-ui-input": "3.133.1", "@lynx-js/lynx-ui-lazy-component": "3.133.1", "@lynx-js/lynx-ui-list": "3.133.2", "@lynx-js/lynx-ui-popover": "3.133.1", "@lynx-js/lynx-ui-presence": "3.133.1", "@lynx-js/lynx-ui-radio-group": "3.133.1", "@lynx-js/lynx-ui-scroll-view": "3.133.1", "@lynx-js/lynx-ui-sheet": "3.133.1", "@lynx-js/lynx-ui-slider": "3.133.1", "@lynx-js/lynx-ui-sortable": "3.133.1", "@lynx-js/lynx-ui-swipe-action": "3.133.1", "@lynx-js/lynx-ui-swiper": "3.133.1", "@lynx-js/lynx-ui-switch": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-g7Vai4ci+SiNgr4z7INzzJp+o+W14XtKWZByGqykvO8UJdnCOh2eXcv9gewvjLO61kCVNtLoZzmRoa1CCV1YCQ=="],
 
     "@lynx-js/lynx-ui-button": ["@lynx-js/lynx-ui-button@3.133.1", "", { "dependencies": { "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/react-use": "0.1.3", "clsx": "^2.1.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-HhncNSI+PWFIDBYYT+4sEBZhJbDr6ra7Ppdoys12XxKWydjsphnzKHG0Klh+VPbNRu7VUGo3WZ3ymm6K/ehw3g=="],
 
@@ -118,7 +118,7 @@
 
     "@lynx-js/lynx-ui-draggable": ["@lynx-js/lynx-ui-draggable@3.133.1", "", { "dependencies": { "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/react-use": "0.1.3" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-MY/tGYckCA1kvlgMQlmAdY5uo+YYg6IaybkKNwQ9a+9o66mADFqGrhyjsFv2zHEYpKINJT57q2gq0/TAB8Dy5Q=="],
 
-    "@lynx-js/lynx-ui-feed-list": ["@lynx-js/lynx-ui-feed-list@3.133.1", "", { "dependencies": { "@lynx-js/gesture-runtime": "2.1.1", "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/lynx-ui-list": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-PcRvvvKPPd1CDheJahYx2VYlHLrYuFP++eSouS77Jls+Y7aTgclxvtUtIw/Yes2LaK4C76PvAVxyS4O/ZZ6Rjw=="],
+    "@lynx-js/lynx-ui-feed-list": ["@lynx-js/lynx-ui-feed-list@3.133.2", "", { "dependencies": { "@lynx-js/gesture-runtime": "2.1.1", "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/lynx-ui-list": "3.133.2" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-IUT5MdWSAmDhfLW/eLLCF57cYK5dzEbFaFLgE4mYASnt+iGb0s0mMoLid9q7+gc2Obro/18r36g7bnIhSNI8eg=="],
 
     "@lynx-js/lynx-ui-form": ["@lynx-js/lynx-ui-form@3.133.1", "", { "dependencies": { "@lynx-js/lynx-ui-button": "3.133.1", "@lynx-js/lynx-ui-checkbox": "3.133.1", "@lynx-js/lynx-ui-common": "3.133.1", "@lynx-js/lynx-ui-input": "3.133.1", "@lynx-js/lynx-ui-radio-group": "3.133.1", "@lynx-js/lynx-ui-switch": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-+V9CK/gjPFZzMPfKxORZ+6pQaU5xhkQd6N/IMXMLL5Ezjn8Y42roQNaGNiONdpewff8VngeQgKERNvC6qeXCJA=="],
 
@@ -126,7 +126,7 @@
 
     "@lynx-js/lynx-ui-lazy-component": ["@lynx-js/lynx-ui-lazy-component@3.133.1", "", { "dependencies": { "@lynx-js/lynx-ui-common": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-TQnCx6PqZ6CorctmpGnkg/LueUK5I3R6KCwsLi41z6jETrup7b6fEZnbiL7ljVUSbrijdoy2Ezq8vuilkCHA+Q=="],
 
-    "@lynx-js/lynx-ui-list": ["@lynx-js/lynx-ui-list@3.133.1", "", { "dependencies": { "@lynx-js/gesture-runtime": "2.1.1", "@lynx-js/lynx-ui-common": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-4O/W/vdv4sRCLKvXYBYoS4l3rFTLA5thEwuAOZqpANGh3pWXU9D2Dh5s3+j0o7w3fWW1lxoDYthTc5aMEy2xVQ=="],
+    "@lynx-js/lynx-ui-list": ["@lynx-js/lynx-ui-list@3.133.2", "", { "dependencies": { "@lynx-js/gesture-runtime": "2.1.1", "@lynx-js/lynx-ui-common": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-WQyJFqBHqEU5e8V1X2igWA3sDrZ/4SaNzoKrezXPavg3AqeYalqKozAgPQ5igM4H5BYM0WRikd3ciXHD2wOc/w=="],
 
     "@lynx-js/lynx-ui-overlay": ["@lynx-js/lynx-ui-overlay@3.133.1", "", { "dependencies": { "@lynx-js/lynx-ui-common": "3.133.1" }, "peerDependencies": { "@lynx-js/react": ">=0.100.0", "@lynx-js/types": "*", "@types/react": "^18" } }, "sha512-PCfjmAUheL5USYCaJUZQVf8M+g6we0h7yOdi0Z0+5RJgjzn0WNuAQU6oNisId+H4W0tGmTlRvtXs1gZJ4+KcoQ=="],
 
@@ -154,37 +154,37 @@
 
     "@lynx-js/qrcode-rsbuild-plugin": ["@lynx-js/qrcode-rsbuild-plugin@0.4.7", "", {}, "sha512-7Y4jK5I7lbmzbmmBhXPbbFw+4+mAWkwqzF1+PKLSzgY9BPsnwuEyu4EsrRo7RqyXpgcpunacZC7IgyB6BRDh+g=="],
 
-    "@lynx-js/react": ["@lynx-js/react@0.121.0", "", { "dependencies": { "preact": "npm:@lynx-js/internal-preact@10.29.1-20260424024911-12b794f" }, "peerDependencies": { "@lynx-js/types": "*", "@types/react": "^18" }, "optionalPeers": ["@lynx-js/types"] }, "sha512-V3/1+kRM7ugFZbhfldnPyJH65gZI06qa9E2/lGM8b+almHWzn+i9G1imMZiHROKlkOT495TauMOH4FiH1U47Fw=="],
+    "@lynx-js/react": ["@lynx-js/react@0.121.1", "", { "dependencies": { "preact": "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c" }, "peerDependencies": { "@lynx-js/types": "*", "@types/react": "^18" }, "optionalPeers": ["@lynx-js/types"] }, "sha512-nHlm73FiArjRoJyL23Ja7J7be3TLpSZLz1XZEumxXObeW0P+4iSWuOqalvkCm02bPkUg89j3cyO0dhTOXkqb6Q=="],
 
-    "@lynx-js/react-alias-rsbuild-plugin": ["@lynx-js/react-alias-rsbuild-plugin@0.16.2", "", {}, "sha512-pgwvQJs5dn41YmKsbHNxERI5CPwzvkn7ogcaeVHPak2jkVqiZ6e2FDUTbTlvoD6WdfXXeELdFU1IcurHF0dzJw=="],
+    "@lynx-js/react-alias-rsbuild-plugin": ["@lynx-js/react-alias-rsbuild-plugin@0.16.3", "", {}, "sha512-YQHEYaYRu2wRoTF4hmXTVU6f625iAPMqHTK9EKPtAw+1eVAx4IohvWIRpGEQYVXWEz6YWkof7WKltJtqqwB8Xg=="],
 
     "@lynx-js/react-refresh-webpack-plugin": ["@lynx-js/react-refresh-webpack-plugin@0.3.6", "", { "peerDependencies": { "@lynx-js/react-webpack-plugin": "^0.3.0 || ^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0" } }, "sha512-O6N37CelhyqS0wu4T8sk6/Q2vZ1u2ScN6BmUm8YjS4HSDKtxlk3PNJPBL13kxT37q8Fh98KoI4Y+/e/wFm9efQ=="],
 
-    "@lynx-js/react-rsbuild-plugin": ["@lynx-js/react-rsbuild-plugin@0.16.2", "", { "dependencies": { "@lynx-js/css-extract-webpack-plugin": "0.7.1", "@lynx-js/react-alias-rsbuild-plugin": "0.16.2", "@lynx-js/react-refresh-webpack-plugin": "0.3.6", "@lynx-js/react-webpack-plugin": "0.9.2", "@lynx-js/runtime-wrapper-webpack-plugin": "0.1.3", "@lynx-js/template-webpack-plugin": "0.11.1", "@lynx-js/use-sync-external-store": "1.5.0", "background-only": "^0.0.1", "tiny-invariant": "^1.3.3" }, "peerDependencies": { "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0 || ^0.106.0 || ^0.107.0 || ^0.108.0 || ^0.109.0 || ^0.110.0 || ^0.111.0 || ^0.112.0 || ^0.113.0 || ^0.114.0 || ^0.115.0 || ^0.116.0 || ^0.117.0 || ^0.118.0 || ^0.119.0 || ^0.120.0 || ^0.121.0" }, "optionalPeers": ["@lynx-js/react"] }, "sha512-LmoHTtToDfa5DPxaMDEY0hSQ9Sd0blty/7gurC3N//pAqMj+wBNziK7dPZUnCkB78WZJHMLt5eRKSk6w9QduzA=="],
+    "@lynx-js/react-rsbuild-plugin": ["@lynx-js/react-rsbuild-plugin@0.16.3", "", { "dependencies": { "@lynx-js/css-extract-webpack-plugin": "0.7.1", "@lynx-js/react-alias-rsbuild-plugin": "0.16.3", "@lynx-js/react-refresh-webpack-plugin": "0.3.6", "@lynx-js/react-webpack-plugin": "0.9.3", "@lynx-js/runtime-wrapper-webpack-plugin": "0.1.3", "@lynx-js/template-webpack-plugin": "0.11.2", "@lynx-js/use-sync-external-store": "1.5.0", "background-only": "^0.0.1", "tiny-invariant": "^1.3.3" }, "peerDependencies": { "@lynx-js/react": "^0.103.0 || ^0.104.0 || ^0.105.0 || ^0.106.0 || ^0.107.0 || ^0.108.0 || ^0.109.0 || ^0.110.0 || ^0.111.0 || ^0.112.0 || ^0.113.0 || ^0.114.0 || ^0.115.0 || ^0.116.0 || ^0.117.0 || ^0.118.0 || ^0.119.0 || ^0.120.0 || ^0.121.0" }, "optionalPeers": ["@lynx-js/react"] }, "sha512-rexjc6kv3Lp59ixhfSJBEs2IDXYF2TaNVgO9ZHxCYSFE/9BZnry8HG1r2+sVqi/Y49YsHC+VouQWtbWf1LfLGA=="],
 
     "@lynx-js/react-use": ["@lynx-js/react-use@0.1.3", "", { "dependencies": { "immer": "10.1.1", "nanoid": "^5.1.6", "react-use": "^17.6.0" }, "peerDependencies": { "@lynx-js/react": ">=0.105.1" } }, "sha512-48NX1DZfIqdpcFPKR3SdI/E0D2INJzgMDtl9IK0vbqWKPgj6LgUPZN0iqIDd7Juy3in5c2bv6E9jCpoq5ONeVw=="],
 
-    "@lynx-js/react-webpack-plugin": ["@lynx-js/react-webpack-plugin@0.9.2", "", { "dependencies": { "@lynx-js/webpack-runtime-globals": "0.0.6", "tiny-invariant": "^1.3.3" }, "peerDependencies": { "@lynx-js/react": "*", "@lynx-js/template-webpack-plugin": "^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0" }, "optionalPeers": ["@lynx-js/react"] }, "sha512-cANEyD/ZYlW6Btqeq5peRDKFaL6DfSbQFsWSoGHxSp/RE67Yl8DdbGT5sX4WY9um329JMBEPfHVQdpZI4PDc8A=="],
+    "@lynx-js/react-webpack-plugin": ["@lynx-js/react-webpack-plugin@0.9.3", "", { "dependencies": { "@lynx-js/webpack-runtime-globals": "0.0.6", "tiny-invariant": "^1.3.3" }, "peerDependencies": { "@lynx-js/react": "*", "@lynx-js/template-webpack-plugin": "^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0" }, "optionalPeers": ["@lynx-js/react"] }, "sha512-7H96aVR7v9i/vOqEMzxY2E2+RByTgZHNZjJBn98SbGhoV3ZybAwy/NyeF1CK955EFVPSm71b/ifPJvQnOB2Ujg=="],
 
-    "@lynx-js/rspeedy": ["@lynx-js/rspeedy@0.14.4", "", { "dependencies": { "@lynx-js/cache-events-webpack-plugin": "^0.0.3", "@lynx-js/chunk-loading-webpack-plugin": "^0.3.4", "@lynx-js/web-rsbuild-server-middleware": "0.20.4", "@lynx-js/webpack-dev-transport": "^0.2.0", "@lynx-js/websocket": "^0.0.4", "@rsbuild/core": "1.7.5", "@rsbuild/plugin-css-minimizer": "1.1.1", "@rsdoctor/rspack-plugin": "~1.5.6" }, "peerDependencies": { "typescript": "5.1.6 - 5.9.x" }, "optionalPeers": ["typescript"], "bin": { "rspeedy": "./bin/rspeedy.js" } }, "sha512-2oLI1/+oqmBxS0jmwjAFZvkAp8kLdbLa6C6MSE7gYLt3/Z/EvCAfEOcm/1q0BycF3UdnY91gfZwlTJgGaYMk+g=="],
+    "@lynx-js/rspeedy": ["@lynx-js/rspeedy@0.14.5", "", { "dependencies": { "@lynx-js/cache-events-webpack-plugin": "^0.0.3", "@lynx-js/chunk-loading-webpack-plugin": "^0.3.4", "@lynx-js/web-rsbuild-server-middleware": "0.21.0", "@lynx-js/webpack-dev-transport": "^0.2.0", "@lynx-js/websocket": "^0.0.4", "@rsbuild/core": "1.7.5", "@rsbuild/plugin-css-minimizer": "1.1.1", "@rsdoctor/rspack-plugin": "~1.5.6" }, "peerDependencies": { "typescript": "5.1.6 - 5.9.x" }, "optionalPeers": ["typescript"], "bin": { "rspeedy": "./bin/rspeedy.js" } }, "sha512-rFL3N1hjDMoFJwPQ0JHusj9g6oIVxOhCIJtGuvRvba2f63S5MFJCHTWD8tIZmDB+Jgtx7/8voXrbDkbhP0GiiQ=="],
 
     "@lynx-js/runtime-wrapper-webpack-plugin": ["@lynx-js/runtime-wrapper-webpack-plugin@0.1.3", "", { "dependencies": { "@lynx-js/webpack-runtime-globals": "0.0.6" } }, "sha512-F/spRqXWE5XS4h36mN89ulGGXjvs7DEiBFUO/Xf6barstKXbhLM485CwMzXz/Zh07ZIFvnHFtRZprOT0jNrrag=="],
 
     "@lynx-js/tasm": ["@lynx-js/tasm@0.0.39", "", { "bin": { "lynx-tasm": "cli.js" } }, "sha512-FNIV6Cc2K0wCKOHVMfpr3M6kpIZqHHNI02GpVl+h0ClyyK44jxEO+lf58gLFD5E3o0hJ1cp3H2OBIxSUJGkPDw=="],
 
-    "@lynx-js/template-webpack-plugin": ["@lynx-js/template-webpack-plugin@0.11.1", "", { "dependencies": { "@jridgewell/trace-mapping": "^0.3.29", "@lynx-js/css-serializer": "0.1.6", "@lynx-js/tasm": "0.0.39", "@lynx-js/web-core": "0.20.4", "@lynx-js/webpack-runtime-globals": "^0.0.6", "@rspack/lite-tapable": "1.1.0", "css-tree": "^3.1.0", "object.groupby": "^1.0.3", "tinypool": "^2.1.0" } }, "sha512-m61fYPYJKgI56YwrAiKPmeqp/Mr8aOd2JBC8sfF536tfB9s/hqQP1E2+11oi0hxTf1IbaBdTiZx8WkQNi6VAIQ=="],
+    "@lynx-js/template-webpack-plugin": ["@lynx-js/template-webpack-plugin@0.11.2", "", { "dependencies": { "@jridgewell/trace-mapping": "^0.3.29", "@lynx-js/css-serializer": "0.1.6", "@lynx-js/tasm": "0.0.39", "@lynx-js/web-core": "0.21.0", "@lynx-js/webpack-runtime-globals": "^0.0.6", "@rspack/lite-tapable": "1.1.0", "css-tree": "^3.1.0", "object.groupby": "^1.0.3", "tinypool": "^2.1.0" } }, "sha512-GCaRbGvxcdwRaa8Knz/pMQyjRpYpXD5SUjMj/K5euRjh8P9gSTL4M7LkypR2iv13nNrCiJAz/xWb0sRDWd7CYg=="],
 
     "@lynx-js/types": ["@lynx-js/types@3.9.0", "", { "dependencies": { "csstype": "3.1.3" } }, "sha512-mwODjqahwrGwNUsmpG/GZ5ztccB2aZ3Do8o9KwJpH5XsaXXynaRVEzmOeq2/BsLWzs4rWj6zEwsK+CaX3DCKyA=="],
 
     "@lynx-js/use-sync-external-store": ["@lynx-js/use-sync-external-store@1.5.0", "", { "peerDependencies": { "@lynx-js/react": "*" } }, "sha512-iXwLiGUBgfWLozCIh3ICe07x534p9CVlFS3/iGEiFOce58MLX6/PbAvWcE8qEhYaOKiQNe9hqUnS2RbyCqoqGg=="],
 
-    "@lynx-js/web-core": ["@lynx-js/web-core@0.20.4", "", { "dependencies": { "@lynx-js/web-elements": "0.12.2", "@lynx-js/web-worker-rpc": "0.20.4", "wasm-feature-detect": "^1.8.0" }, "peerDependencies": { "@lynx-js/css-serializer": "0.1.6", "@lynx-js/lynx-core": "0.1.3", "tslib": "^2.5.0" }, "optionalPeers": ["@lynx-js/css-serializer", "@lynx-js/lynx-core", "tslib"] }, "sha512-n0lLAjUeK1ndJE7xzCzkccYQE42C1qDMOvRSxqSZ5JdcBaY4pG0ZWswXC6jiL0gaksiY5Y31wZOIWHMlRRotPw=="],
+    "@lynx-js/web-core": ["@lynx-js/web-core@0.21.0", "", { "dependencies": { "@lynx-js/web-elements": "0.12.3", "@lynx-js/web-worker-rpc": "0.21.0", "wasm-feature-detect": "^1.8.0" }, "peerDependencies": { "@lynx-js/css-serializer": "0.1.6", "@lynx-js/lynx-core": "0.1.3", "tslib": "^2.5.0" }, "optionalPeers": ["@lynx-js/css-serializer", "@lynx-js/lynx-core", "tslib"] }, "sha512-GrmABxobiXmFQvjTe9fiSNgZKnG+pswJjSBuD/XOlit+u7vpC1xR1yxJBocalLlSwGJVzpdFE1AbG7y14nQdBw=="],
 
-    "@lynx-js/web-elements": ["@lynx-js/web-elements@0.12.2", "", { "dependencies": { "dompurify": "^3.3.1", "markdown-it": "^14.1.0" }, "peerDependencies": { "tslib": "^2.5.0" } }, "sha512-k6eblA01RUIt09/GRXpRx1eL4n4Ztzs4v81RAE8Pkix8MyRArwjHb5qbV9O64VWuSk/R6h6ZJjen0cfzrBZdzw=="],
+    "@lynx-js/web-elements": ["@lynx-js/web-elements@0.12.3", "", { "dependencies": { "dompurify": "^3.3.1", "markdown-it": "^14.1.0" }, "peerDependencies": { "tslib": "^2.5.0" } }, "sha512-2hww4llLjwl/Q6y53V4roTNnqc/KYtIq2g8E2UD3Lnh35IJKdFTOQGDfyi82vbfkLD+XAvSIHDvP+fQufV6kqg=="],
 
-    "@lynx-js/web-rsbuild-server-middleware": ["@lynx-js/web-rsbuild-server-middleware@0.20.4", "", {}, "sha512-PduMgg35iGBSKnw8XxkpGUv9C2PZSjC2qF3p/5ptE22wqcp4Ofzs/3xkEv0p9YxIwD+9Q3LhwwKp9AREkohkTA=="],
+    "@lynx-js/web-rsbuild-server-middleware": ["@lynx-js/web-rsbuild-server-middleware@0.21.0", "", {}, "sha512-tzcTVctCmWwUhGlmAL7IgYRf67Yy50tei5drce7fEW5omjzgC0l5p09O/DLq4K759cSFbyZDLVpDBpUQelDi2w=="],
 
-    "@lynx-js/web-worker-rpc": ["@lynx-js/web-worker-rpc@0.20.4", "", {}, "sha512-i4RV8f397nl02zB1wjFfEJDo/bM0c+dvzd9nIPY9gksf2lX8aSOpkXn6Kyou+05qdJAXm2EZIl8SKYiTMi/P6w=="],
+    "@lynx-js/web-worker-rpc": ["@lynx-js/web-worker-rpc@0.21.0", "", {}, "sha512-lRVzwz7+vMzSkcHEfDNquNH40f3oki9T3PVDMN4nsLqxu5OesFhRQhLN8HMPaNlx0OL24ZrFdGuRtu0vbxhOOA=="],
 
     "@lynx-js/webpack-dev-transport": ["@lynx-js/webpack-dev-transport@0.2.0", "", {}, "sha512-RSy02FSoMsavEn2wna4khSJwT2uGW4XeLduKH8UDT3aCsBNM/rXndUyG6PbwMcywXCeyb8UofkhaQDtJvNJklA=="],
 
@@ -1142,7 +1142,7 @@
 
     "postcss-value-parser": ["postcss-value-parser@4.2.0", "", {}, "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="],
 
-    "preact": ["@lynx-js/internal-preact@10.29.1-20260424024911-12b794f", "", {}, "sha512-MQ+xjPL2f1P9/eCAdkT2h9cJRXl1qqhSJDX9GkPETt3UAepLo5N+HbGB8Qr3IUzqGDWMr3Mj76my1P0pLkKVDg=="],
+    "preact": ["@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c", "", {}, "sha512-h2pRrt5oLK9LT1NkjyprtzJij/AdZGvv3CN6B5edL4chixqvITbxoCSdYy667Hl6+uKOBuxmCNZoDddgRfcLnw=="],
 
     "proxy-from-env": ["proxy-from-env@2.1.0", "", {}, "sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA=="],
 

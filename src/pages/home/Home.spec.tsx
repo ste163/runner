@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { getQueriesForElement, fireEvent, render } from '@lynx-js/react/testing-library'
+import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as router from 'sparkling-navigation'
@@ -52,19 +52,37 @@ describe('Home', () => {
     render(<Home onMounted={onMounted} />)
 
     expect(onMounted).toBeCalledTimes(1)
-
     expect(router.open).toHaveBeenCalledWith({ scheme: onboardingScheme }, expect.any(Function))
+  })
+
+  it('renders the block chart layout and current values', async () => {
+    render(<Home />)
+
+    const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
+
+    expect(queryByText('Runner')).toBeNull()
+    expect(queryByText('3 sessions. 7-day windows.')).toBeNull()
+    await findByText('Block chart')
+    await findByText('Week')
+    await findByText('Run')
+    await findByText('Walk')
+    await findByText('0/3 completed')
+    await findByText('Run 30s')
+    await findByText('Walk 2m 0s')
+    await findByText('Manual adjust')
+    await findByText('Backup & restore')
   })
 
   it('updates the current interval when the user taps increase', async () => {
     render(<Home />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
-    await findByText('Run 30s · Walk 2m 0s')
+    await findByText('Run 30s')
 
     fireEvent.tap(getByText('Increase 10%'))
 
-    await findByText('Run 33s · Walk 1m 48s')
+    await findByText('Run 33s')
+    await findByText('Walk 1m 48s')
   })
 
   it('opens the workout page when the start button is tapped', async () => {
@@ -111,7 +129,8 @@ describe('Home', () => {
     fireEvent.tap(queries.getByText('Import JSON'))
 
     await queries.findByText('Imported profile from device.')
-    await queries.findByText('Run 33s · Walk 1m 48s')
+    await queries.findByText('Run 33s')
+    await queries.findByText('Walk 1m 48s')
 
     expect(exportProfile).toHaveBeenCalledTimes(1)
     expect(importProfile).toHaveBeenCalledTimes(1)

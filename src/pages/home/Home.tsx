@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Home.css'
+import { BarChart } from '../../components/BarChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
@@ -22,8 +23,6 @@ const buildPageScheme = (bundle: string, title: string): string => {
 
 const onboardingScheme = buildPageScheme('onboarding.lynx.bundle', 'How It Works')
 const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
-const weekWindowMilliseconds = 7 * 24 * 60 * 60 * 1000
-const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 const formatDuration = (seconds: number): string => {
   const roundedSeconds = Math.round(seconds)
@@ -33,16 +32,32 @@ const formatDuration = (seconds: number): string => {
   return minutes === 0 ? `${remainingSeconds}s` : `${minutes}m ${remainingSeconds}s`
 }
 
-const buildIntervalLabel = (level: TrainingLevel): string =>
-  isGraduated(level)
-    ? `Running ${formatDuration(level.intervalBlockSeconds)}`
-    : `Run ${formatDuration(level.runSeconds)} · Walk ${formatDuration(level.walkSeconds)}`
+const buildIntervalDurationLines = (level: TrainingLevel): [string, string | null] => {
+  if (isGraduated(level)) {
+    return [`Run ${formatDuration(level.intervalBlockSeconds)}`, null]
+  }
+
+  return [`Run ${formatDuration(level.runSeconds)}`, `Walk ${formatDuration(level.walkSeconds)}`]
+}
+
+const buildRunPercent = (level: TrainingLevel): number => {
+  const totalSeconds = Math.max(level.runSeconds + level.walkSeconds, 1)
+
+  return isGraduated(level) ? 100 : (level.runSeconds / totalSeconds) * 100
+}
+
+const buildWalkPercent = (level: TrainingLevel): number => {
+  const totalSeconds = Math.max(level.runSeconds + level.walkSeconds, 1)
+
+  return isGraduated(level) ? 0 : (level.walkSeconds / totalSeconds) * 100
+}
 
 const countWindowSessions = (profile: TrainingProfile): number => {
   if (profile.window.windowStart === '') {
     return profile.sessions.length
   }
 
+  const weekWindowMilliseconds = 7 * 24 * 60 * 60 * 1000
   const windowStart = new Date(profile.window.windowStart).getTime()
   const windowEnd = windowStart + weekWindowMilliseconds
 
@@ -52,9 +67,6 @@ const countWindowSessions = (profile: TrainingProfile): number => {
     return completedAt >= windowStart && completedAt < windowEnd ? count + 1 : count
   }, 0)
 }
-
-const buildProgressDots = (completedSessions: number): string[] =>
-  Array.from({ length: 3 }, (_, index) => (index < Math.min(completedSessions, 3) ? '●' : '○'))
 
 const buildProgressMessage = (profile: TrainingProfile, completedSessions: number): string => {
   if (isGraduated(profile.level)) {
@@ -69,6 +81,15 @@ const buildProgressMessage = (profile: TrainingProfile, completedSessions: numbe
 }
 
 const buildSuggestedSessionLabel = (profile: TrainingProfile, referenceDate: Date): string => {
+  const weekdayNames = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ]
   const lastSession = profile.sessions[profile.sessions.length - 1]
   const sourceDate = lastSession === undefined ? referenceDate : new Date(lastSession.completedAt)
   const suggestedDate = new Date(sourceDate)
@@ -78,7 +99,7 @@ const buildSuggestedSessionLabel = (profile: TrainingProfile, referenceDate: Dat
   return `Next suggested session: ${weekdayNames[suggestedDate.getDay()]}`
 }
 
-export function Home(props: { onMounted?: () => void }): JSX.Element {
+export const Home = (props: { onMounted?: () => void }): JSX.Element => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
   const [storageStatus, setStorageStatus] = useState('')
   const [debugJson, setDebugJson] = useState('')
@@ -166,39 +187,60 @@ export function Home(props: { onMounted?: () => void }): JSX.Element {
 
   const currentWindowSessions = countWindowSessions(profile)
   const currentProgress = Math.min(currentWindowSessions, 3)
-  const progressDots = buildProgressDots(currentProgress)
-  const intervalLabel = buildIntervalLabel(profile.level)
+  const runPercent = buildRunPercent(profile.level)
+  const walkPercent = buildWalkPercent(profile.level)
+  const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
   const progressMessage = buildProgressMessage(profile, currentWindowSessions)
   const suggestedSessionLabel = buildSuggestedSessionLabel(profile, new Date())
+  const weekComplete = currentProgress >= 3
 
   return (
     <scroll-view className='page-scroll' scroll-orientation='vertical'>
-      <view className='app'>
-        <view className='hero'>
-          <text className='eyebrow'>Runner</text>
-          <text className='title'>3 sessions. 7-day windows.</text>
-          <text className='subtitle'>Simple run/walk progress, no extra noise.</text>
-        </view>
-
-        <view className='card'>
-          <view className='card__header'>
-            <text className='card__title'>This week</text>
-            <text className='card__tag'>{currentProgress}/3</text>
-          </view>
-          <view className='tracker'>
-            {progressDots.map((dot, index) => (
-              <text
-                key={`${dot}-${index}`}
-                className={dot === '●' ? 'tracker__dot tracker__dot--filled' : 'tracker__dot'}
-              >
-                {dot}
-              </text>
-            ))}
-          </view>
+      <view className='app home'>
+        <view className='card card--center'>
+          <text className='label'>Block chart</text>
+          <BarChart
+            amountValue={`${currentProgress}/3 completed`}
+            color={weekComplete ? 'primary' : 'tertiary'}
+            fillPercent={(currentProgress / 3) * 100}
+            label='Week'
+          />
+          <BarChart
+            amountValue={runDurationLabel}
+            color='primary'
+            fillPercent={runPercent}
+            label='Run'
+          />
+          <BarChart
+            amountValue={walkDurationLabel ?? 'Graduated'}
+            color='secondary'
+            fillPercent={walkPercent}
+            label='Walk'
+          />
           <text className='copy'>{progressMessage}</text>
+          <text className='copy'>{suggestedSessionLabel}</text>
         </view>
 
-        <view className='card'>
+        <view className='card card--center'>
+          <text className='label'>Manual adjust</text>
+          <view className='actions-row'>
+            <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
+              <text className='secondary__text'>Decrease 10%</text>
+            </view>
+            <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
+              <text className='secondary__text'>Increase 10%</text>
+            </view>
+          </view>
+        </view>
+
+        <view className='card card--center'>
+          <view className='primary' bindtap={openWorkout}>
+            <text className='primary__text'>Start Workout</text>
+            <text className='primary__icon'>→</text>
+          </view>
+        </view>
+
+        <view className='card card--debug'>
           <text className='label'>Backup & restore</text>
           <view className='stack'>
             <text className='copy'>
@@ -216,31 +258,6 @@ export function Home(props: { onMounted?: () => void }): JSX.Element {
           </view>
           <text className='copy'>{storageStatus}</text>
           {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
-        </view>
-
-        <view className='card'>
-          <text className='label'>Current interval</text>
-          <text className='pill pill--mono'>{intervalLabel}</text>
-          <text className='copy'>{suggestedSessionLabel}</text>
-        </view>
-
-        <view className='card'>
-          <text className='label'>Manual adjust</text>
-          <view className='stack'>
-            <view className='secondary' bindtap={handleDecreaseLevel}>
-              <text className='secondary__text'>Decrease 10%</text>
-            </view>
-            <view className='secondary' bindtap={handleIncreaseLevel}>
-              <text className='secondary__text'>Increase 10%</text>
-            </view>
-          </view>
-        </view>
-
-        <view className='card'>
-          <view className='primary' bindtap={openWorkout}>
-            <text className='primary__text'>Start Workout</text>
-            <text className='primary__icon'>→</text>
-          </view>
         </view>
       </view>
     </scroll-view>
