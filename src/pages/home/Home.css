@@ -1,37 +1,37 @@
 @import url('../../global.css');
 
 .app {
-  gap: 14px;
+  gap: 0.875rem;
 }
 
-.card--center {
-  align-items: center;
-  text-align: center;
-}
-
-.card--debug {
-  align-items: stretch;
-  text-align: left;
+.home__section--week {
+  margin-top: 2rem;
 }
 
 .actions-row {
   width: 100%;
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .actions-row__button {
-  flex: 1 1 140px;
-  min-width: 140px;
-  padding-inline: 18px;
+  flex: 1 1 9rem;
+  min-width: 9rem;
+  padding-inline: 1.125rem;
 }
 
 .home__section {
   width: 100%;
 }
 
+
+.home__section--center {
+  align-items: center;
+  text-align: center;
+}
+
 .secondary--compact {
   align-self: flex-start;
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
 }

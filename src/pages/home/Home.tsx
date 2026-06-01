@@ -76,28 +76,34 @@ const buildProgressMessage = (profile: TrainingProfile, completedSessions: numbe
 
   const remainingSessions = Math.max(3 - completedSessions, 0)
 
-  return remainingSessions === 1
-    ? 'Complete 1 more session this week to progress!'
-    : `Complete ${remainingSessions} more sessions this week to progress!`
+  if (remainingSessions === 0) return 'Completed!'
+  if (remainingSessions === 1) return 'Complete 1 more session this week to progress!'
+  return `Complete ${remainingSessions} more sessions this week to progress!`
 }
 
-const buildSuggestedSessionLabel = (profile: TrainingProfile, referenceDate: Date): string => {
-  const weekdayNames = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-  ]
+const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+const buildSuggestedSessionLabel = (
+  profile: TrainingProfile,
+  completedSessions: number,
+  referenceDate: Date
+): string => {
   const lastSession = profile.sessions[profile.sessions.length - 1]
-  const sourceDate = lastSession === undefined ? referenceDate : new Date(lastSession.completedAt)
+  const sourceDate =
+    completedSessions >= 3 && profile.window.windowStart !== ''
+      ? new Date(profile.window.windowStart)
+      : lastSession === undefined
+        ? referenceDate
+        : new Date(lastSession.completedAt)
   const suggestedDate = new Date(sourceDate)
 
-  suggestedDate.setDate(suggestedDate.getDate() + 2)
+  if (completedSessions >= 3) {
+    suggestedDate.setUTCDate(suggestedDate.getUTCDate() + 7)
+  } else {
+    suggestedDate.setUTCDate(suggestedDate.getUTCDate() + 2)
+  }
 
-  return `Next suggested session: ${weekdayNames[suggestedDate.getDay()]}`
+  return `Exercise again on ${weekdayNames[suggestedDate.getUTCDay()]}`
 }
 
 export const Home = (props: { onMounted?: () => void }): JSX.Element => {
@@ -197,16 +203,20 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
   const walkPercent = buildWalkPercent(profile.level)
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
   const progressMessage = buildProgressMessage(profile, currentWindowSessions)
-  const suggestedSessionLabel = buildSuggestedSessionLabel(profile, new Date())
+  const suggestedSessionLabel = buildSuggestedSessionLabel(
+    profile,
+    currentWindowSessions,
+    new Date()
+  )
   return (
     <scroll-view className='page-scroll' scroll-orientation='vertical'>
       <view className='app home'>
-        <view className='home__section home__section--full'>
+        <view className='home__section home__section--full home__section--week home__section--center'>
           <DotChart
             amountValue={`${currentProgress}/3 completed`}
             color='primary'
             completedCount={currentProgress}
-            label='Week'
+            label='This Week'
             totalCount={3}
           />
           <text className='copy'>{progressMessage}</text>
@@ -250,6 +260,11 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
             <text className='primary__text'>Start Workout</text>
             <text className='primary__icon'>→</text>
           </view>
+        </view>
+
+        <view className='home__section home__section--full'>
+          <text className='label'>This month</text>
+          <text className='copy'>Coming soon.</text>
         </view>
 
         <view className='home__section home__section--full'>

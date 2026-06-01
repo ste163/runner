@@ -34,6 +34,33 @@ const buildProfile = (): TrainingProfile => ({
   sessions: [],
 })
 
+const buildCompletedWeekProfile = (): TrainingProfile => ({
+  ...buildProfile(),
+  sessions: [
+    {
+      id: 'session-1',
+      completedAt: '2024-01-01T12:00:00.000Z',
+      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      intervals: [],
+      totalDistanceMiles: 0,
+    },
+    {
+      id: 'session-2',
+      completedAt: '2024-01-03T12:00:00.000Z',
+      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      intervals: [],
+      totalDistanceMiles: 0,
+    },
+    {
+      id: 'session-3',
+      completedAt: '2024-01-05T12:00:00.000Z',
+      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      intervals: [],
+      totalDistanceMiles: 0,
+    },
+  ],
+})
+
 describe('Home', () => {
   beforeEach(() => {
     sharedProfileStore.reset()
@@ -55,14 +82,14 @@ describe('Home', () => {
     expect(router.open).toHaveBeenCalledWith({ scheme: onboardingScheme }, expect.any(Function))
   })
 
-  it('renders the block chart layout and current values', async () => {
+  it('renders the sectioned home layout and current values', async () => {
     render(<Home />)
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
     expect(queryByText('Runner')).toBeNull()
     expect(queryByText('3 sessions. 7-day windows.')).toBeNull()
-    await findByText('Week')
+    await findByText('This Week')
     await findByText('Current interval')
     await findByText('Run')
     await findByText('Walk')
@@ -75,6 +102,8 @@ describe('Home', () => {
     fireEvent.tap(await findByText('Adjust'))
     await findByText('- Decrease')
     await findByText('+ Add')
+    await findByText('This month')
+    await findByText('Coming soon.')
     await findByText('Backup & restore')
   })
 
@@ -90,6 +119,18 @@ describe('Home', () => {
 
     await findByText('Run 33s')
     await findByText('Walk 1m 48s')
+  })
+
+  it('shows a completed week message and the next cycle day after three sessions', async () => {
+    sharedProfileStore.save(buildCompletedWeekProfile())
+
+    render(<Home />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('3/3 completed')
+    await findByText('Completed!')
+    await findByText('Exercise again on Monday')
   })
 
   it('opens the workout page when the start button is tapped', async () => {
