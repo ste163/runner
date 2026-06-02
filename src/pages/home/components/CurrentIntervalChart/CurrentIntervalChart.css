@@ -9,14 +9,6 @@
   position: relative;
 }
 
-.currentIntervalChart__ruler {
-  position: absolute;
-  left: -625rem;
-  top: -625rem;
-  width: auto;
-  height: auto;
-}
-
 .currentIntervalChart__header,
 .currentIntervalChart__footer {
   width: 100%;
@@ -59,45 +51,31 @@
   align-self: stretch;
   display: flex;
   flex-direction: row;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.75rem;
-  white-space: nowrap;
-  line-height: 1;
+  align-items: center;
+  justify-content: stretch;
 }
 
-.currentIntervalChart__barStack {
+.currentIntervalChart__barTrack {
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 0;
-  line-height: 0;
-}
-
-.currentIntervalChart__measure {
-  font-size: 1rem;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.025rem;
-  font-family: 'Menlo', 'SFMono-Regular', Consolas, monospace;
-  word-break: keep-all;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--color-border) 35%, transparent);
 }
 
 .currentIntervalChart__bar {
-  font-size: 1.125rem;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.025rem;
-  font-family: 'Menlo', 'SFMono-Regular', Consolas, monospace;
-  word-break: keep-all;
-  text-align: center;
-  min-width: 1ch;
+  height: 1.25rem;
   display: block;
+  min-width: 0;
 }
 
 .currentIntervalChart__bar--run {
-  color: var(--color-primary);
+  background: var(--color-primary);
+  border-radius: 0.875rem 0 0 0.875rem;
 }
 
 .currentIntervalChart__bar--walk {
-  color: var(--color-secondary);
+  background: var(--color-secondary);
+  border-radius: 0 0.875rem 0.875rem 0;
 }
