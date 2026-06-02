@@ -1,0 +1,43 @@
+.bottomNav {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.bottomNav__surface {
+  width: 100%;
+  padding: 0.625rem;
+  display: flex;
+  gap: 0.5rem;
+  border: 0.0625rem solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface-raised);
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.36);
+}
+
+.bottomNav__item {
+  flex: 1;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.bottomNav__item--active {
+  background: var(--color-primary-soft);
+}
+
+.bottomNav__item--inactive {
+  opacity: 0.78;
+}
+
+.bottomNav__text {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.bottomNav__text--active {
+  color: var(--color-primary);
+}

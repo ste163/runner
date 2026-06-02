@@ -105,6 +105,9 @@ describe('Home', () => {
     await findByText('This month')
     await findByText('Coming soon.')
     await findByText('Backup & restore')
+    await findByText('Home')
+    await findByText('Workout')
+    await findByText('Settings')
   })
 
   it('updates the current interval when the user taps increase', async () => {

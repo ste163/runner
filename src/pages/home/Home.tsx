@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Home.css'
+import { BottomNav } from '../../components/BottomNav/index.js'
 import { DotChart } from '../../components/DotChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
@@ -278,6 +279,8 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
           <text className='copy'>{storageStatus}</text>
           {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
         </view>
+
+        <BottomNav activeTab='home' onWorkout={openWorkout} />
       </view>
     </scroll-view>
   )

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from '@lynx-js/reac
 import { close } from 'sparkling-navigation'
 
 import './Workout.css'
+import { BottomNav } from '../../components/BottomNav/index.js'
 import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
 import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
@@ -497,6 +498,8 @@ export const Workout = ({ haptics, onMounted }: WorkoutProps): JSX.Element => {
             </view>
           </>
         )}
+
+        <BottomNav activeTab='workout' onHome={handleDone} />
       </view>
     </scroll-view>
   )
