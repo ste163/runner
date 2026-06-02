@@ -8,6 +8,7 @@ const lynxConfig = defineConfig({
   source: {
     entry: {
       home: './src/pages/home/index.tsx',
+      graphs: './src/pages/graphs/index.tsx',
       onboarding: './src/pages/onboarding/index.tsx',
       workout: './src/pages/workout/index.tsx',
     },
@@ -47,6 +48,9 @@ const config: AppConfig = {
   router: {
     home: {
       path: './lynxPages/home',
+    },
+    graphs: {
+      path: './lynxPages/graphs',
     },
     onboarding: {
       path: './lynxPages/onboarding',

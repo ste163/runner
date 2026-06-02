@@ -23,6 +23,7 @@ const buildPageScheme = (bundle: string, title: string): string => {
 }
 
 const onboardingScheme = buildPageScheme('onboarding.lynx.bundle', 'How It Works')
+const graphsScheme = buildPageScheme('graphs.lynx.bundle', 'Text Graph Gallery')
 const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
 
 const formatDuration = (seconds: number): string => {
@@ -101,6 +102,10 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
 
   const openWorkout = useCallback((): void => {
     router.open({ scheme: workoutScheme }, () => undefined)
+  }, [])
+
+  const openGraphGallery = useCallback((): void => {
+    router.open({ scheme: graphsScheme }, () => undefined)
   }, [])
 
   useEffect(() => {
@@ -236,6 +241,16 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
           <view className='primary' bindtap={openWorkout}>
             <text className='primary__text'>Start Workout</text>
             <text className='primary__icon'>→</text>
+          </view>
+        </view>
+
+        <view className='home__section home__section--full'>
+          <text className='label'>Text graph gallery</text>
+          <text className='copy'>
+            Braille, blocks, dots, and squares at a few different font sizes.
+          </text>
+          <view className='home__galleryButton' bindtap={openGraphGallery}>
+            <text className='home__galleryButtonText'>Open graph examples</text>
           </view>
         </view>
 

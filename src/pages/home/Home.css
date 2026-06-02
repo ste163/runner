@@ -43,3 +43,21 @@
 .home__helperToggleText:active {
   color: var(--color-text);
 }
+
+.home__galleryButton {
+  width: 100%;
+  min-height: 2.875rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.0625rem solid var(--color-border-strong);
+  border-radius: 0.875rem;
+  background: var(--color-surface-raised);
+}
+
+.home__galleryButtonText {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}

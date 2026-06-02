@@ -1,0 +1,198 @@
+@import url('../../global.css');
+
+.textGraphs {
+  gap: 1rem;
+}
+
+.textGraphs__monthCard {
+  gap: 0.75rem;
+}
+
+.textGraphs__monthChart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.textGraphs__monthAxisRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.textGraphs__monthYAxis {
+  width: 2.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.textGraphs__monthAxisLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02rem;
+  color: var(--color-text-soft);
+}
+
+.textGraphs__monthAxisLabel--top {
+  color: var(--color-text-muted);
+}
+
+.textGraphs__monthAxisLine {
+  flex: 1;
+  width: 100%;
+  border-left: 0.0625rem solid var(--color-border);
+}
+
+.textGraphs__monthAxisLabel--bottom {
+  color: var(--color-text-soft);
+}
+
+.textGraphs__progressColumns {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  align-items: end;
+}
+
+.textGraphs__progressColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 0.14rem;
+  min-width: 0;
+}
+
+.textGraphs__progressWeekBars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.12rem;
+  align-items: end;
+}
+
+.textGraphs__progressBarTrack {
+  min-width: 0;
+  height: 5.9rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-border) 35%, transparent);
+  border-radius: 0.4rem 0.4rem 0 0;
+  overflow: hidden;
+}
+
+.textGraphs__progressBarFill {
+  width: 100%;
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+
+.textGraphs__progressBarFill--run {
+  background: var(--color-primary);
+}
+
+.textGraphs__progressBarFill--walk {
+  background: var(--color-secondary);
+}
+
+.textGraphs__progressFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.06rem;
+  align-items: stretch;
+}
+
+.textGraphs__progressAmountRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.textGraphs__monthAmount {
+  font-size: 0.48rem;
+  font-weight: 800;
+  line-height: 0.8rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.textGraphs__progressWeekLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.textGraphs__monthAmount--run {
+  color: var(--color-primary);
+}
+
+.textGraphs__monthAmount--walk {
+  color: var(--color-secondary);
+}
+
+.textGraphs__samples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.textGraphs__sampleRow {
+  padding: 0.8125rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  border: 0.0625rem solid var(--color-border);
+  border-radius: 0.875rem;
+  background: var(--color-surface-raised);
+}
+
+.textGraphs__sampleLabel {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.025rem;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+}
+
+.textGraphs__glyphs {
+  font-family: 'Menlo', 'SFMono-Regular', Consolas, monospace;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  word-break: keep-all;
+  color: var(--color-text);
+}
+
+.textGraphs__glyphs--small {
+  font-size: 0.875rem;
+}
+
+.textGraphs__glyphs--medium {
+  font-size: 1.25rem;
+}
+
+.textGraphs__glyphs--large {
+  font-size: 1.875rem;
+}
+
+.textGraphs__glyphs--braille {
+  letter-spacing: 0.08rem;
+  color: var(--color-primary);
+}
+
+.textGraphs__glyphs--blocks {
+  letter-spacing: 0.035rem;
+}
+
+.textGraphs__glyphs--dots {
+  letter-spacing: 0.2rem;
+}
+
+.textGraphs__glyphs--squares {
+  letter-spacing: 0.12rem;
+}

@@ -19,6 +19,7 @@ src/
     home/         # index.tsx (entry), Home.tsx (component), Home.spec.tsx (tests), Home.css
     workout/      # same structure
     onboarding/   # same structure
+    graphs/       # example page for text graph experiments
   native/         # JS bridge wrappers for NativeModules
   assets/         # Static images (png)
   native-modules.d.ts
