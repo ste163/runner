@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Home.css'
-import { BottomNav } from '../../components/BottomNav/index.js'
 import { DotChart } from '../../components/DotChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
@@ -195,93 +194,93 @@ export const Home = (props: { onMounted?: () => void }): JSX.Element => {
     new Date()
   )
   return (
-    <scroll-view className='page-scroll' scroll-orientation='vertical'>
-      <view className='app home'>
-        <view className='home__section home__section--full home__section--week home__section--center'>
-          <DotChart
-            amountValue={`${currentProgress}/3 completed`}
-            color='primary'
-            completedCount={currentProgress}
-            label='This Week'
-            totalCount={3}
-            {...(currentProgress >= 3 ? { detail: suggestedSessionLabel } : {})}
-          />
-        </view>
-
-        <view className='home__section home__section--full home__section--center'>
-          <text className='dotChart__label'>Current interval</text>
-        </view>
-
-        <view className='home__section home__section--full'>
-          <CurrentIntervalChart
-            runAmount={runDurationLabel}
-            walkAmount={walkDurationLabel ?? 'Graduated'}
-            runPercent={runPercent}
-          />
-        </view>
-
-        <view className='home__section home__section--full'>
-          <view className='home__helperToggle' bindtap={toggleManualAdjust}>
-            <text className='home__helperToggleText'>
-              {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
-            </text>
+    <view className='page-shell'>
+      <scroll-view className='page-scroll' scroll-orientation='vertical'>
+        <view className='app home'>
+          <view className='home__section home__section--full home__section--week home__section--center'>
+            <DotChart
+              amountValue={`${currentProgress}/3 completed`}
+              color='primary'
+              completedCount={currentProgress}
+              label='This Week'
+              totalCount={3}
+              {...(currentProgress >= 3 ? { detail: suggestedSessionLabel } : {})}
+            />
           </view>
-          {showManualAdjust ? (
-            <view className='actions-row'>
-              <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
-                <text className='secondary__text'>- Decrease</text>
-              </view>
-              <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
-                <text className='secondary__text'>+ Add</text>
-              </view>
+
+          <view className='home__section home__section--full home__section--center'>
+            <text className='dotChart__label'>Current interval</text>
+          </view>
+
+          <view className='home__section home__section--full'>
+            <CurrentIntervalChart
+              runAmount={runDurationLabel}
+              walkAmount={walkDurationLabel ?? 'Graduated'}
+              runPercent={runPercent}
+            />
+          </view>
+
+          <view className='home__section home__section--full'>
+            <view className='home__helperToggle' bindtap={toggleManualAdjust}>
+              <text className='home__helperToggleText'>
+                {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
+              </text>
             </view>
-          ) : null}
-        </view>
-
-        <view className='home__section home__section--full'>
-          <view className='primary' bindtap={openWorkout}>
-            <text className='primary__text'>Start Workout</text>
-            <text className='primary__icon'>→</text>
+            {showManualAdjust ? (
+              <view className='actions-row'>
+                <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
+                  <text className='secondary__text'>- Decrease</text>
+                </view>
+                <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
+                  <text className='secondary__text'>+ Add</text>
+                </view>
+              </view>
+            ) : null}
           </view>
-        </view>
 
-        <view className='home__section home__section--full'>
-          <text className='label'>Text graph gallery</text>
-          <text className='copy'>
-            Braille, blocks, dots, and squares at a few different font sizes.
-          </text>
-          <view className='home__galleryButton' bindtap={openGraphGallery}>
-            <text className='home__galleryButtonText'>Open graph examples</text>
+          <view className='home__section home__section--full'>
+            <view className='primary' bindtap={openWorkout}>
+              <text className='primary__text'>Start Workout</text>
+              <text className='primary__icon'>→</text>
+            </view>
           </view>
-        </view>
 
-        <view className='home__section home__section--full'>
-          <text className='label'>This month</text>
-          <text className='copy'>Coming soon.</text>
-        </view>
-
-        <view className='home__section home__section--full'>
-          <text className='label'>Backup & restore</text>
-          <view className='stack'>
+          <view className='home__section home__section--full'>
+            <text className='label'>Text graph gallery</text>
             <text className='copy'>
-              Use Android pickers to export or import the current profile JSON.
+              Braille, blocks, dots, and squares at a few different font sizes.
             </text>
-            <view className='secondary' bindtap={handleExportProfile}>
-              <text className='secondary__text'>Export JSON</text>
-            </view>
-            <view className='secondary' bindtap={handleImportProfile}>
-              <text className='secondary__text'>Import JSON</text>
-            </view>
-            <view className='secondary' bindtap={handleShowCurrentJson}>
-              <text className='secondary__text'>Show current JSON</text>
+            <view className='home__galleryButton' bindtap={openGraphGallery}>
+              <text className='home__galleryButtonText'>Open graph examples</text>
             </view>
           </view>
-          <text className='copy'>{storageStatus}</text>
-          {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
-        </view>
 
-        <BottomNav activeTab='home' onWorkout={openWorkout} />
-      </view>
-    </scroll-view>
+          <view className='home__section home__section--full'>
+            <text className='label'>This month</text>
+            <text className='copy'>Coming soon.</text>
+          </view>
+
+          <view className='home__section home__section--full'>
+            <text className='label'>Backup & restore</text>
+            <view className='stack'>
+              <text className='copy'>
+                Use Android pickers to export or import the current profile JSON.
+              </text>
+              <view className='secondary' bindtap={handleExportProfile}>
+                <text className='secondary__text'>Export JSON</text>
+              </view>
+              <view className='secondary' bindtap={handleImportProfile}>
+                <text className='secondary__text'>Import JSON</text>
+              </view>
+              <view className='secondary' bindtap={handleShowCurrentJson}>
+                <text className='secondary__text'>Show current JSON</text>
+              </view>
+            </view>
+            <text className='copy'>{storageStatus}</text>
+            {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
+          </view>
+        </view>
+      </scroll-view>
+    </view>
   )
 }

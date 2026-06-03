@@ -11,6 +11,7 @@ const lynxConfig = defineConfig({
       graphs: './src/pages/graphs/index.tsx',
       onboarding: './src/pages/onboarding/index.tsx',
       workout: './src/pages/workout/index.tsx',
+      activeWorkout: './src/pages/activeWorkout/index.tsx',
     },
   },
   output: {
@@ -57,6 +58,9 @@ const config: AppConfig = {
     },
     workout: {
       path: './lynxPages/workout',
+    },
+    activeWorkout: {
+      path: './lynxPages/activeWorkout',
     },
   },
   plugin: [

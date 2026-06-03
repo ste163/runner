@@ -1,7 +1,8 @@
 import { root } from '@lynx-js/react'
 
-import { Home } from './Home.js'
+import { AppLayout } from '../../components/AppLayout/index.js'
 import { runnerProfileStorage } from '../../native-bridge/storage.js'
+import { Home } from './Home.js'
 
 const configureHomeNativeModules = (): void => {
   const nativeModules = typeof NativeModules === 'undefined' ? null : NativeModules
@@ -11,7 +12,11 @@ const configureHomeNativeModules = (): void => {
 
 configureHomeNativeModules()
 
-root.render(<Home />)
+root.render(
+  <AppLayout initialPage='home'>
+    <Home />
+  </AppLayout>
+)
 
 if (import.meta.webpackHot) {
   import.meta.webpackHot.accept()

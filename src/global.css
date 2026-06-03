@@ -41,10 +41,18 @@ body,
 
 .page-scroll {
   width: 100%;
-  height: 100vh;
+  flex: 1 1 auto;
   box-sizing: border-box;
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+.page-shell {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
 }
 
 .app,
@@ -53,7 +61,7 @@ body,
   padding:
     calc(var(--page-top-gap) + var(--app-safe-area-top))
     var(--page-horizontal-gap)
-    calc(var(--page-bottom-gap) + var(--app-safe-area-bottom));
+    calc(var(--page-bottom-gap) + 5rem + var(--app-safe-area-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;

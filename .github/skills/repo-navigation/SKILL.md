@@ -17,11 +17,16 @@ description: Layout of the runner repo — where source, pages, tests, scripts, 
 src/
   pages/
     home/         # index.tsx (entry), Home.tsx (component), Home.spec.tsx (tests), Home.css
-    workout/      # same structure
+    workout/      # Workout selection page (shows nav bar)
+    activeWorkout/# Active workout execution page (hides nav bar)
     onboarding/   # same structure
     graphs/       # example page for text graph experiments
+  components/
+    AppLayout/    # Root layout wrapper (provides BottomNav on all pages except activeWorkout)
+    BottomNav/    # Bottom navigation component
   native/         # JS bridge wrappers for NativeModules
   assets/         # Static images (png)
+  domain/         # Business logic (profile, intervals, progression, currentPage context)
   native-modules.d.ts
   rspeedy-env.d.ts
   typing.d.ts

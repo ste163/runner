@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as router from 'sparkling-navigation'
 
+import { AppLayout } from '../../components/AppLayout/index.js'
 import { Home } from './Home.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
@@ -76,14 +77,22 @@ describe('Home', () => {
   it('opens onboarding on first launch', async () => {
     const onMounted = vi.fn()
 
-    render(<Home onMounted={onMounted} />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home onMounted={onMounted} />
+      </AppLayout>
+    )
 
     expect(onMounted).toBeCalledTimes(1)
     expect(router.open).toHaveBeenCalledWith({ scheme: onboardingScheme }, expect.any(Function))
   })
 
   it('renders the sectioned home layout and current values', async () => {
-    render(<Home />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home />
+      </AppLayout>
+    )
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -107,11 +116,14 @@ describe('Home', () => {
     await findByText('Backup & restore')
     await findByText('Home')
     await findByText('Workout')
-    await findByText('Settings')
   })
 
   it('updates the current interval when the user taps increase', async () => {
-    render(<Home />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home />
+      </AppLayout>
+    )
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('30s')
@@ -127,7 +139,11 @@ describe('Home', () => {
   it('shows a completed week message and the next cycle day after three sessions', async () => {
     sharedProfileStore.save(buildCompletedWeekProfile())
 
-    render(<Home />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home />
+      </AppLayout>
+    )
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -139,7 +155,11 @@ describe('Home', () => {
   it('opens the workout page when the start button is tapped', async () => {
     sharedProfileStore.save(buildProfile())
 
-    render(<Home />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home />
+      </AppLayout>
+    )
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Start Workout')
@@ -171,7 +191,11 @@ describe('Home', () => {
 
     runnerProfileStorage.configure(module)
 
-    render(<Home />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home />
+      </AppLayout>
+    )
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Export JSON')
@@ -190,7 +214,11 @@ describe('Home', () => {
   it('shows the current profile JSON for debugging', async () => {
     sharedProfileStore.save(buildProfile())
 
-    render(<Home />)
+    render(
+      <AppLayout initialPage='home'>
+        <Home />
+      </AppLayout>
+    )
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Show current JSON')
