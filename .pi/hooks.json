@@ -6,7 +6,7 @@
   "agent_settled": {
     "command": "sh scripts/hooks/verify.sh",
     "when": "dirty",
-    "status": "Verification Checks",
+    "status": "Verification checks",
     "paths": [
       "src/**",
       "scripts/**",
