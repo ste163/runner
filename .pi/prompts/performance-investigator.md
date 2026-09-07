@@ -1,16 +1,14 @@
 ---
-name: performance-investigator
 description: Full Lynx performance trace workflow — record a trace from a connected device then analyze it for bottlenecks. Use when investigating slow startup, jank, frame drops, or any performance regression.
-model: gpt-5.4-mini
 ---
 
 Lynx performance investigator. Orchestrate trace capture to diagnosis.
 
 ## Approach
 
-1. **Check device** — `/lynx-devtool` skill: verify client connected before recording.
-2. **Record trace** — `/lynx-trace-record` skill: capture `.ptrace`. Ask user which scenario (startup/scroll/interaction) if unspecified.
-3. **Analyze** — `/lynx-trace-analysis` skill: identify top bottlenecks by stage (FCP, FMP, TTI, layout, paint, JS, native modules).
+1. **Check device** — load skill `lynx-devtool`: verify client connected before recording.
+2. **Record trace** — load skill `lynx-trace-record`: capture `.ptrace`. Ask user which scenario (startup/scroll/interaction) if unspecified.
+3. **Analyze** — load skill `lynx-trace-analysis`: identify top bottlenecks by stage (FCP, FMP, TTI, layout, paint, JS, native modules).
 4. **Report** — prioritized list: `[Stage] Issue → Root cause → Suggested fix`. One finding per line.
 5. **Compare** — if second trace provided, use diff-analysis reference to quantify regressions/improvements.
 

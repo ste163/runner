@@ -13,7 +13,7 @@ Pi resource model differs from Copilot CLI:
   - `agentStop` verify script → `agent_settled` event running the same checks (Part 2, piece B).
   - `sessionStart` prompt → no direct equivalent; skip (skill description-based auto-load already covers it).
 - Path-scoped instructions (`applyTo` glob in `.github/instructions/*.instructions.md`): no native pi equivalent (only whole-file `AGENTS.md`/`CLAUDE.md`, no glob-scoped auto-inject). Replacing this needs a custom extension (Part 2, piece C).
-- Docs staleness checks (`bun run verify-docs`, `scripts/verify-docs.ts`, `doc-sync-check.yml`): hardcoded to check `.github/skills`/`.github/agents` mentions in markdown. Keep the mechanism — update the hardcoded paths to the new locations (`.agents/skills/`, `.pi/prompts/`). Rationale: doc sync still helps humans.
+- Docs staleness checks (`bun run verify-docs`, `scripts/verify-docs.ts`, `doc-sync-check.yml`): hardcoded to check `.github/skills`/`.github/agents` mentions in markdown. Keep the mechanism — update the hardcoded paths to the new locations (`.agents/skills/`, `.pi/prompts/`). Scope shrinks: the `repo-navigation` skill is removed (always out of date), so the pages/commands checks go away; the script now only checks that `AGENTS.md` mentions every skill and prompt template. Rationale: doc sync still helps humans.
 
 ## Part 1 — pi-native pieces (resolve today)
 
@@ -28,8 +28,9 @@ No new extensions. Moves, deletions, config files, and doc rewrites only.
 3. **MCP config**: create `.mcp.json` at the project root with the `lynx-docs` server. Convert the Copilot shape (`"type": "local"`, `"tools": ["*"]`) to pi's shape — `{ "command": "npx", "args": ["-y", "@lynx-js/docs-mcp-server@latest"], "lifecycle": "eager" }`, matching the global config shape (`command` + `lifecycle: eager`). Delete `.github/mcp.json`. Verify with `mcp()` status after reload. Resolved: `.mcp.json` at the project root — tool-agnostic, so any harness can use it; pi-mcp-adapter reads it as a normal project config layer. Fallback if project-level config is ignored: add `lynx-docs` to the global `~/.pi/agent/mcp.json` (lives in the dotfiles repo — a separate commit there).
 4. **LSP config**: delete `.github/lsp.json` entirely. pi-lens (already installed as a package) ships 45 built-in language-server definitions including `typescript-language-server`, auto-discovered from PATH and project `node_modules` — the Copilot LSP config is dead code. No relocation, no hand-built extension needed.
 5. **`copilot-instructions.md` → `AGENTS.md`**: merge its Stack/Verification content into root `AGENTS.md` (already largely duplicated there); delete `.github/copilot-instructions.md`.
-6. **Doc-sync update** (keep verify-docs — update paths, do not remove):
+6. **Doc-sync update** (keep verify-docs — update paths and scope, do not remove):
    - Update `scripts/verify-docs.ts` hardcoded paths from `.github/skills`/`.github/agents` to `.agents/skills`/`.pi/prompts`.
+   - Drop the `repo-navigation`-based checks (pages, commands, root src files) — the skill is removed (see step 8). The script now only checks that `AGENTS.md` mentions every skill and prompt template.
    - Keep the `"verify-docs"` script in `package.json`, the `doc-sync-check.yml` workflow, the `.husky/pre-commit` chain, and the `AGENTS.md`/`README.md`/`scripts/README.md` mentions.
    - Rationale: doc sync still helps humans.
 7. **Rewrite root `AGENTS.md`** (native parts only; the folded-in rules from the old step 6 move to Part 2 piece C):
@@ -38,7 +39,7 @@ No new extensions. Moves, deletions, config files, and doc rewrites only.
    - Update "Custom agents live in `.github/agents/`" → describe as prompt templates in `.pi/prompts/` (`/debug`, `/performance-investigator`, `/reactlynx-reviewer`, `/test-generator`).
    - Add MCP note: `lynx-docs` via `.mcp.json` (project root, tool-agnostic).
    - Keep the `bun run verify-docs` line in Verification.
-8. **`repo-navigation` skill**: remove the Copilot-specific "`sessionStart` hook. No task — orient silently" line (no pi equivalent). Also fix the stale intro line "two Lynx pages (`main`, `second`)" — actual pages are `home`, `workout`, `activeWorkout`, `onboarding`, `graphs` (matches the layout block below it). Update any `.github/skills`/`.github/agents` path mentions inside it (if present) to new locations.
+8. **Remove `repo-navigation` skill**: delete `.agents/skills/repo-navigation/` entirely — it will always be out of date (per user). Also remove its references: `AGENTS.md` skills list, the `debug` and `test-generator` prompt templates, `README.md` Doc Sync section, and the `verification.json` sessionStart prompt (already deleted with the hooks config).
 9. **Further doc cleanup** (per your note — sweep beyond the obvious Copilot artifacts):
    - Grep whole repo for remaining `.github/skills`, `.github/agents`, `.github/copilot-instructions.md`, `.github/mcp.json`, `.github/lsp.json`, `.github/hooks`, `.github/instructions`, and `caveman` references (READMEs, `scripts/README.md`, code comments, CI configs) and update them.
    - Check `.github/` for any other Copilot-CLI-only leftovers not yet covered (e.g. stray `.github/copilot/` dirs, issue/PR templates referencing Copilot workflows) and flag for removal/update.
@@ -95,4 +96,5 @@ Shared setup for any kept piece:
 - `caveman`: remove fully from the repo (AGENTS.md reference + any other mentions). Do not create the skill.
 - Off-limits: `runner-plan.md` and `navigation-plan.md` are active plans — never delete or modify them.
 - MCP: `.mcp.json` at the project root (tool-agnostic, any harness can use it).
+- `repo-navigation` skill: removed entirely — it will always be out of date. verify-docs no longer checks pages/commands; it only checks that AGENTS.md mentions every skill and prompt template.
 - verify-docs: keep — update hardcoded paths to the new locations (`.agents/skills/`, `.pi/prompts/`). Doc sync still helps humans.

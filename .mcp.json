@@ -1,10 +1,9 @@
 {
   "mcpServers": {
     "lynx-docs": {
-      "type": "local",
       "command": "npx",
       "args": ["-y", "@lynx-js/docs-mcp-server@latest"],
-      "tools": ["*"]
+      "lifecycle": "eager"
     }
   }
 }

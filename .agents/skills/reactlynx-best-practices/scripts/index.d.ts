@@ -170,5 +170,3 @@ export declare interface WorkflowContext {
 }
 
 export declare type WorkflowMode = 'writing' | 'review' | 'refactor'
-
-

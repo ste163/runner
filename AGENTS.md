@@ -1,16 +1,18 @@
 # AGENTS.md
 
+You are an expert in ReactLynx, TypeScript, and Lynx application development.
+
 ## Lynx Docs
 
-Use `lynx-docs` MCP if available — read `lynx-docs://llms.txt` first. Fallback: [https://lynxjs.org/next/llms.txt](https://lynxjs.org/next/llms.txt)
+Use `lynx-docs` MCP (configured in `.mcp.json` at the project root) — read `lynx-docs://llms.txt` first. Fallback: [https://lynxjs.org/next/llms.txt](https://lynxjs.org/next/llms.txt)
 
 ## What This Repo Is
 
-`runner` is an Android app built with ReactLynx and `sparkling-app-cli`. Three Lynx pages (`home`, `workout`, `onboarding`) run inside a native Android shell. Stack: bun, Lynx, ReactLynx, Rspeedy, Vitest, oxlint, oxfmt.
+`runner` is an Android app built with ReactLynx and `sparkling-app-cli`. Five Lynx pages (`home`, `workout`, `activeWorkout`, `onboarding`, `graphs`) run inside a native Android shell. Stack: bun, Lynx, ReactLynx, Rspeedy, Vitest, oxlint, oxfmt, sparkling-app-cli.
 
 ## Skills
 
-Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
+Project skills live in `.agents/skills/`. Use them for Lynx-specific tasks:
 
 - `reactlynx-best-practices` — dual-thread patterns, static analysis, auto-fix
 - `lynx-typescript` — TypeScript issues and solutions in Lynx
@@ -18,20 +20,18 @@ Project skills live in `.github/skills/`. Use them for Lynx-specific tasks:
 - `lynx-trace-analysis` — analyze `.ptrace` performance traces
 - `lynx-trace-record` — record Lynx performance traces
 - `debug-info-remapping` — remap `function_id:pc_index` errors to source positions
-- `repo-navigation` — repo layout, commands, test locations
 - `testing-standards` — Vitest + `@lynx-js/react/testing-library` conventions
 - `coding-standards` — TypeScript style: arrow functions, SRP, non-mutability, no lint suppression
 - `app-domain` — Runner app business rules: session mechanics, progression algorithm, data model
-- `caveman` — compressed writing mode for token-efficient `.github/` file edits
 
-## Agents
+## Prompt Templates
 
-Custom agents live in `.github/agents/`. Use them for multi-step workflows:
+Multi-step workflows live in `.pi/prompts/`. Invoke them as `/name`:
 
-- `reactlynx-reviewer` — review ReactLynx/Lynx TypeScript code for correctness and dual-thread violations
-- `test-generator` — generate Vitest tests for components or pages
-- `performance-investigator` — full trace workflow: record → analyze → report
-- `debug` — logs-first TDD triage for frontend vs Android issues
+- `/reactlynx-reviewer` — review ReactLynx/Lynx TypeScript code for correctness and dual-thread violations
+- `/test-generator` — generate Vitest tests for components or pages
+- `/performance-investigator` — full trace workflow: record → analyze → report
+- `/debug` — logs-first TDD triage for frontend vs Android issues
 
 ## Behavior Rules
 
@@ -40,4 +40,11 @@ Custom agents live in `.github/agents/`. Use them for multi-step workflows:
 - Ask before deleting files, changing package versions, or modifying Android native code.
 - Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt without them.
 - Tests live next to source: `src/pages/<name>/App.spec.tsx`.
-- After substantial tasks, finish with `bun run verify-docs`.
+
+## Verification
+
+```sh
+bun typecheck && bun test && bun lint
+```
+
+After substantial tasks, run `bun run verify-docs` last.

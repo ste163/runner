@@ -1,78 +1,28 @@
 /**
- * Verifies that repo-navigation/SKILL.md stays in sync with the codebase.
+ * Verifies that AGENTS.md stays in sync with the repo's agent resources.
  *
  * Checks:
- *   1. Every directory under src/pages/ is mentioned in repo-navigation/SKILL.md
- *   2. Every command in the SKILL.md Commands table exists as a package.json script
- *   3. Every .ts/.tsx file directly in src/ (non-spec) is mentioned in repo-navigation/SKILL.md
- *   4. Every skill directory under .github/skills/ is mentioned in AGENTS.md
- *   5. Every agent file under .github/agents/ is mentioned in AGENTS.md
+ *   1. Every skill directory under .agents/skills/ is mentioned in AGENTS.md
+ *   2. Every prompt template under .pi/prompts/ is mentioned in AGENTS.md
  */
 
 import { readdirSync, readFileSync } from 'fs'
 
-const SKILL_PATH = '.github/skills/repo-navigation/SKILL.md'
 const AGENTS_PATH = 'AGENTS.md'
-const PAGES_DIR = 'src/pages'
-const SRC_DIR = 'src'
-const SKILLS_DIR = '.github/skills'
-const AGENTS_DIR = '.github/agents'
-const PKG_PATH = 'package.json'
+const SKILLS_DIR = '.agents/skills'
+const PROMPTS_DIR = '.pi/prompts'
 
-const readSkill = () => readFileSync(SKILL_PATH, 'utf-8')
 const readAgentsMd = () => readFileSync(AGENTS_PATH, 'utf-8')
-
-const readPages = () =>
-  readdirSync(PAGES_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-
-const readRootSrcFiles = () =>
-  readdirSync(SRC_DIR, { withFileTypes: true })
-    .filter((f) => f.isFile() && /\.(ts|tsx)$/.test(f.name) && !f.name.includes('.spec.'))
-    .map((f) => f.name)
 
 const readSkillNames = () =>
   readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
 
-const readAgentNames = () =>
-  readdirSync(AGENTS_DIR, { withFileTypes: true })
-    .filter((f) => f.isFile() && f.name.endsWith('.agent.md'))
-    .map((f) => f.name.replace(/\.agent\.md$/, ''))
-
-const readScripts = () =>
-  (JSON.parse(readFileSync(PKG_PATH, 'utf-8')) as { scripts: Record<string, string> }).scripts
-
-const parseDocumentedCommands = (skill: string): readonly string[] => {
-  const BUN_BUILTINS = ['install', 'add', 'remove', 'update', 'init', 'run', 'x']
-  const matches = [...skill.matchAll(/\|\s*`bun(?:\s+run)?\s+([\w:]+)`/g)]
-  return matches.reduce<string[]>(
-    (acc, [, cmd]) => (cmd && !BUN_BUILTINS.includes(cmd) ? [...acc, cmd] : acc),
-    []
-  )
-}
-
-const checkPages = (skill: string, pages: readonly string[]) =>
-  pages.map((page) =>
-    skill.includes(page)
-      ? { ok: true, msg: `Page '${page}' found in ${SKILL_PATH}` }
-      : {
-          ok: false,
-          msg: `Page '${page}' exists in ${PAGES_DIR}/ but is missing from ${SKILL_PATH}`,
-        }
-  )
-
-const checkRootSrcFiles = (skill: string, files: readonly string[]) =>
-  files.map((file) =>
-    skill.includes(file)
-      ? { ok: true, msg: `Source file '${file}' found in ${SKILL_PATH}` }
-      : {
-          ok: false,
-          msg: `Source file '${file}' exists in ${SRC_DIR}/ but is missing from ${SKILL_PATH}`,
-        }
-  )
+const readPromptNames = () =>
+  readdirSync(PROMPTS_DIR, { withFileTypes: true })
+    .filter((f) => f.isFile() && f.name.endsWith('.md'))
+    .map((f) => f.name.replace(/\.md$/, ''))
 
 const checkSkills = (agentsMd: string, skills: readonly string[]) =>
   skills.map((skill) =>
@@ -84,35 +34,21 @@ const checkSkills = (agentsMd: string, skills: readonly string[]) =>
         }
   )
 
-const checkAgents = (agentsMd: string, agents: readonly string[]) =>
-  agents.map((agent) =>
-    agentsMd.includes(agent)
-      ? { ok: true, msg: `Agent '${agent}' found in ${AGENTS_PATH}` }
+const checkPrompts = (agentsMd: string, prompts: readonly string[]) =>
+  prompts.map((prompt) =>
+    agentsMd.includes(prompt)
+      ? { ok: true, msg: `Prompt template '${prompt}' found in ${AGENTS_PATH}` }
       : {
           ok: false,
-          msg: `Agent '${agent}' exists in ${AGENTS_DIR}/ but is missing from ${AGENTS_PATH}`,
-        }
-  )
-
-const checkCommands = (commands: readonly string[], scripts: Readonly<Record<string, string>>) =>
-  commands.map((cmd) =>
-    scripts[cmd]
-      ? { ok: true, msg: `Command '${cmd}' in ${SKILL_PATH} exists in package.json` }
-      : {
-          ok: false,
-          msg: `Command '${cmd}' is documented in ${SKILL_PATH} but missing from package.json scripts`,
+          msg: `Prompt template '${prompt}' exists in ${PROMPTS_DIR}/ but is missing from ${AGENTS_PATH}`,
         }
   )
 
 const run = () => {
-  const skill = readSkill()
   const agentsMd = readAgentsMd()
   const results = [
-    ...checkPages(skill, readPages()),
-    ...checkRootSrcFiles(skill, readRootSrcFiles()),
     ...checkSkills(agentsMd, readSkillNames()),
-    ...checkAgents(agentsMd, readAgentNames()),
-    ...checkCommands(parseDocumentedCommands(skill), readScripts()),
+    ...checkPrompts(agentsMd, readPromptNames()),
   ]
 
   results.forEach(({ ok, msg }) => (ok ? console.log(`✓ ${msg}`) : console.error(`❌ ${msg}`)))
@@ -120,9 +56,7 @@ const run = () => {
   const failures = results.filter(({ ok }) => !ok).length
 
   if (failures > 0) {
-    console.error(
-      `\n${failures} doc-sync issue(s) found. Update ${SKILL_PATH} to match the codebase.`
-    )
+    console.error(`\n${failures} doc-sync issue(s) found. Update ${AGENTS_PATH} to match the repo.`)
     process.exit(1)
   }
 
