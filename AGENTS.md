@@ -42,7 +42,9 @@ Multi-step workflows live in `.pi/prompts/`. Invoke them as `/name`:
 ## Verification
 
 ```sh
-bun typecheck && bun test && bun lint
+bun typecheck && bun run test && bun lint
 ```
+
+Use `bun run test` (Vitest). `bun test` runs bun's native runner, which ignores `vitest.config.ts` and fails on Lynx component specs.
 
 After substantial tasks, run `bun run verify-docs` last.

@@ -18,12 +18,67 @@ Global (dotfiles repo):
 
 ## Extension 1: `hooks` (project-local, replaces `.github/hooks/`)
 
-One extension, two handlers, named after the hook events they replace:
+One extension, two handlers, named after the hook events they replace.
 
-- **`preToolUse`** (replaces `pre-tool.sh`): `tool_call` handler that blocks `bash` commands matching `bun (run build|dev|run smoke|run android|run log)` with the same reason message as today ("requires macOS + Android SDK + a connected emulator. Verify your environment and run it manually if ready."). Deterministic guard against wasted attempts on commands that cannot work in this environment.
-- **`agentStop`** (replaces `verify.sh`): `agent_settled` handler running `bun typecheck && bun test && bun lint && bun run verify-docs` via `createLocalBashOperations`, surfacing failures via `ctx.ui.notify`. Gated: run only when the session touched source files (track `read`/`edit`/`write` paths in the same extension), so long sessions do not re-run the full suite on every settle.
+### Files
 
-After both handlers fire correctly: delete `.github/hooks/` entirely.
+| File                                 | Purpose                                              |
+| ------------------------------------ | ---------------------------------------------------- |
+| `.pi/extensions/hooks/index.ts`      | Factory: registers both handlers, wires deps + state |
+| `.pi/extensions/hooks/deps.ts`       | DI seam (`HooksDeps` + `defaultDeps()`)              |
+| `.pi/extensions/hooks/index.spec.ts` | Colocated Vitest spec                                |
+| `package.json`                       | Add devDep, extend lint scope                        |
+| `tsconfig.json`                      | Add `.pi/extensions` to `include`                    |
+
+### Design
+
+- Entry shape: `export default function (pi: ExtensionAPI) { pi.on(...) }`. Loaded via jiti, no build step.
+- `deps.ts` — the only I/O seam: `HooksDeps.exec(command, cwd)` returning `{ output, exitCode, cancelled }`. `defaultDeps()` wraps `createLocalBashOperations().exec`. Tests inject a fake — no real disk I/O in specs.
+- State created in the factory, passed to handlers (not module-level): `{ dirty: boolean; running: boolean }`.
+- Pure functions (exported, directly testable): `isAndroidCommand(command)`, `isSourcePath(path)`.
+
+### Handler 1 — `preToolUse` (`tool_call` event)
+
+- `isToolCallEventType("bash", event)` + `isAndroidCommand(event.input.command)` → return `{ block: true, reason: "This command requires macOS + Android SDK + a connected emulator. Verify your environment and run it manually if ready." }` (exact text from pre-tool.sh).
+- No `terminate` — the original denies the call and lets the agent continue.
+- Blocked commands: `bun run build`, `bun dev`, `bun run dev`, `bun run smoke`, `bun run android`, `bun run log` (original 5 + `bun run dev` — the `dev` script is android-only, a gap in the original).
+- Also: `isToolCallEventType("edit" | "write", event)` + `isSourcePath(event.input.path)` → `state.dirty = true`. Read does not trigger (does not mutate).
+
+### Handler 2 — `agentStop` (`agent_settled` event)
+
+- If `!dirty || running` → return.
+- Set `running`, exec `bun typecheck && bun run test && bun lint && bun run verify-docs` with `ctx.cwd` (single chained command — parity with verify.sh, no `await` in loops).
+- Clear `running` and `dirty` after the run (success or failure — verify runs at most once per settle, only when something changed).
+- `ctx.ui.notify("Verification passed", "info")` on success; `ctx.ui.notify("Verification failed (exit N): <output tail>", "error")` on failure.
+
+### Source path set (dirty trigger)
+
+`src/**`, `scripts/**`, `.agents/**`, `.pi/**`, plus `app.config.ts`, `lynx.config.ts`, `vitest.config.ts`, `AGENTS.md`, `package.json`. Docs (README.md, plan.md, `.github/**`) do not trigger.
+
+### Spec plan
+
+- `isAndroidCommand`: blocks each listed command, blocks compound (`bun run build && echo hi`), does not block `bun test`, `bun typecheck`, `bun run lint`, `bun run verify-docs`, `bun run fmt`, `adb devices`, `bun run log:app`.
+- `isSourcePath`: matches src file, config files, `.agents` skill, `.pi` prompt, AGENTS.md, package.json, scripts file; rejects README.md, plan.md, `.github` workflow.
+- `handleToolCall`: android bash → block with exact reason; safe bash → no return; edit on source path → dirty; edit on doc → not dirty.
+- `handleAgentSettled`: clean → no exec; dirty + success → exec with chain + cwd, dirty cleared, success notify; dirty + failure → error notify, dirty cleared; `running` guard skips re-entry.
+- Factory: registers both handlers (spy on `pi.on`).
+
+### Tooling changes
+
+- `package.json`: devDep `@earendil-works/pi-coding-agent: "0.85.1"` (exact pin); `lint`/`lint:fix` gain `.pi/extensions`.
+- `tsconfig.json`: `include` gains `.pi/extensions`.
+- No vitest config change — default include picks up the spec automatically, so `bun test` runs it.
+
+### Prerequisites
+
+- The verify chain must use `bun run test` (Vitest). `bun test` is bun's native runner — it ignores `vitest.config.ts` and fails on Lynx component specs (`ReferenceError: lynx is not defined`). All 61 tests pass under `bun run test`.
+- Trust prompt on first pi run after `.pi/` exists; `/reload` needed to load the extension.
+
+### Verification steps
+
+1. `bun typecheck && bun lint` pass; new spec passes in `bun test`.
+2. In pi: `/reload`, run `bun run build` → blocked with the reason; make a source edit, settle → verify chain runs.
+3. Both confirmed → delete `.github/hooks/` entirely.
 
 ## Extension 2: `file-path-rules` (global, dotfiles repo)
 
