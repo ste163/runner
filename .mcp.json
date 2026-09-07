@@ -2,7 +2,7 @@
   "mcpServers": {
     "lynx-docs": {
       "command": "npx",
-      "args": ["-y", "@lynx-js/docs-mcp-server@latest"],
+      "args": ["-y", "@lynx-js/docs-mcp-server@0.2.6"],
       "lifecycle": "eager"
     }
   }

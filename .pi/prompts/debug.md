@@ -14,7 +14,7 @@ Debug agent for app issues. Triage first, fix second.
    - Android/native bridge if logs or bridge behavior point native
 5. First goal: narrow frontend vs Android before coding.
 6. Once localized, explain the intended implementation path and wait for user choice if multiple fixes fit.
-7. Run the test to ensure it fails as expected. If it doesn't fail. Reassess why.
+7. Run the test to ensure it fails as expected. If it doesn't fail, reassess why.
 8. Implement the fix.
 9. Run the focused test again.
 

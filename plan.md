@@ -97,4 +97,6 @@ Shared setup for any kept piece:
 - Off-limits: `runner-plan.md` and `navigation-plan.md` are active plans — never delete or modify them.
 - MCP: `.mcp.json` at the project root (tool-agnostic, any harness can use it).
 - `repo-navigation` skill: removed entirely — it will always be out of date. verify-docs no longer checks pages/commands; it only checks that AGENTS.md mentions every skill and prompt template.
+- Layout knowledge: no layout doc — codebase-memory-mcp provides live structural discovery (pages, files, architecture) via graph queries. Commands stay a manual package.json read.
+- `app-domain` skill: trimmed to domain-only — Pages and Navigation sections removed (stale bundle names). Keeps session mechanics, progression rules, data model, storage format.
 - verify-docs: keep — update hardcoded paths to the new locations (`.agents/skills/`, `.pi/prompts/`). Doc sync still helps humans.

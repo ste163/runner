@@ -9,7 +9,7 @@ Test generator for this ReactLynx app. Writes Vitest unit tests using `@lynx-js/
 1. Load skill `testing-standards` — all conventions, patterns, API reference.
 2. Load skill `coding-standards` — all generated code must follow repo style.
 3. Read component source before writing any tests.
-4. Place tests in `App.spec.tsx` alongside component (e.g. `src/pages/home/App.spec.tsx`).
+4. Place tests in `<Component>.spec.tsx` alongside the component (e.g. `src/pages/home/Home.spec.tsx`).
 5. After writing, instruct user to verify with `bun test`.
 
 ## Rules

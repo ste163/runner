@@ -1,7 +1,5 @@
 # AGENTS.md
 
-You are an expert in ReactLynx, TypeScript, and Lynx application development.
-
 ## Lynx Docs
 
 Use `lynx-docs` MCP (configured in `.mcp.json` at the project root) — read `lynx-docs://llms.txt` first. Fallback: [https://lynxjs.org/next/llms.txt](https://lynxjs.org/next/llms.txt)
@@ -39,7 +37,7 @@ Multi-step workflows live in `.pi/prompts/`. Invoke them as `/name`:
 - Make minimal, targeted changes. Do not refactor unrelated code.
 - Ask before deleting files, changing package versions, or modifying Android native code.
 - Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt without them.
-- Tests live next to source: `src/pages/<name>/App.spec.tsx`.
+- Tests live next to source, named after the component: `src/pages/<name>/<Name>.spec.tsx`.
 
 ## Verification
 
