@@ -39,12 +39,18 @@ Multi-step workflows live in `.pi/prompts/`. Invoke them as `/name`:
 - Android build (`bun dev`, `bun run build`) requires macOS + Android SDK — do not attempt without them.
 - Tests live next to source, named after the component: `src/pages/<name>/<Name>.spec.tsx`.
 
+## Hooks
+
+`.pi/hooks.json` configures the global `hooks` extension (dotfiles repo). It blocks android-only commands (`bun run build`, `bun run dev`, `bun dev`, `bun run smoke`, `bun run android`, `bun run log`) on `tool_call` and runs the verification chain on `agent_settled` when the session edited or wrote a file under `src/`, `scripts/`, `.agents/`, `.pi/`, or one of the root config files. The result shows in a dedicated widget section below the editor as `hooks  Verification, running/complete/failed` (the `status` label in `.pi/hooks.json`). The policy lives in `scripts/hooks/`.
+
 ## Verification
 
-```sh
-bun typecheck && bun run test && bun lint
-```
+The `hooks` extension runs the verification chain automatically on `agent_settled` when the session touched source files — the result shows in the widget below the editor (`hooks  Verification, running/complete/failed`). Do not run the chain manually after edits; rely on the extension to save tokens.
 
-Use `bun run test` (Vitest). `bun test` runs bun's native runner, which ignores `vitest.config.ts` and fails on Lynx component specs.
+Run checks manually only when:
 
-After substantial tasks, run `bun run verify-docs` last.
+- The widget shows `failed` — run the failing step to see the full output and fix it.
+- You changed files outside the hook's paths (README.md, plan.md, `.github/`) and need a check.
+- You need a result mid-task before continuing (e.g. TDD red-green).
+
+The chain is `bun typecheck && bun run test && bun lint && bun run verify-docs`. Use `bun run test` (Vitest) — `bun test` runs bun's native runner, which ignores `vitest.config.ts` and fails on Lynx component specs.

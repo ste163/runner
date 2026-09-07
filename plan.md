@@ -2,83 +2,41 @@
 
 Part 1 (the pi-native port) is complete: skills in `.agents/skills/`, prompt templates in `.pi/prompts/`, `lynx-docs` in `.mcp.json`, LSP config deleted, AGENTS.md rewritten, verify-docs updated, repo-navigation removed, app-domain trimmed to domain-only.
 
-What remains: two extensions. One project-local (`hooks`), one global (`file-path-rules`).
+What remains: one global extension in the dotfiles repo — `file-path-rules`. `hooks` is complete and live-verified.
 
-## Shared setup
+## Shared setup (dotfiles repo)
 
-Project-local (runner repo):
+- Extension lives at `pi-extension-development/extensions/<name>/index.ts` + colocated `*.spec.ts` files. No bare top-level `.ts` files in `extensions/` (pi auto-loads each as its own extension).
+- Mandatory checklist before any extension work is done: `npm run typecheck`, `npm run lint`, `npm run format`, `npm test` — all must pass, with 100% line/branch/function coverage for the extension's files.
+- Testing rules: no real disk I/O, no `process.chdir`, no temp directories — injectable deps (the `PlanModeDeps` pattern); no loops with `await` inside (recursion instead); specs colocate with the code they test.
+- Extensions load for every project; each project supplies its own config.
 
-- Extension lives at `.pi/extensions/<name>/index.ts` + colocated `index.spec.ts`. Directory shape, not a bare `.ts` file: pi auto-loads every top-level `.ts` in `.pi/extensions/` as its own extension, so a sibling spec file would be loaded as an extension too. Only `index.ts` is the entry point per subdirectory (same hard rule as the dotfiles `pi-extension-development` project).
-- Tooling: add `@earendil-works/pi-coding-agent@0.85.1` (exact pin, matches installed pi 0.85.1) to the runner repo's devDependencies so `bun typecheck` resolves the extension types. Specs run under the existing Vitest setup. Follow the dotfiles extension conventions: injectable deps (no real disk I/O in tests), no `await` in loops, colocated specs. Reference implementations: `plan-mode` and `codebase-memory-mcp-enforcer` in the dotfiles repo.
-- Project-local extensions load only after project trust.
+## Extension 1: `hooks` (global, dotfiles repo) — complete
 
-Global (dotfiles repo):
+Config-driven shell hooks — the Copilot CLI / Claude Code model. The extension only wires pi events to shell commands; the policy lives in the scripts, not in TypeScript.
 
-- Extension lives at `pi-extension-development/extensions/<name>/index.ts` + colocated spec, same shape and conventions, plus the dotfiles test rule (100% line/branch/function coverage). Loads for every project.
+### Mechanism (dotfiles: `pi-extension-development/extensions/hooks/`)
 
-## Extension 1: `hooks` (project-local, replaces `.github/hooks/`)
+- Reads `.pi/hooks.json` from the project root. Missing file → no-op. Invalid config → one warning notification on `session_start`.
+- `tool_call` hook: the tool input JSON is passed as the last shell-quoted argument. Non-zero exit (or kill) blocks the tool call with stdout as the reason. `tools` filters which tool names trigger it.
+- `agent_settled` hook: the command runs when the agent settles. `when: "dirty"` + `paths` gates it on edit/write of matching files (`/**` suffix = prefix match, otherwise exact). A `status` label renders a dedicated widget section below the editor (the pi-lens pattern — `setWidget` with `placement: "belowEditor"`, not `setStatus`, since all setStatus texts share one footer line with no key labels): `hooks  <label>, running/complete/failed` with theme colors (dim/success/error), cleared on `session_start`. Non-zero exit notifies an error with the output tail; success notifies the output tail. A `running` guard prevents overlapping runs; dirty clears after each run.
+- Files: `index.ts`, `deps.ts` (DI seam: `exec`/`readFile`/`cwd`), `config.ts` (schema + validation), `match.ts` (shell quoting + path matching), plus 3 colocated specs. All four dotfiles gates pass; hooks files at 100% coverage.
 
-One extension, two handlers, named after the hook events they replace.
+### Runner config (`.pi/hooks.json`)
 
-### Files
+- `tool_call` → `sh scripts/hooks/pre-tool.sh`, `tools: ["bash"]`.
+- `agent_settled` → `sh scripts/hooks/verify.sh`, `when: "dirty"`, `status: "Verification"`, paths: `src/**`, `scripts/**`, `.agents/**`, `.pi/**`, `app.config.ts`, `lynx.config.ts`, `vitest.config.ts`, `AGENTS.md`, `package.json`.
 
-| File                                 | Purpose                                              |
-| ------------------------------------ | ---------------------------------------------------- |
-| `.pi/extensions/hooks/index.ts`      | Factory: registers both handlers, wires deps + state |
-| `.pi/extensions/hooks/deps.ts`       | DI seam (`HooksDeps` + `defaultDeps()`)              |
-| `.pi/extensions/hooks/index.spec.ts` | Colocated Vitest spec                                |
-| `package.json`                       | Add devDep, extend lint scope                        |
-| `tsconfig.json`                      | Add `.pi/extensions` to `include`                    |
+### Runner scripts (`scripts/hooks/`)
 
-### Design
+- `pre-tool.sh`: reads the tool input JSON from `$1`, blocks `bun run build`, `bun run dev`, `bun dev`, `bun run smoke`, `bun run android`, `bun run log` (original 5 + `bun run dev` — the `dev` script is android-only, a gap in the original). Exit 1 with the reason message on match. Tested manually.
+- `verify.sh`: `bun typecheck && bun run test && bun lint && bun run verify-docs` (note `bun run test`, not `bun test` — bun's native runner ignores `vitest.config.ts` and fails on Lynx component specs). Tested manually.
 
-- Entry shape: `export default function (pi: ExtensionAPI) { pi.on(...) }`. Loaded via jiti, no build step.
-- `deps.ts` — the only I/O seam: `HooksDeps.exec(command, cwd)` returning `{ output, exitCode, cancelled }`. `defaultDeps()` wraps `createLocalBashOperations().exec`. Tests inject a fake — no real disk I/O in specs.
-- State created in the factory, passed to handlers (not module-level): `{ dirty: boolean; running: boolean }`.
-- Pure functions (exported, directly testable): `isAndroidCommand(command)`, `isSourcePath(path)`.
+### Live verification (done)
 
-### Handler 1 — `preToolUse` (`tool_call` event)
-
-- `isToolCallEventType("bash", event)` + `isAndroidCommand(event.input.command)` → return `{ block: true, reason: "This command requires macOS + Android SDK + a connected emulator. Verify your environment and run it manually if ready." }` (exact text from pre-tool.sh).
-- No `terminate` — the original denies the call and lets the agent continue.
-- Blocked commands: `bun run build`, `bun dev`, `bun run dev`, `bun run smoke`, `bun run android`, `bun run log` (original 5 + `bun run dev` — the `dev` script is android-only, a gap in the original).
-- Also: `isToolCallEventType("edit" | "write", event)` + `isSourcePath(event.input.path)` → `state.dirty = true`. Read does not trigger (does not mutate).
-
-### Handler 2 — `agentStop` (`agent_settled` event)
-
-- If `!dirty || running` → return.
-- Set `running`, exec `bun typecheck && bun run test && bun lint && bun run verify-docs` with `ctx.cwd` (single chained command — parity with verify.sh, no `await` in loops).
-- Clear `running` and `dirty` after the run (success or failure — verify runs at most once per settle, only when something changed).
-- `ctx.ui.notify("Verification passed", "info")` on success; `ctx.ui.notify("Verification failed (exit N): <output tail>", "error")` on failure.
-
-### Source path set (dirty trigger)
-
-`src/**`, `scripts/**`, `.agents/**`, `.pi/**`, plus `app.config.ts`, `lynx.config.ts`, `vitest.config.ts`, `AGENTS.md`, `package.json`. Docs (README.md, plan.md, `.github/**`) do not trigger.
-
-### Spec plan
-
-- `isAndroidCommand`: blocks each listed command, blocks compound (`bun run build && echo hi`), does not block `bun test`, `bun typecheck`, `bun run lint`, `bun run verify-docs`, `bun run fmt`, `adb devices`, `bun run log:app`.
-- `isSourcePath`: matches src file, config files, `.agents` skill, `.pi` prompt, AGENTS.md, package.json, scripts file; rejects README.md, plan.md, `.github` workflow.
-- `handleToolCall`: android bash → block with exact reason; safe bash → no return; edit on source path → dirty; edit on doc → not dirty.
-- `handleAgentSettled`: clean → no exec; dirty + success → exec with chain + cwd, dirty cleared, success notify; dirty + failure → error notify, dirty cleared; `running` guard skips re-entry.
-- Factory: registers both handlers (spy on `pi.on`).
-
-### Tooling changes
-
-- `package.json`: devDep `@earendil-works/pi-coding-agent: "0.85.1"` (exact pin); `lint`/`lint:fix` gain `.pi/extensions`.
-- `tsconfig.json`: `include` gains `.pi/extensions`.
-- No vitest config change — default include picks up the spec automatically, so `bun test` runs it.
-
-### Prerequisites
-
-- The verify chain must use `bun run test` (Vitest). `bun test` is bun's native runner — it ignores `vitest.config.ts` and fails on Lynx component specs (`ReferenceError: lynx is not defined`). All 61 tests pass under `bun run test`.
-- Trust prompt on first pi run after `.pi/` exists; `/reload` needed to load the extension.
-
-### Verification steps
-
-1. `bun typecheck && bun lint` pass; new spec passes in `bun test`.
-2. In pi: `/reload`, run `bun run build` → blocked with the reason; make a source edit, settle → verify chain runs.
-3. Both confirmed → delete `.github/hooks/` entirely.
+- Blocked `bun run build` with the exact reason message; normal commands pass.
+- Absolute-path edit to `AGENTS.md` triggered the verify chain at settle — notification showed "✓ typecheck + test + lint + doc-sync passed".
+- `.github/hooks/` deleted.
 
 ## Extension 2: `file-path-rules` (global, dotfiles repo)
 
@@ -93,14 +51,14 @@ One extension, two handlers, named after the hook events they replace.
 
 ## Verification
 
-- `hooks` / `preToolUse`: confirm a sample android command is blocked with the reason message.
-- `hooks` / `agentStop`: confirm the gated verify runs after a source-touching session and stays silent otherwise.
+- `hooks`: confirm a sample android command is blocked with the reason message; confirm the gated verify runs after a source-touching session and stays silent otherwise.
 - `file-path-rules`: confirm the reminder fires on a sample edit under each configured glob.
 
 ## Decisions (resolved)
 
 - Extension name `hooks`: the standard term across Copilot CLI (`.github/hooks/`), Claude Code (`hooks` key in settings.json), and Codex CLI (`~/.codex/hooks/`). Directly replaces `.github/hooks/`.
+- Hooks design: config-driven — the extension wires events to shell commands; policy lives in the scripts (the Copilot CLI / Claude Code model). No TypeScript policy duplication.
 - Extension name `file-path-rules`: aligns with Claude Code (`.claude/rules/`) and Cursor (`.cursor/rules/`) terminology; the `file-path-` prefix makes the scope obvious.
 - Rules key format: front-matter field (`paths: 'src/pages/**'`) parsed by the global extension. Keeps each doc self-contained. Matches Claude Code's rules frontmatter.
-- Extension shape: `.pi/extensions/<name>/index.ts` + colocated spec inside the directory (bare top-level `.ts` files in `.pi/extensions/` are each auto-loaded as extensions, so a sibling spec file would be loaded too).
+- Extension shape: `pi-extension-development/extensions/<name>/index.ts` + colocated specs inside the directory (bare top-level `.ts` files in `extensions/` are each auto-loaded as extensions, so a sibling spec file would be loaded too).
 - Off-limits: `runner-plan.md` and `navigation-plan.md` are active plans — never delete or modify them.
