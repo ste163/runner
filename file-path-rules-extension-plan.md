@@ -1,3 +1,5 @@
+NOTE: this plan was created in the extension repo and needs to be hooked in and tested
+
 # Plan: file-path-rules Extension
 
 Part 1 (the pi-native port) is complete: skills in `.agents/skills/`, prompt templates in `.pi/prompts/`, `lynx-docs` in `.mcp.json`, LSP config deleted, AGENTS.md rewritten, verify-docs updated, repo-navigation removed, app-domain trimmed to domain-only. The `hooks` extension is also complete and live-verified.
