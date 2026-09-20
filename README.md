@@ -15,13 +15,13 @@ This is not a Couch to 5k program with huge intensity bursts. This is a gradual,
 
 ## Agentic Development
 
-This project is set up for agentic development with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli). Project skills and instructions live in `.github/skills/` and `.github/copilot-instructions.md`.
+This project is set up for agentic development with [pi](https://pi.dev/). Project skills live in `.agents/skills/`, prompt templates in `.pi/prompts/`, and the Lynx Docs MCP server is configured in `.mcp.json`.
 
-`AGENTS.md` is the entry point for all agents (CLI, IDE, cloud). It describes the repo, how to use the Lynx Docs MCP, and the verification commands.
+`AGENTS.md` is the entry point for all agents. It describes the repo, how to use the Lynx Docs MCP, and the verification commands.
 
 ### Doc Sync
 
-`scripts/verify-docs.ts` checks that `repo-navigation/SKILL.md` stays in sync with the actual codebase (pages, commands). Run it after any substantial change.
+`scripts/verify-docs.ts` checks that `AGENTS.md` mentions every skill in `.agents/skills/` and every prompt template in `.pi/prompts/`. Run it after any substantial change.
 
 ```bash
 bun run verify-docs
@@ -86,7 +86,7 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 In Android Studio's SDK Manager, install the Android 15 platform, Build Tools 35.0.0, and NDK 27.x or newer.
 
 - `bun`
-- `npm install -g typescript typescript-language-server` — required for LSP code intelligence in Copilot CLI (see `.github/lsp.json`)
+- `npm install -g typescript typescript-language-server` — required for LSP code intelligence (pi-lens auto-discovers it from PATH)
 - Android Studio, with Android SDK, platform-tools, and emulator
 
 ## Stack

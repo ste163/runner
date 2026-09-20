@@ -1,6 +1,6 @@
 ---
 name: app-domain
-description: Runner app business rules — session mechanics, progression algorithm, data model, and page structure. Use when writing or reviewing any app logic to avoid re-reading plan.md.
+description: Runner app business rules — session mechanics, progression algorithm, and data model. Use when writing or reviewing any app logic.
 ---
 
 # Runner App Domain Rules
@@ -90,17 +90,6 @@ interface TrainingProfile {
 
 Storage: single JSON file at `context.filesDir/training_profile.json`.  
 **Atomic write**: write to `.tmp` → fsync → rename (crash-safe).
-
-## Pages
-
-| Page               | Lynx bundle  | Notes                                                                    |
-| ------------------ | ------------ | ------------------------------------------------------------------------ |
-| Home (`main`)      | `main`       | Branding, 3-dot weekly progress, current level, manual adjust, Start CTA |
-| Workout (`second`) | `workout`    | Full-screen timer, phase label, pause/stop, post-workout summary         |
-| Onboarding         | `onboarding` | Shown once on first launch; explains program + progression               |
-| History            | `history`    | Deferred to v2                                                           |
-
-**Navigation**: Home → Workout via `sparkling-navigation` `router.open()`. Workout → Home via `close()`.
 
 ## Manual Adjustment
 

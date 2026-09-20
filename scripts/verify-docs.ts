@@ -1,78 +1,32 @@
 /**
- * Verifies that repo-navigation/SKILL.md stays in sync with the codebase.
+ * Verifies that AGENTS.md stays in sync with the repo's agent resources.
  *
  * Checks:
- *   1. Every directory under src/pages/ is mentioned in repo-navigation/SKILL.md
- *   2. Every command in the SKILL.md Commands table exists as a package.json script
- *   3. Every .ts/.tsx file directly in src/ (non-spec) is mentioned in repo-navigation/SKILL.md
- *   4. Every skill directory under .github/skills/ is mentioned in AGENTS.md
- *   5. Every agent file under .github/agents/ is mentioned in AGENTS.md
+ *   1. Every skill directory under .agents/skills/ is mentioned in AGENTS.md
+ *   2. Every prompt template under .pi/prompts/ is mentioned in AGENTS.md
+ *   3. Every rule file under .pi/rules/ is mentioned in AGENTS.md, has a
+ *      non-empty 'paths:' front-matter field, and each pattern's static
+ *      prefix exists
  */
 
-import { readdirSync, readFileSync } from 'fs'
+import { existsSync, readdirSync, readFileSync } from 'fs'
 
-const SKILL_PATH = '.github/skills/repo-navigation/SKILL.md'
 const AGENTS_PATH = 'AGENTS.md'
-const PAGES_DIR = 'src/pages'
-const SRC_DIR = 'src'
-const SKILLS_DIR = '.github/skills'
-const AGENTS_DIR = '.github/agents'
-const PKG_PATH = 'package.json'
+const SKILLS_DIR = '.agents/skills'
+const PROMPTS_DIR = '.pi/prompts'
+const RULES_DIR = '.pi/rules'
 
-const readSkill = () => readFileSync(SKILL_PATH, 'utf-8')
 const readAgentsMd = () => readFileSync(AGENTS_PATH, 'utf-8')
-
-const readPages = () =>
-  readdirSync(PAGES_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-
-const readRootSrcFiles = () =>
-  readdirSync(SRC_DIR, { withFileTypes: true })
-    .filter((f) => f.isFile() && /\.(ts|tsx)$/.test(f.name) && !f.name.includes('.spec.'))
-    .map((f) => f.name)
 
 const readSkillNames = () =>
   readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
 
-const readAgentNames = () =>
-  readdirSync(AGENTS_DIR, { withFileTypes: true })
-    .filter((f) => f.isFile() && f.name.endsWith('.agent.md'))
-    .map((f) => f.name.replace(/\.agent\.md$/, ''))
-
-const readScripts = () =>
-  (JSON.parse(readFileSync(PKG_PATH, 'utf-8')) as { scripts: Record<string, string> }).scripts
-
-const parseDocumentedCommands = (skill: string): readonly string[] => {
-  const BUN_BUILTINS = ['install', 'add', 'remove', 'update', 'init', 'run', 'x']
-  const matches = [...skill.matchAll(/\|\s*`bun(?:\s+run)?\s+([\w:]+)`/g)]
-  return matches.reduce<string[]>(
-    (acc, [, cmd]) => (cmd && !BUN_BUILTINS.includes(cmd) ? [...acc, cmd] : acc),
-    []
-  )
-}
-
-const checkPages = (skill: string, pages: readonly string[]) =>
-  pages.map((page) =>
-    skill.includes(page)
-      ? { ok: true, msg: `Page '${page}' found in ${SKILL_PATH}` }
-      : {
-          ok: false,
-          msg: `Page '${page}' exists in ${PAGES_DIR}/ but is missing from ${SKILL_PATH}`,
-        }
-  )
-
-const checkRootSrcFiles = (skill: string, files: readonly string[]) =>
-  files.map((file) =>
-    skill.includes(file)
-      ? { ok: true, msg: `Source file '${file}' found in ${SKILL_PATH}` }
-      : {
-          ok: false,
-          msg: `Source file '${file}' exists in ${SRC_DIR}/ but is missing from ${SKILL_PATH}`,
-        }
-  )
+const readPromptNames = () =>
+  readdirSync(PROMPTS_DIR, { withFileTypes: true })
+    .filter((f) => f.isFile() && f.name.endsWith('.md'))
+    .map((f) => f.name.replace(/\.md$/, ''))
 
 const checkSkills = (agentsMd: string, skills: readonly string[]) =>
   skills.map((skill) =>
@@ -84,35 +38,93 @@ const checkSkills = (agentsMd: string, skills: readonly string[]) =>
         }
   )
 
-const checkAgents = (agentsMd: string, agents: readonly string[]) =>
-  agents.map((agent) =>
-    agentsMd.includes(agent)
-      ? { ok: true, msg: `Agent '${agent}' found in ${AGENTS_PATH}` }
+const checkPrompts = (agentsMd: string, prompts: readonly string[]) =>
+  prompts.map((prompt) =>
+    agentsMd.includes(prompt)
+      ? { ok: true, msg: `Prompt template '${prompt}' found in ${AGENTS_PATH}` }
       : {
           ok: false,
-          msg: `Agent '${agent}' exists in ${AGENTS_DIR}/ but is missing from ${AGENTS_PATH}`,
+          msg: `Prompt template '${prompt}' exists in ${PROMPTS_DIR}/ but is missing from ${AGENTS_PATH}`,
         }
   )
 
-const checkCommands = (commands: readonly string[], scripts: Readonly<Record<string, string>>) =>
-  commands.map((cmd) =>
-    scripts[cmd]
-      ? { ok: true, msg: `Command '${cmd}' in ${SKILL_PATH} exists in package.json` }
-      : {
+const readRuleNames = () =>
+  readdirSync(RULES_DIR, { withFileTypes: true })
+    .filter((f) => f.isFile() && f.name.endsWith('.md'))
+    .map((f) => f.name)
+
+const readRulePaths = (name: string): string[] | null => {
+  const raw = readFileSync(`${RULES_DIR}/${name}`, 'utf-8')
+  const lines = raw.split('\n')
+  const open = lines.indexOf('---')
+  const close = lines.indexOf('---', open + 1)
+  if (open === -1 || close === -1) return null
+  const pathsLine = lines.slice(open + 1, close).find((line) => line.startsWith('paths:'))
+  if (!pathsLine) return null
+  const value = pathsLine.slice('paths:'.length).trim()
+  if (value === '') return null
+  const entries = value.startsWith('[') ? value.slice(1, -1).split(/["']\s*,\s*["']/g) : [value]
+  const cleaned = entries
+    .map((entry) =>
+      entry
+        .trim()
+        .replace(/^['"]+/, '')
+        .replace(/['"]+$/, '')
+    )
+    .filter((entry) => entry !== '')
+  return cleaned.length === 0 ? null : cleaned
+}
+
+const staticPrefix = (pattern: string): string => {
+  const metachar = pattern.search(/[*?{]/)
+  return metachar === -1 ? pattern : pattern.slice(0, metachar)
+}
+
+const checkRules = (agentsMd: string, rules: readonly string[]) =>
+  rules.flatMap((rule) => {
+    if (!agentsMd.includes(rule)) {
+      return [
+        {
           ok: false,
-          msg: `Command '${cmd}' is documented in ${SKILL_PATH} but missing from package.json scripts`,
+          msg: `Rule '${rule}' exists in ${RULES_DIR}/ but is missing from ${AGENTS_PATH}`,
+        },
+      ]
+    }
+    const mentioned = { ok: true, msg: `Rule '${rule}' found in ${AGENTS_PATH}` }
+    const patterns = readRulePaths(rule)
+    if (patterns === null) {
+      return [
+        mentioned,
+        { ok: false, msg: `Rule '${rule}' has no non-empty 'paths:' front-matter field` },
+      ]
+    }
+    return [
+      mentioned,
+      { ok: true, msg: `Rule '${rule}' has a non-empty 'paths:' front-matter field` },
+      ...patterns.map((pattern) => {
+        const prefix = staticPrefix(pattern)
+        if (prefix === '') {
+          return {
+            ok: true,
+            msg: `Pattern '${pattern}' in ${RULES_DIR}/${rule} has no static prefix to check`,
+          }
         }
-  )
+        return existsSync(prefix)
+          ? { ok: true, msg: `Pattern '${pattern}' in ${RULES_DIR}/${rule} matches '${prefix}'` }
+          : {
+              ok: false,
+              msg: `Pattern '${pattern}' in ${RULES_DIR}/${rule} has no matching path (prefix '${prefix}' does not exist)`,
+            }
+      }),
+    ]
+  })
 
 const run = () => {
-  const skill = readSkill()
   const agentsMd = readAgentsMd()
   const results = [
-    ...checkPages(skill, readPages()),
-    ...checkRootSrcFiles(skill, readRootSrcFiles()),
     ...checkSkills(agentsMd, readSkillNames()),
-    ...checkAgents(agentsMd, readAgentNames()),
-    ...checkCommands(parseDocumentedCommands(skill), readScripts()),
+    ...checkPrompts(agentsMd, readPromptNames()),
+    ...checkRules(agentsMd, readRuleNames()),
   ]
 
   results.forEach(({ ok, msg }) => (ok ? console.log(`✓ ${msg}`) : console.error(`❌ ${msg}`)))
@@ -121,7 +133,7 @@ const run = () => {
 
   if (failures > 0) {
     console.error(
-      `\n${failures} doc-sync issue(s) found. Update ${SKILL_PATH} to match the codebase.`
+      `\n${failures} doc-sync issue(s) found. Update ${AGENTS_PATH} or ${RULES_DIR}/ to match the repo.`
     )
     process.exit(1)
   }
