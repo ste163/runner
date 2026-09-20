@@ -1,10 +1,10 @@
 ---
-applyTo: '.github/**/*.md'
+paths: ['.agents/**/*.md', '.pi/**/*.md', 'AGENTS.md']
 ---
 
-## Editing `.github/` Agent Files
+## Editing Agent Config Files
 
-When writing or editing any file in `.github/` (skills, agents, instructions, hooks, copilot-instructions.md, AGENTS.md):
+When writing or editing any agent config file (`.agents/**`, `.pi/**`, `AGENTS.md`):
 
 1. Write in compressed, token-efficient style.
 2. Drop articles, filler, hedging. Fragments OK. Technical terms exact.
