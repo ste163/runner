@@ -31,6 +31,15 @@ Multi-step workflows live in `.pi/prompts/`. Invoke them as `/name`:
 - `/performance-investigator` — full trace workflow: record → analyze → report
 - `/debug` — logs-first TDD triage for frontend vs Android issues
 
+## Path Rules
+
+Automatic path-triggered reminders live in `.pi/rules/*.md`. The global `file-path-rules` extension appends each file's body to read/edit/write results on the first touch of a matching path per session.
+
+- `pages.md` — load the `app-domain` skill before page edits
+- `tests.md` — load the `testing-standards` skill before test edits
+- `typescript.md` — load the `coding-standards` + `reactlynx-best-practices` skills before TypeScript edits
+- `agentic-files.md` — compressed token-efficient style for agent config file edits
+
 ## Behavior Rules
 
 - Use `/plan` before multi-file or multi-step tasks.
