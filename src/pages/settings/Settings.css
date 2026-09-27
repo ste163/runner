@@ -6,22 +6,8 @@
   gap: 0.625rem;
 }
 
-.backupActions__button {
+.backupActions .button {
   flex: 1 1 auto;
-  padding: 0.75rem 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 0.0625rem solid var(--color-neutral-border);
-  border-radius: 0.75rem;
-  background: var(--color-neutral-soft);
-}
-
-.backupActions__buttonText {
-  font-size: 0.8125rem;
-  font-weight: 800;
-  color: var(--color-text-muted);
 }
 
 .sessions__month {

@@ -16,6 +16,11 @@ import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
 import { runnerHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen } from '../../native-bridge/screen.js'
 import { runnerWorkoutTimer, type WorkoutTimerState } from '../../native-bridge/workout-timer.js'
+import {
+  Button,
+  buildPauseIconContent,
+  buildPlayIconContent,
+} from '../../components/Button/index.js'
 import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
 import { Card } from '../../components/Card/index.js'
 
@@ -314,6 +319,7 @@ export const Workout = ({
   const isPaused = timerState?.isPaused ?? false
   const isFresh = timerState === null && !isStarted
   const toggleLabel = isFresh ? 'Start' : isPaused ? 'Resume' : 'Pause'
+  const toggleIconContent = isFresh || isPaused ? buildPlayIconContent() : buildPauseIconContent()
   const elapsedSeconds = timerState?.totalElapsedSeconds ?? 0
   const distanceStatLabel = buildDistanceStatLabel(gpsState)
   const paceStatLabel = buildPaceStatLabel(gpsState, elapsedSeconds)
@@ -386,17 +392,15 @@ export const Workout = ({
           </Card>
 
           <view className='stack'>
-            <view className='primary' bindtap={isFresh ? handleStart : handlePauseToggle}>
-              <text className='primary__text'>{toggleLabel}</text>
-            </view>
+            <Button
+              label={toggleLabel}
+              icon={toggleIconContent}
+              onTap={isFresh ? handleStart : handlePauseToggle}
+            />
             {isFresh ? null : (
               <>
-                <view className='secondary' bindtap={completeWorkout}>
-                  <text className='secondary__text'>Debug: complete workout</text>
-                </view>
-                <view className='secondary' bindtap={handleStop}>
-                  <text className='secondary__text'>Stop</text>
-                </view>
+                <Button label='Debug: complete workout' variant='danger' onTap={completeWorkout} />
+                <Button label='Stop' variant='danger' onTap={handleStop} />
               </>
             )}
           </view>
@@ -443,9 +447,7 @@ export const Workout = ({
             </Card>
           ) : null}
 
-          <view className='primary' bindtap={handleDone}>
-            <text className='primary__text'>Done</text>
-          </view>
+          <Button label='Done' onTap={handleDone} />
         </>
       )}
     </view>

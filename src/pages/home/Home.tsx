@@ -7,6 +7,7 @@ import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.j
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
+import { Button, buildPlayIconContent } from '../../components/Button/index.js'
 import { Card } from '../../components/Card/index.js'
 import { themeColors } from '../../theme.js'
 
@@ -183,9 +184,7 @@ export const Home = (props: {
       </Card>
 
       <view className='home__section'>
-        <view className='primary' bindtap={props.onStartWorkout}>
-          <text className='primary__text'>Start Workout</text>
-        </view>
+        <Button label='Start Workout' icon={buildPlayIconContent()} onTap={props.onStartWorkout} />
       </view>
     </view>
   )

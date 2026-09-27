@@ -8,4 +8,5 @@ export const themeColors = {
   iconMuted: '#b6c5bc',
   navActive: '#0b0f0b',
   danger: '#ef4444',
+  onPrimary: '#08110a',
 } as const
