@@ -13,9 +13,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 0.0625rem solid rgba(182, 197, 188, 0.28);
+  border: 0.0625rem solid var(--color-neutral-border);
   border-radius: 0.75rem;
-  background: rgba(182, 197, 188, 0.08);
+  background: var(--color-neutral-soft);
 }
 
 .backupActions__buttonText {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
 
 import './WorkoutTimeline.css'
+import { themeColors } from '../../../../theme.js'
 
 export interface TimelineInterval {
   type: 'cooldown' | 'run' | 'walk' | 'warmup'
@@ -38,11 +39,6 @@ interface DonutPhase {
 }
 
 const WARMUP_INDEX = 0
-const RUN_COLOR = '#2dd35f'
-const WALK_COLOR = '#f59e0b'
-const TRACK_COLOR = '#1b231c'
-const RUN_MUTED_COLOR = 'rgba(45, 211, 95, 0.35)'
-const WALK_MUTED_COLOR = 'rgba(245, 158, 11, 0.35)'
 const SMALL_DONUT_SIZE = 100
 const SMALL_DONUT_RADIUS = 45
 const SMALL_DONUT_STROKE = 10
@@ -84,9 +80,9 @@ const buildArcFraction = (
 }
 
 const resolveArcColor = (tone: 'run' | 'walk', fullColor: boolean): string => {
-  if (tone === 'run') return fullColor ? RUN_COLOR : RUN_MUTED_COLOR
+  if (tone === 'run') return fullColor ? themeColors.run : themeColors.runMuted
 
-  return fullColor ? WALK_COLOR : WALK_MUTED_COLOR
+  return fullColor ? themeColors.walk : themeColors.walkMuted
 }
 
 const buildWarmupPhase = (
@@ -104,7 +100,7 @@ const buildWarmupPhase = (
   return {
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
-    arcColor: done || isDimmed ? WALK_MUTED_COLOR : WALK_COLOR,
+    arcColor: done || isDimmed ? themeColors.walkMuted : themeColors.walk,
     centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || isDimmed ? 'muted' : 'walk',
     subtext: null,
@@ -138,7 +134,7 @@ const buildBlockPhase = (
   return {
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, currentDuration),
-    arcColor: done ? RUN_MUTED_COLOR : resolveArcColor(tone, blockActive && !isDimmed),
+    arcColor: done ? themeColors.runMuted : resolveArcColor(tone, blockActive && !isDimmed),
     centerText: done
       ? 'Done'
       : `${tone === 'run' ? 'Run' : 'Walk'} ${formatDuration(remainingSeconds)}`,
@@ -169,7 +165,7 @@ const buildCooldownPhase = (
   return {
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
-    arcColor: done || isDimmed || status === 'upcoming' ? WALK_MUTED_COLOR : WALK_COLOR,
+    arcColor: done || isDimmed || status === 'upcoming' ? themeColors.walkMuted : themeColors.walk,
     centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || isDimmed || status === 'upcoming' ? 'muted' : 'walk',
     subtext: null,
@@ -201,7 +197,7 @@ const buildDonutSvgContent = (
 
   return (
     `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">` +
-    `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${TRACK_COLOR}" ` +
+    `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${themeColors.track}" ` +
     `stroke-width="${strokeWidth}"/>` +
     progressCircle +
     `</svg>`

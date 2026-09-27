@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
 
 import './CurrentIntervalDonut.css'
+import { themeColors } from '../../../../theme.js'
 
 type CurrentIntervalDonutProps = {
   runLabel: string
@@ -11,9 +12,6 @@ type CurrentIntervalDonutProps = {
 const RADIUS = 112
 const CENTER = 130
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
-const TRACK_COLOR = '#1b231c'
-const RUN_COLOR = '#2dd35f'
-const WALK_COLOR = '#f59e0b'
 const STROKE_WIDTH = 24
 const ANIMATION_FRAME_MS = 8
 const ANIMATION_DURATION_MS = 500
@@ -32,25 +30,25 @@ const buildSvgContent = (runPercent: number): string => {
 
   const runArc =
     safePercent > 0
-      ? `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${RUN_COLOR}" ` +
+      ? `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.run}" ` +
         `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
         `stroke-dasharray="${runLength} ${gapLength}" transform="rotate(-90 ${CENTER} ${CENTER})"/>`
       : ''
 
   const walkArc =
     safePercent < 100
-      ? `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${WALK_COLOR}" ` +
-        `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
+      ? `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.walkMuted}" ` +
+        `stroke-width="${STROKE_WIDTH}" stroke-linecap="butt" ` +
         `stroke-dasharray="${walkLength} ${gapLength}" ` +
         `transform="rotate(${walkRotation} ${CENTER} ${CENTER})"/>`
       : ''
 
   return (
     `<svg width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">` +
-    `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${TRACK_COLOR}" ` +
+    `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.track}" ` +
     `stroke-width="${STROKE_WIDTH}"/>` +
-    runArc +
     walkArc +
+    runArc +
     `</svg>`
   )
 }

@@ -1,6 +1,7 @@
 import type { ReactElement } from '@lynx-js/react'
 
 import './ThisWeekDonut.css'
+import { themeColors } from '../../../../theme.js'
 
 type ThisWeekDonutProps = {
   completedCount: number
@@ -9,8 +10,6 @@ type ThisWeekDonutProps = {
 
 const RADIUS = 36
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
-const TRACK_COLOR = '#1b231c'
-const ARC_COLOR = '#2dd35f'
 const STROKE_WIDTH = 10
 
 const clampCount = (value: number, totalCount: number): number =>
@@ -24,13 +23,13 @@ const buildSvgContent = (completedCount: number, totalCount: number): string => 
   const progressCircle =
     fraction <= 0
       ? ''
-      : `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${ARC_COLOR}" ` +
+      : `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${themeColors.run}" ` +
         `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
         `stroke-dasharray="${arcLength} ${gapLength}" transform="rotate(-90 44 44)"/>`
 
   return (
     `<svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">` +
-    `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${TRACK_COLOR}" ` +
+    `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${themeColors.track}" ` +
     `stroke-width="${STROKE_WIDTH}"/>` +
     progressCircle +
     `</svg>`

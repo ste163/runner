@@ -46,7 +46,7 @@
 }
 
 .stats__value--action {
-  color: var(--color-secondary);
+  color: var(--color-walk);
 }
 
 .eyebrow {
@@ -111,7 +111,7 @@
 }
 
 .primary__text {
-  color: #08110a;
+  color: var(--color-on-primary);
 }
 
 .secondary__text {

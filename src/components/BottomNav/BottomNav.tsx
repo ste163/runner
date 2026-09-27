@@ -1,12 +1,11 @@
 import type { ReactElement } from '@lynx-js/react'
 
 import './BottomNav.css'
+import { themeColors } from '../../theme.js'
 
 type BottomNavTab = 'home' | 'workout' | 'settings'
 
 const ICON_STROKE_WIDTH = 1.8
-const ACTIVE_ICON_COLOR = '#0b0f0b'
-const INACTIVE_ICON_COLOR = '#b6c5bc'
 
 const buildSvgOpen = (color: string): string =>
   `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
@@ -84,7 +83,7 @@ export const BottomNav = ({
       <view className='bottomNav__surface'>
         {items.map((item) => {
           const isActive = item.key === activeTab
-          const iconColor = isActive ? ACTIVE_ICON_COLOR : INACTIVE_ICON_COLOR
+          const iconColor = isActive ? themeColors.navActive : themeColors.iconMuted
 
           return (
             <view

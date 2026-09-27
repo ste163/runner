@@ -4,6 +4,7 @@ import './Settings.css'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingProfile } from '../../domain/types.js'
 import { Card } from '../../components/Card/index.js'
+import { themeColors } from '../../theme.js'
 
 const MONTH_NAMES = [
   'January',
@@ -109,7 +110,7 @@ const buildDistanceLabel = (totalDistanceMiles: number): string =>
 
 const buildUploadIconContent = (): string =>
   `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
-  `fill="none" stroke="#b6c5bc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `fill="none" stroke="${themeColors.iconMuted}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
   `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>` +
   `<polyline points="17 8 12 3 7 8"/>` +
   `<line x1="12" x2="12" y1="3" y2="15"/>` +
@@ -117,7 +118,7 @@ const buildUploadIconContent = (): string =>
 
 const buildDownloadIconContent = (): string =>
   `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
-  `fill="none" stroke="#b6c5bc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `fill="none" stroke="${themeColors.iconMuted}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
   `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>` +
   `<polyline points="7 10 12 15 17 10"/>` +
   `<line x1="12" x2="12" y1="15" y2="3"/>` +
@@ -125,7 +126,7 @@ const buildDownloadIconContent = (): string =>
 
 const buildTrashIconContent = (): string =>
   `<svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
-  `fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">` +
+  `fill="none" stroke="${themeColors.danger}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">` +
   `<path d="M3 6h18"/>` +
   `<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>` +
   `<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>` +

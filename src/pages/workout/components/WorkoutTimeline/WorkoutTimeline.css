@@ -51,7 +51,7 @@
 }
 
 .timeline__countdown--walk {
-  color: var(--color-secondary);
+  color: var(--color-walk);
 }
 
 .timeline__countdown--muted {
@@ -67,9 +67,9 @@
 .timeline__connector {
   width: 2px;
   height: 1.5rem;
-  background: #2a382f;
+  background: var(--color-connector);
 }
 
 .timeline__connector--done {
-  background: rgba(245, 158, 11, 0.35);
+  background: var(--color-walk-muted);
 }

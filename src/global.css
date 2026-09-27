@@ -9,7 +9,7 @@
   --color-surface: #0b0f0b;
   --color-surface-raised: #111711;
   --color-surface-soft: rgba(255, 255, 255, 0.03);
-  --color-card-bg: #161616;
+  --color-card-bg: #121212;
   --color-card-border: rgba(255, 255, 255, 0.08);
   --color-border: rgba(45, 211, 95, 0.18);
   --color-border-strong: rgba(45, 211, 95, 0.34);
@@ -21,11 +21,12 @@
   --color-primary-soft: rgba(45, 211, 95, 0.14);
   --color-primary-glow: rgba(45, 211, 95, 0.42);
   --color-primary-glow-soft: rgba(45, 211, 95, 0.18);
-  --color-secondary: #f59e0b;
-  --color-secondary-strong: #d97706;
-  --color-secondary-soft: rgba(245, 158, 11, 0.14);
-  --color-secondary-glow: rgba(245, 158, 11, 0.42);
-  --color-secondary-glow-soft: rgba(245, 158, 11, 0.18);
+  --color-walk: #2563eb;
+  --color-walk-muted: rgba(37, 99, 235, 0.35);
+  --color-connector: #2a382f;
+  --color-on-primary: #08110a;
+  --color-neutral-soft: rgba(182, 197, 188, 0.08);
+  --color-neutral-border: rgba(182, 197, 188, 0.28);
   --color-danger: #ef4444;
   --color-danger-strong: #dc2626;
   --color-danger-soft: rgba(239, 68, 68, 0.12);
@@ -130,13 +131,13 @@ body,
 }
 
 .primary__text {
-  color: #08110a;
+  color: var(--color-on-primary);
   font-size: 0.9375rem;
   font-weight: 800;
 }
 
 .primary__icon {
-  color: #08110a;
+  color: var(--color-on-primary);
   font-size: 1rem;
   font-weight: 800;
 }
@@ -178,21 +179,4 @@ body,
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--color-text-muted);
-}
-
-.secondary {
-  padding: 0.875rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 0.0625rem solid var(--color-secondary-strong);
-  border-radius: 0.75rem;
-  background: var(--color-secondary-soft);
-}
-
-.secondary__text {
-  color: var(--color-secondary);
-  font-size: 0.9375rem;
-  font-weight: 800;
 }

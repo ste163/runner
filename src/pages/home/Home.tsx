@@ -8,6 +8,7 @@ import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
 import { Card } from '../../components/Card/index.js'
+import { themeColors } from '../../theme.js'
 
 const formatDuration = (seconds: number): string => {
   const roundedSeconds = Math.round(seconds)
@@ -51,10 +52,10 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 
 const buildInfoIconContent = (): string =>
   `<svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
-  `fill="none" stroke="#b6c5bc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `fill="none" stroke="${themeColors.iconMuted}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
   `<circle cx="12" cy="12" r="10"/>` +
   `<path d="M12 16v-4"/>` +
-  `<circle cx="12" cy="8" r="1" fill="#b6c5bc" stroke="none"/>` +
+  `<circle cx="12" cy="8" r="1" fill="${themeColors.iconMuted}" stroke="none"/>` +
   `</svg>`
 
 const buildDayList = (anchorDate: Date, dayOffsets: number[]): string =>
