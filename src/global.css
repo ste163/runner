@@ -19,18 +19,16 @@
   --color-primary: #2dd35f;
   --color-primary-strong: #16a34a;
   --color-primary-soft: rgba(45, 211, 95, 0.14);
-  --color-primary-glow: rgba(45, 211, 95, 0.42);
-  --color-primary-glow-soft: rgba(45, 211, 95, 0.18);
   --color-walk: #2563eb;
   --color-walk-muted: rgba(37, 99, 235, 0.35);
   --color-connector: #2a382f;
-  --color-on-primary: #08110a;
   --color-neutral-soft: rgba(182, 197, 188, 0.08);
   --color-neutral-border: rgba(182, 197, 188, 0.28);
   --color-danger: #ef4444;
   --color-danger-strong: #dc2626;
   --color-danger-soft: rgba(239, 68, 68, 0.12);
   --color-danger-border: rgba(239, 68, 68, 0.28);
+  --color-ripple: rgba(255, 255, 255, 0.35);
 }
 
 html,

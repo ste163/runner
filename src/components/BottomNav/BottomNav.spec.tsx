@@ -5,19 +5,19 @@ import { describe, expect, it, vi } from 'vitest'
 import { BottomNav } from './BottomNav.js'
 
 describe('BottomNav', () => {
-  it('renders the tabs and calls callbacks on tap', async () => {
+  it('renders the icon tabs and calls callbacks on tap', async () => {
     const onHome = vi.fn()
     const onWorkout = vi.fn()
 
     render(<BottomNav activeTab='home' onHome={onHome} onWorkout={onWorkout} />)
 
-    const { findByText } = getQueriesForElement(elementTree.root!)
+    const { findByTestId } = getQueriesForElement(elementTree.root!)
 
-    await findByText('Home')
-    await findByText('Workout')
+    const homeTab = await findByTestId('bottomNav-home')
+    const workoutTab = await findByTestId('bottomNav-workout')
 
-    fireEvent.tap(await findByText('Home'))
-    fireEvent.tap(await findByText('Workout'))
+    fireEvent.tap(homeTab)
+    fireEvent.tap(workoutTab)
 
     expect(onHome).toHaveBeenCalledTimes(1)
     expect(onWorkout).toHaveBeenCalledTimes(1)

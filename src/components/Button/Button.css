@@ -12,9 +12,8 @@
 }
 
 .button--primary {
-  border: 0.0625rem solid var(--color-primary-strong);
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
-  box-shadow: 0 10px 24px rgba(45, 211, 95, 0.24);
+  border: 0.0625rem solid var(--color-border-strong);
+  background: var(--color-primary-soft);
 }
 
 .button--danger {
@@ -34,7 +33,7 @@
 }
 
 .button--primary .button__label {
-  color: var(--color-on-primary);
+  color: var(--color-primary);
 }
 
 .button--danger .button__label {

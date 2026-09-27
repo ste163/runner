@@ -1,6 +1,7 @@
 import type { ReactElement } from '@lynx-js/react'
 
 import './BottomNav.css'
+import { Pressable } from '../Pressable/index.js'
 import { themeColors } from '../../theme.js'
 
 type BottomNavTab = 'home' | 'workout' | 'settings'
@@ -33,16 +34,12 @@ const buildSettingsIconContent = (color: string): string =>
 
 interface BottomNavItem {
   key: BottomNavTab
-  label: string
   icon: (color: string) => string
   action?: () => void
 }
 
 const buildTabClassName = (isActive: boolean): string =>
   `bottomNav__item${isActive ? ' bottomNav__item--active' : ''}`
-
-const buildTextClassName = (isActive: boolean): string =>
-  `bottomNav__text${isActive ? ' bottomNav__text--active' : ''}`
 
 interface BottomNavProps {
   activeTab: BottomNavTab
@@ -60,19 +57,16 @@ export const BottomNav = ({
   const items: BottomNavItem[] = [
     {
       key: 'home',
-      label: 'Home',
       icon: buildHomeIconContent,
       ...(onHome ? { action: onHome } : {}),
     },
     {
       key: 'workout',
-      label: 'Workout',
       icon: buildWorkoutIconContent,
       ...(onWorkout ? { action: onWorkout } : {}),
     },
     {
       key: 'settings',
-      label: 'Settings',
       icon: buildSettingsIconContent,
       ...(onSettings ? { action: onSettings } : {}),
     },
@@ -83,17 +77,17 @@ export const BottomNav = ({
       <view className='bottomNav__surface'>
         {items.map((item) => {
           const isActive = item.key === activeTab
-          const iconColor = isActive ? themeColors.navActive : themeColors.iconMuted
+          const iconColor = isActive ? themeColors.walk : themeColors.iconMuted
 
           return (
-            <view
+            <Pressable
               key={item.key}
               className={buildTabClassName(isActive)}
-              {...(item.action ? { bindtap: item.action } : {})}
+              testId={`bottomNav-${item.key}`}
+              {...(item.action ? { onTap: item.action } : {})}
             >
               <svg content={item.icon(iconColor)} style={{ width: '24px', height: '24px' }} />
-              <text className={buildTextClassName(isActive)}>{item.label}</text>
-            </view>
+            </Pressable>
           )
         })}
       </view>

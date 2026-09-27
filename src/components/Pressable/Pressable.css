@@ -1,0 +1,20 @@
+@import url('../../global.css');
+
+.pressable__ripple {
+  position: absolute;
+  border-radius: 62.4375rem;
+  background: var(--color-ripple);
+  animation: pressable-ripple 350ms ease-out forwards;
+}
+
+@keyframes pressable-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.45;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}

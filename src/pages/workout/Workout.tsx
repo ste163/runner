@@ -21,6 +21,7 @@ import {
   buildPauseIconContent,
   buildPlayIconContent,
 } from '../../components/Button/index.js'
+import { Pressable } from '../../components/Pressable/index.js'
 import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
 import { Card } from '../../components/Card/index.js'
 
@@ -381,14 +382,14 @@ export const Workout = ({
               <text className='stats__label'>Distance</text>
               <text className='stats__value'>{distanceStatLabel}</text>
             </view>
-            <view className='stats__item' bindtap={handleOpenPaceSettings}>
+            <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
               <text className='stats__label'>Pace</text>
               <text
                 className={gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'}
               >
                 {paceStatLabel}
               </text>
-            </view>
+            </Pressable>
           </Card>
 
           <view className='stack'>

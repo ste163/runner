@@ -9,6 +9,7 @@ import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
 import { Button, buildPlayIconContent } from '../../components/Button/index.js'
 import { Card } from '../../components/Card/index.js'
+import { Pressable } from '../../components/Pressable/index.js'
 import { themeColors } from '../../theme.js'
 
 const formatDuration = (seconds: number): string => {
@@ -155,9 +156,9 @@ export const Home = (props: {
         title='Current interval'
         className='home__section--interval'
         headerContent={
-          <view className='home__infoIcon' data-testid='adjust-info' bindtap={toggleManualAdjust}>
+          <Pressable className='home__infoIcon' testId='adjust-info' onTap={toggleManualAdjust}>
             <svg content={buildInfoIconContent()} style={{ width: '20px', height: '20px' }} />
-          </view>
+          </Pressable>
         }
       >
         {showManualAdjust ? (
@@ -167,12 +168,12 @@ export const Home = (props: {
               adjust intervals manually to suit your needs.
             </text>
             <view className='actions-row'>
-              <view className='actions-row__button' bindtap={handleDecreaseLevel}>
+              <Pressable className='actions-row__button' onTap={handleDecreaseLevel}>
                 <text className='actions-row__buttonText'>Decrease 10%</text>
-              </view>
-              <view className='actions-row__button' bindtap={handleIncreaseLevel}>
+              </Pressable>
+              <Pressable className='actions-row__button' onTap={handleIncreaseLevel}>
                 <text className='actions-row__buttonText'>Increase 10%</text>
-              </view>
+              </Pressable>
             </view>
           </view>
         ) : null}

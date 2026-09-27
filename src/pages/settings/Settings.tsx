@@ -6,6 +6,7 @@ import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingProfile } from '../../domain/types.js'
 import { Button } from '../../components/Button/index.js'
 import { Card } from '../../components/Card/index.js'
+import { Pressable } from '../../components/Pressable/index.js'
 import { themeColors } from '../../theme.js'
 
 const MONTH_NAMES = [
@@ -233,12 +234,12 @@ export const Settings = (): ReactElement => {
               pendingDeleteId === session.id ? (
                 <view key={session.id} className='sessions__confirm'>
                   <text className='sessions__confirmText'>Delete this session?</text>
-                  <view className='sessions__confirmYes' bindtap={handleConfirmDelete}>
+                  <Pressable className='sessions__confirmYes' onTap={handleConfirmDelete}>
                     <text className='sessions__confirmYesText'>Yes</text>
-                  </view>
-                  <view className='sessions__confirmNo' bindtap={handleCancelDelete}>
+                  </Pressable>
+                  <Pressable className='sessions__confirmNo' onTap={handleCancelDelete}>
                     <text className='sessions__confirmNoText'>No</text>
-                  </view>
+                  </Pressable>
                 </view>
               ) : (
                 <view
@@ -260,16 +261,16 @@ export const Settings = (): ReactElement => {
                   <text className='sessions__number sessions__numberColumn'>
                     {buildPaceLabel(session)}
                   </text>
-                  <view
+                  <Pressable
                     className='sessions__trash sessions__iconColumn'
-                    data-testid={`trash-${session.id}`}
-                    bindtap={(): void => setPendingDeleteId(session.id)}
+                    testId={`trash-${session.id}`}
+                    onTap={(): void => setPendingDeleteId(session.id)}
                   >
                     <svg
                       content={buildTrashIconContent()}
                       style={{ width: '20px', height: '20px' }}
                     />
-                  </view>
+                  </Pressable>
                 </view>
               )
             )}
@@ -278,14 +279,14 @@ export const Settings = (): ReactElement => {
         {isPreviousDisabled && isNextHidden ? null : (
           <view className='sessions__nav'>
             {isPreviousDisabled ? null : (
-              <view className='sessions__navButton' bindtap={handlePreviousMonth}>
+              <Pressable className='sessions__navButton' onTap={handlePreviousMonth}>
                 <text className='sessions__navButtonText'>Previous</text>
-              </view>
+              </Pressable>
             )}
             {isNextHidden ? null : (
-              <view className='sessions__navButton' bindtap={handleNextMonth}>
+              <Pressable className='sessions__navButton' onTap={handleNextMonth}>
                 <text className='sessions__navButtonText'>Next</text>
-              </view>
+              </Pressable>
             )}
           </view>
         )}
