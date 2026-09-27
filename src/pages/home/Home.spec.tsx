@@ -2,31 +2,10 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import * as router from 'sparkling-navigation'
-
-import { AppLayout } from '../../components/AppLayout/index.js'
 import { Home } from './Home.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
 import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
-
-vi.mock('sparkling-navigation', () => ({ open: vi.fn(), close: vi.fn() }))
-
-const buildPageScheme = (bundle: string, title: string): string => {
-  return (
-    `hybrid://lynxview_page?bundle=${bundle}` +
-    '&container_bg_color=%23000000' +
-    '&force_theme_style=dark' +
-    '&hide_nav_bar=1' +
-    '&nav_bar_color=%23000000' +
-    '&screen_orientation=portrait' +
-    `&title=${encodeURIComponent(title)}` +
-    '&trans_status_bar=0'
-  )
-}
-
-const onboardingScheme = buildPageScheme('onboarding.lynx.bundle', 'How It Works')
-const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
 
 const buildProfile = (): TrainingProfile => ({
   schemaVersion: 1,
@@ -76,23 +55,18 @@ describe('Home', () => {
 
   it('opens onboarding on first launch', async () => {
     const onMounted = vi.fn()
+    const onOpenOnboarding = vi.fn()
 
     render(
-      <AppLayout initialPage='home'>
-        <Home onMounted={onMounted} />
-      </AppLayout>
+      <Home onMounted={onMounted} onOpenOnboarding={onOpenOnboarding} onStartWorkout={vi.fn()} />
     )
 
     expect(onMounted).toBeCalledTimes(1)
-    expect(router.open).toHaveBeenCalledWith({ scheme: onboardingScheme }, expect.any(Function))
+    expect(onOpenOnboarding).toHaveBeenCalledTimes(1)
   })
 
   it('renders the sectioned home layout and current values', async () => {
-    render(
-      <AppLayout initialPage='home'>
-        <Home />
-      </AppLayout>
-    )
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -114,16 +88,10 @@ describe('Home', () => {
     await findByText('This month')
     await findByText('Coming soon.')
     await findByText('Backup & restore')
-    await findByText('Home')
-    await findByText('Workout')
   })
 
   it('updates the current interval when the user taps increase', async () => {
-    render(
-      <AppLayout initialPage='home'>
-        <Home />
-      </AppLayout>
-    )
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('30s')
@@ -139,11 +107,7 @@ describe('Home', () => {
   it('shows a completed week message and the next cycle day after three sessions', async () => {
     sharedProfileStore.save(buildCompletedWeekProfile())
 
-    render(
-      <AppLayout initialPage='home'>
-        <Home />
-      </AppLayout>
-    )
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -152,21 +116,19 @@ describe('Home', () => {
     await findByText('Exercise again on Monday')
   })
 
-  it('opens the workout page when the start button is tapped', async () => {
+  it('requests the workout tab when the start button is tapped', async () => {
     sharedProfileStore.save(buildProfile())
 
-    render(
-      <AppLayout initialPage='home'>
-        <Home />
-      </AppLayout>
-    )
+    const onStartWorkout = vi.fn()
+
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={onStartWorkout} />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Start Workout')
 
     fireEvent.tap(getByText('Start Workout'))
 
-    expect(router.open).toHaveBeenCalledWith({ scheme: workoutScheme }, expect.any(Function))
+    expect(onStartWorkout).toHaveBeenCalledTimes(1)
   })
 
   it('exports and imports profile JSON with the native file pickers', async () => {
@@ -191,11 +153,7 @@ describe('Home', () => {
 
     runnerProfileStorage.configure(module)
 
-    render(
-      <AppLayout initialPage='home'>
-        <Home />
-      </AppLayout>
-    )
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Export JSON')
@@ -214,11 +172,7 @@ describe('Home', () => {
   it('shows the current profile JSON for debugging', async () => {
     sharedProfileStore.save(buildProfile())
 
-    render(
-      <AppLayout initialPage='home'>
-        <Home />
-      </AppLayout>
-    )
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Show current JSON')

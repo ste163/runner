@@ -1,16 +1,15 @@
 import { useCallback, useEffect, type ReactElement } from '@lynx-js/react'
-import * as router from 'sparkling-navigation'
 
 import './Onboarding.css'
 
-export function Onboarding(props: { onMounted?: () => void }): ReactElement {
+export function Onboarding(props: { onMounted?: () => void; onClose: () => void }): ReactElement {
   useEffect(() => {
     props.onMounted?.()
   }, [props.onMounted])
 
   const handleDone = useCallback((): void => {
-    router.close()
-  }, [])
+    props.onClose()
+  }, [props.onClose])
 
   return (
     <scroll-view className='page-scroll' scroll-orientation='vertical'>

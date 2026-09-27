@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
-import * as router from 'sparkling-navigation'
 
 import './Home.css'
 import { isGraduated } from '../../domain/intervals.js'
@@ -8,23 +7,6 @@ import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.j
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { CurrentIntervalChart } from './components/CurrentIntervalChart/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
-
-const buildPageScheme = (bundle: string, title: string): string => {
-  return (
-    `hybrid://lynxview_page?bundle=${bundle}` +
-    '&container_bg_color=%23000000' +
-    '&force_theme_style=dark' +
-    '&hide_nav_bar=1' +
-    '&nav_bar_color=%23000000' +
-    '&screen_orientation=portrait' +
-    `&title=${encodeURIComponent(title)}` +
-    '&trans_status_bar=0'
-  )
-}
-
-const onboardingScheme = buildPageScheme('onboarding.lynx.bundle', 'How It Works')
-const graphsScheme = buildPageScheme('graphs.lynx.bundle', 'Text Graph Gallery')
-const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
 
 const formatDuration = (seconds: number): string => {
   const roundedSeconds = Math.round(seconds)
@@ -89,24 +71,16 @@ const buildSuggestedSessionLabel = (
   return `Exercise again on ${weekdayNames[suggestedDate.getUTCDay()]}`
 }
 
-export const Home = (props: { onMounted?: () => void }): ReactElement => {
+export const Home = (props: {
+  onMounted?: () => void
+  onOpenOnboarding: () => void
+  onStartWorkout: () => void
+}): ReactElement => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
   const [storageStatus, setStorageStatus] = useState('')
   const [debugJson, setDebugJson] = useState('')
   const [showManualAdjust, setShowManualAdjust] = useState(false)
   const hasOpenedOnboardingRef = useRef(false)
-
-  const openOnboarding = useCallback((): void => {
-    router.open({ scheme: onboardingScheme }, () => undefined)
-  }, [])
-
-  const openWorkout = useCallback((): void => {
-    router.open({ scheme: workoutScheme }, () => undefined)
-  }, [])
-
-  const openGraphGallery = useCallback((): void => {
-    router.open({ scheme: graphsScheme }, () => undefined)
-  }, [])
 
   useEffect(() => {
     const next = sharedProfileStore.hydrate()
@@ -116,9 +90,9 @@ export const Home = (props: { onMounted?: () => void }): ReactElement => {
 
     if (next.isFirstLaunch && !hasOpenedOnboardingRef.current) {
       hasOpenedOnboardingRef.current = true
-      openOnboarding()
+      props.onOpenOnboarding()
     }
-  }, [openOnboarding, props.onMounted])
+  }, [props.onMounted, props.onOpenOnboarding])
 
   const handleLevelAdjustment = useCallback((direction: 'up' | 'down'): void => {
     setProfile((currentProfile) => {
@@ -236,19 +210,9 @@ export const Home = (props: { onMounted?: () => void }): ReactElement => {
           </view>
 
           <view className='home__section home__section--full'>
-            <view className='primary' bindtap={openWorkout}>
+            <view className='primary' bindtap={props.onStartWorkout}>
               <text className='primary__text'>Start Workout</text>
               <text className='primary__icon'>→</text>
-            </view>
-          </view>
-
-          <view className='home__section home__section--full'>
-            <text className='label'>Text graph gallery</text>
-            <text className='copy'>
-              Braille, blocks, dots, and squares at a few different font sizes.
-            </text>
-            <view className='home__galleryButton' bindtap={openGraphGallery}>
-              <text className='home__galleryButtonText'>Open graph examples</text>
             </view>
           </view>
 

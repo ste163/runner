@@ -1,13 +1,13 @@
 import { root } from '@lynx-js/react'
 
-import { runnerGps } from '../../native-bridge/gps.js'
-import { runnerHaptics } from '../../native-bridge/haptics.js'
-import { runnerScreen } from '../../native-bridge/screen.js'
-import { runnerProfileStorage } from '../../native-bridge/storage.js'
-import { runnerWorkoutTimer } from '../../native-bridge/workout-timer.js'
-import { ActiveWorkout } from './ActiveWorkout.js'
+import { AppShell } from './components/AppShell/index.js'
+import { runnerGps } from './native-bridge/gps.js'
+import { runnerHaptics } from './native-bridge/haptics.js'
+import { runnerScreen } from './native-bridge/screen.js'
+import { runnerProfileStorage } from './native-bridge/storage.js'
+import { runnerWorkoutTimer } from './native-bridge/workout-timer.js'
 
-const configureActiveWorkoutNativeModules = (): void => {
+const configureNativeModules = (): void => {
   const nativeModules = typeof NativeModules === 'undefined' ? null : NativeModules
   const hapticsModule = nativeModules?.['RunnerHapticModule'] ?? null
   const gpsModule = nativeModules?.['RunnerGpsModule'] ?? null
@@ -21,9 +21,9 @@ const configureActiveWorkoutNativeModules = (): void => {
   runnerProfileStorage.configure(storageModule)
 }
 
-configureActiveWorkoutNativeModules()
+configureNativeModules()
 
-root.render(<ActiveWorkout haptics={runnerHaptics} />)
+root.render(<AppShell />)
 
 if (import.meta.webpackHot) {
   import.meta.webpackHot.accept()
