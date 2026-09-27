@@ -179,14 +179,15 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
     setScreenWakeLock(false)
 
     const completedAt = new Date()
+    const latestProfile = sharedProfileStore.loadOrCreate().profile
     const session: Session = {
       id: buildSessionId(),
       completedAt: completedAt.toISOString(),
       intervals: [],
-      level: { ...sessionProfile.level },
+      level: { ...latestProfile.level },
       totalDistanceMiles: completedGpsState?.distanceMiles ?? 0,
     }
-    const nextProfile = buildCompletedProfile(sessionProfile, session, completedAt)
+    const nextProfile = buildCompletedProfile(latestProfile, session, completedAt)
 
     sharedProfileStore.save(nextProfile)
     setSummary({ profile: nextProfile, session })
@@ -195,7 +196,7 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
     setGpsState(completedGpsState)
     onLiveChange(false)
     runnerHaptics.cancel()
-  }, [onLiveChange, sessionProfile])
+  }, [onLiveChange])
 
   const syncWorkoutState = useCallback((): void => {
     const nextTimerState = runnerWorkoutTimer.loadState()
@@ -336,14 +337,6 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
       {summary === null ? (
         !isStarted ? (
           <>
-            <view className='hero hero--tight'>
-              <text className='eyebrow'>Workout</text>
-              <text className='title'>Runner</text>
-              <text className='subtitle'>
-                Tap start when you are ready. The timer begins with the warmup walk.
-              </text>
-            </view>
-
             <view className='card timer-card'>
               <view className='timer-card__header'>
                 <text className='label'>Ready</text>
@@ -391,14 +384,6 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
           </>
         ) : (
           <>
-            <view className='hero hero--tight'>
-              <text className='eyebrow'>Workout</text>
-              <text className='title'>Runner</text>
-              <text className='subtitle'>
-                Stay with the interval. Haptics pulse in the last 5 seconds.
-              </text>
-            </view>
-
             <view className='card timer-card'>
               <view className='timer-card__header'>
                 <text className='label'>{currentInterval?.type.toUpperCase() ?? 'COMPLETE'}</text>
