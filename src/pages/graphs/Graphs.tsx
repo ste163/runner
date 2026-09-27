@@ -1,4 +1,4 @@
-import { useCallback } from '@lynx-js/react'
+import { useCallback, type ReactElement } from '@lynx-js/react'
 import { close } from 'sparkling-navigation'
 
 import './Graphs.css'
@@ -116,7 +116,7 @@ const getBarStyle = (amountSeconds: number) => ({
   height: `${getBarHeightPercent(amountSeconds)}%`,
 })
 
-export const Graphs = (): JSX.Element => {
+export const Graphs = (): ReactElement => {
   const handleBack = useCallback((): void => {
     close()
   }, [])

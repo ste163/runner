@@ -1,4 +1,4 @@
-import { useCallback, useState } from '@lynx-js/react'
+import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 
 import './BarChart.css'
 
@@ -38,7 +38,7 @@ export const BarChart = ({
   color,
   fillPercent,
   label,
-}: BarChartProps): JSX.Element => {
+}: BarChartProps): ReactElement => {
   const [chartWidth, setChartWidth] = useState(0)
   const [blockCharWidth, setBlockCharWidth] = useState(0)
 

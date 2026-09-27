@@ -17,7 +17,7 @@ This is not a Couch to 5k program with huge intensity bursts. This is a gradual,
 
 This project is set up for agentic development with [pi](https://pi.dev/). Project skills live in `.agents/skills/`, prompt templates in `.pi/prompts/`, and the Lynx Docs MCP server is configured in `.mcp.json`.
 
-`AGENTS.md` is the entry point for all agents. It describes the repo, how to use the Lynx Docs MCP, and the verification commands.
+`AGENTS.md` describes the repo, how to use the Lynx Docs MCP and verification flow.
 
 ### Doc Sync
 

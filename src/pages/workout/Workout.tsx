@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
+import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Workout.css'
@@ -38,7 +38,7 @@ const levelLabel = (level: TrainingLevel): string =>
     ? `Running ${formatDuration(level.intervalBlockSeconds)}`
     : `Run ${formatDuration(level.runSeconds)} · Walk ${formatDuration(level.walkSeconds)}`
 
-export const Workout = ({ onMounted }: WorkoutProps): JSX.Element => {
+export const Workout = ({ onMounted }: WorkoutProps): ReactElement => {
   const [sessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
   )

@@ -1,3 +1,5 @@
+import type { ReactElement } from '@lynx-js/react'
+
 import './CurrentIntervalChart.css'
 
 type CurrentIntervalChartProps = {
@@ -12,7 +14,7 @@ export const CurrentIntervalChart = ({
   runAmount,
   walkAmount,
   runPercent,
-}: CurrentIntervalChartProps): JSX.Element => {
+}: CurrentIntervalChartProps): ReactElement => {
   const runBarPercent = clampPercent(runPercent)
   const walkBarPercent = 100 - runBarPercent
 
