@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './Settings.css'
+import { isGraduated } from '../../domain/intervals.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingProfile } from '../../domain/types.js'
 import { Card } from '../../components/Card/index.js'
@@ -73,15 +74,14 @@ const filterSessionsForMonth = (sessions: Session[], month: VisibleMonth): Sessi
     )
   )
 
-const buildIntervalSeconds = (session: Session, type: 'run' | 'walk'): number | null => {
-  if (session.intervals.length === 0) {
-    return null
+const buildIntervalLabel = (session: Session, type: 'run' | 'walk'): string => {
+  if (isGraduated(session.level)) {
+    return type === 'run' ? formatSessionDuration(session.level.intervalBlockSeconds) : '—'
   }
 
-  return session.intervals.reduce(
-    (total, interval) => (interval.type === type ? total + interval.durationSeconds : total),
-    0
-  )
+  const seconds = type === 'run' ? session.level.runSeconds : session.level.walkSeconds
+
+  return formatSessionDuration(seconds)
 }
 
 const formatSessionDuration = (seconds: number): string => {
@@ -90,12 +90,6 @@ const formatSessionDuration = (seconds: number): string => {
   const remainingSeconds = roundedSeconds % 60
 
   return minutes === 0 ? `${remainingSeconds}s` : `${minutes}m ${remainingSeconds}s`
-}
-
-const buildIntervalLabel = (session: Session, type: 'run' | 'walk'): string => {
-  const seconds = buildIntervalSeconds(session, type)
-
-  return seconds === null ? '—' : formatSessionDuration(seconds)
 }
 
 const formatSessionDate = (completedAt: string): string => {
@@ -107,6 +101,15 @@ const formatSessionDate = (completedAt: string): string => {
 
 const buildDistanceLabel = (totalDistanceMiles: number): string =>
   totalDistanceMiles === 0 ? '—' : `${totalDistanceMiles.toFixed(2)} mi`
+
+const buildPaceLabel = (session: Session): string => {
+  const pace = session.avgPaceMinPerMile
+
+  return pace === undefined || pace <= 0 ? '—' : `${pace.toFixed(2)} min/mi`
+}
+
+const buildSessionRowClassName = (isLastRow: boolean): string =>
+  isLastRow ? 'sessions__row sessions__row--last' : 'sessions__row'
 
 const buildUploadIconContent = (): string =>
   `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
@@ -191,7 +194,10 @@ export const Settings = (): ReactElement => {
 
   return (
     <view className='page settings'>
-      <Card title='Backup & restore'>
+      <Card
+        title='Backup & restore'
+        subtitle='Export your data to a JSON file to back it up, and import the file on a new device. Runner stores all data on your device.'
+      >
         <view className='backupActions'>
           <view className='backupActions__button' bindtap={handleExportProfile}>
             <svg content={buildUploadIconContent()} style={{ width: '18px', height: '18px' }} />
@@ -215,9 +221,10 @@ export const Settings = (): ReactElement => {
               <text className='sessions__headerText sessions__numberColumn'>Run</text>
               <text className='sessions__headerText sessions__numberColumn'>Walk</text>
               <text className='sessions__headerText sessions__numberColumn'>Distance</text>
+              <text className='sessions__headerText sessions__numberColumn'>Pace</text>
               <view className='sessions__iconColumn' />
             </view>
-            {visibleSessions.map((session) =>
+            {visibleSessions.map((session, index) =>
               pendingDeleteId === session.id ? (
                 <view key={session.id} className='sessions__confirm'>
                   <text className='sessions__confirmText'>Delete this session?</text>
@@ -229,7 +236,10 @@ export const Settings = (): ReactElement => {
                   </view>
                 </view>
               ) : (
-                <view key={session.id} className='sessions__row'>
+                <view
+                  key={session.id}
+                  className={buildSessionRowClassName(index === visibleSessions.length - 1)}
+                >
                   <text className='sessions__date sessions__dateColumn'>
                     {formatSessionDate(session.completedAt)}
                   </text>
@@ -241,6 +251,9 @@ export const Settings = (): ReactElement => {
                   </text>
                   <text className='sessions__number sessions__numberColumn'>
                     {buildDistanceLabel(session.totalDistanceMiles)}
+                  </text>
+                  <text className='sessions__number sessions__numberColumn'>
+                    {buildPaceLabel(session)}
                   </text>
                   <view
                     className='sessions__trash sessions__iconColumn'

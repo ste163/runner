@@ -63,12 +63,17 @@ describe('Settings', () => {
       ...buildProfile(),
       level: { runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 },
       sessions: [
-        buildSession(
-          'imported-session',
-          '2024-01-10T12:00:00.000Z',
-          [buildIntervalRecord('run', 33), buildIntervalRecord('walk', 108)],
-          1.5
-        ),
+        {
+          ...buildSession(
+            'imported-session',
+            '2024-01-10T12:00:00.000Z',
+            [buildIntervalRecord('run', 33), buildIntervalRecord('walk', 108)],
+            1.5
+          ),
+          level: { runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 },
+          totalElapsedSeconds: 540,
+          avgPaceMinPerMile: 6,
+        },
       ],
     }
     const exportProfile = vi.fn((callback) => {
@@ -99,7 +104,8 @@ describe('Settings', () => {
     await queries.findByText('Jan 10')
     await queries.findByText('33s')
     await queries.findByText('1m 48s')
-    await queries.findByText('1m 48s')
+    await queries.findByText('1.50 mi')
+    await queries.findByText('6.00 min/mi')
 
     expect(exportProfile).toHaveBeenCalledTimes(1)
     expect(importProfile).toHaveBeenCalledTimes(1)
@@ -134,7 +140,7 @@ describe('Settings', () => {
     expect(dateLabels).toEqual(['Jan 1', 'Jan 2', 'Jan 3'])
   })
 
-  it('shows dashes for sessions without interval or distance data', async () => {
+  it('shows level durations and dashes for missing distance and pace data', async () => {
     vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'))
 
     const profile: TrainingProfile = {
@@ -148,7 +154,9 @@ describe('Settings', () => {
     const queries = getQueriesForElement(elementTree.root!)
 
     await queries.findByText('Jan 10')
-    expect(await queries.findAllByText('—')).toHaveLength(3)
+    await queries.findByText('30s')
+    await queries.findByText('2m 0s')
+    expect(await queries.findAllByText('—')).toHaveLength(2)
   })
 
   it('shows an empty state for the current month when it has no sessions', async () => {

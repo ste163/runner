@@ -163,6 +163,7 @@ export const Workout = ({
     startRequestedRef.current = false
 
     const completedGpsState = runnerGps.loadState()
+    const completedTimerState = runnerWorkoutTimer.loadState()
     setWorkoutGpsTracking(false)
     runnerWorkoutTimer.stop()
     setScreenWakeLock(false)
@@ -175,6 +176,11 @@ export const Workout = ({
       intervals: [],
       level: { ...latestProfile.level },
       totalDistanceMiles: completedGpsState?.distanceMiles ?? 0,
+      totalElapsedSeconds: completedTimerState?.totalElapsedSeconds ?? 0,
+      avgPaceMinPerMile: buildCurrentPace(
+        completedTimerState?.totalElapsedSeconds ?? 0,
+        completedGpsState?.distanceMiles ?? 0
+      ),
     }
     const nextProfile = buildCompletedProfile(latestProfile, session, completedAt)
 
