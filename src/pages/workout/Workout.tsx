@@ -16,6 +16,7 @@ import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
 import { runnerHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen } from '../../native-bridge/screen.js'
 import { runnerWorkoutTimer, type WorkoutTimerState } from '../../native-bridge/workout-timer.js'
+import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
 
 type WorkoutInterval = ReturnType<typeof calculateIntervals>[number]
 
@@ -27,6 +28,7 @@ interface WorkoutSummary {
 interface WorkoutProps {
   onMounted?: () => void
   onLiveChange: (isLive: boolean) => void
+  startRequestId: number
 }
 
 const formatDuration = (seconds: number): string => {
@@ -90,14 +92,6 @@ const buildCompletedProfile = (
     : evaluateWindows(profileWithSession, completedAt)
 }
 
-const buildNextUpLabel = (intervals: WorkoutInterval[], nextIndex: number): string => {
-  const nextInterval = intervals[nextIndex]
-
-  return nextInterval
-    ? `Next up: ${nextInterval.type.toUpperCase()} ${formatDuration(nextInterval.durationSeconds)}`
-    : 'Next up: complete'
-}
-
 const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean =>
   previous.runSeconds !== next.runSeconds ||
   previous.walkSeconds !== next.walkSeconds ||
@@ -118,34 +112,26 @@ const openLocationSettings = (): void => {
   runnerGps.openLocationSettings()
 }
 
-const buildLocationPromptLabel = (gpsState: WorkoutGpsState | null): string | null => {
-  if (!gpsState) return null
-  if (!gpsState.hasPermission)
-    return 'Location permission is required for pace and distance tracking.'
-  if (!gpsState.isLocationEnabled) return 'Turn on location services to track pace and distance.'
+const isGpsUnavailable = (gpsState: WorkoutGpsState | null): boolean =>
+  gpsState === null || !gpsState.hasPermission || !gpsState.isLocationEnabled
 
-  return null
+const buildDistanceStatLabel = (gpsState: WorkoutGpsState | null): string =>
+  isGpsUnavailable(gpsState) ? 'N/A' : formatDistance(gpsState?.distanceMiles ?? 0)
+
+const buildPaceStatLabel = (gpsState: WorkoutGpsState | null, elapsedSeconds: number): string => {
+  if (isGpsUnavailable(gpsState)) return 'N/A - Location off'
+
+  const distanceMiles = gpsState?.distanceMiles ?? 0
+  const paceMinPerMile = buildCurrentPace(elapsedSeconds, distanceMiles)
+
+  return distanceMiles <= 0 ? 'No pace yet' : formatPace(paceMinPerMile)
 }
 
-const buildDistanceLabel = (gpsState: WorkoutGpsState | null): string =>
-  !gpsState
-    ? 'Distance: N/A'
-    : !gpsState.hasPermission
-      ? 'Distance: N/A'
-      : !gpsState.isLocationEnabled
-        ? 'Distance: Location services off'
-        : `Distance: ${formatDistance(gpsState.distanceMiles)}`
-
-const buildPaceLabel = (gpsState: WorkoutGpsState | null, elapsedSeconds: number): string => {
-  if (!gpsState?.hasPermission) return 'Pace: N/A'
-  if (!gpsState.isLocationEnabled) return 'Pace: Location services off'
-
-  const paceMinPerMile = buildCurrentPace(elapsedSeconds, gpsState.distanceMiles)
-
-  return gpsState.distanceMiles <= 0 ? 'Pace: No pace yet' : `Pace: ${formatPace(paceMinPerMile)}`
-}
-
-export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement => {
+export const Workout = ({
+  onMounted,
+  onLiveChange,
+  startRequestId,
+}: WorkoutProps): ReactElement => {
   const [sessionProfile, setSessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
   )
@@ -161,9 +147,7 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
   const countdownPulseKeyRef = useRef<string | null>(null)
-  const locationPromptLabel = buildLocationPromptLabel(gpsState)
-  const shouldShowLocationSettingsButton =
-    gpsState?.hasPermission === true && gpsState?.isLocationEnabled === false
+  const gpsUnavailable = isGpsUnavailable(gpsState)
 
   const completeWorkout = useCallback((): void => {
     'background only'
@@ -232,14 +216,17 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
 
   const handleStart = useCallback((): void => {
     startRequestedRef.current = true
+    const latestProfile = sharedProfileStore.loadOrCreate().profile
+
+    setSessionProfile(latestProfile)
     setIsStarted(true)
     setWorkoutGpsTracking(true)
     setScreenWakeLock(true)
-    runnerWorkoutTimer.start(sessionProfile.level)
+    runnerWorkoutTimer.start(latestProfile.level)
     runnerHaptics.vibrate(500)
     onLiveChange(true)
     syncWorkoutState()
-  }, [onLiveChange, sessionProfile.level, syncWorkoutState])
+  }, [onLiveChange, syncWorkoutState])
 
   const handleStop = useCallback((): void => {
     startRequestedRef.current = false
@@ -262,9 +249,11 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
     setGpsState(runnerGps.loadState())
   }, [])
 
-  const handleOpenLocationSettings = useCallback((): void => {
+  const handleOpenPaceSettings = useCallback((): void => {
+    if (!gpsUnavailable) return
+
     openLocationSettings()
-  }, [])
+  }, [gpsUnavailable])
 
   useEffect(() => {
     if (hasStartedRef.current) return
@@ -292,20 +281,30 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
     return () => clearInterval(intervalId)
   }, [isStarted, summary, syncWorkoutState])
 
+  const startRequestIdRef = useRef(startRequestId)
+
+  useEffect(() => {
+    if (startRequestId === startRequestIdRef.current) return
+
+    startRequestIdRef.current = startRequestId
+
+    if (summary !== null) handleDone()
+    if (isStarted) return
+
+    handleStart()
+  }, [startRequestId, summary, isStarted, handleDone, handleStart])
+
   const currentPhaseIndex = timerState?.phaseIndex ?? 0
   const currentInterval = workoutIntervals[currentPhaseIndex]
-  const totalSeconds = useMemo(
-    () => workoutIntervals.reduce((total, interval) => total + interval.durationSeconds, 0),
-    [workoutIntervals]
-  )
   const remainingSeconds =
     timerState?.phaseRemainingSeconds ?? currentInterval?.durationSeconds ?? 0
   const displayedRemainingSeconds = Math.max(Math.round(remainingSeconds), 0)
   const isPaused = timerState?.isPaused ?? false
+  const isFresh = timerState === null && !isStarted
+  const toggleLabel = isFresh ? 'Start' : isPaused ? 'Resume' : 'Pause'
   const elapsedSeconds = timerState?.totalElapsedSeconds ?? 0
-  const currentDistanceLabel = buildDistanceLabel(gpsState)
-  const currentPaceLabel = buildPaceLabel(gpsState, elapsedSeconds)
-  const nextUpLabel = buildNextUpLabel(workoutIntervals, currentPhaseIndex + 1)
+  const distanceStatLabel = buildDistanceStatLabel(gpsState)
+  const paceStatLabel = buildPaceStatLabel(gpsState, elapsedSeconds)
   const workoutLevel = summary === null ? sessionProfile.level : summary.profile.level
   const workoutLevelMessage = hasLevelChanged(sessionProfile.level, workoutLevel)
     ? `New level: ${levelLabel(workoutLevel)}`
@@ -335,115 +334,44 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
   return (
     <view className='page workout'>
       {summary === null ? (
-        !isStarted ? (
-          <>
-            <view className='card timer-card'>
-              <view className='timer-card__header'>
-                <text className='label'>Ready</text>
-                <text className='timer-card__tag'>Not started</text>
-              </view>
+        <>
+          <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
 
-              <text className='timer'>{levelLabel(sessionProfile.level)}</text>
-
-              <view className='timer-card__meta'>
-                <text className='copy'>
-                  Warmup walk starts first, then the 20-minute interval block.
-                </text>
-                <text className='copy'>
-                  Haptics and countdown start after you tap Start Workout.
-                </text>
-              </view>
+          <view className='stats'>
+            <view className='stats__item'>
+              <text className='stats__label'>Elapsed</text>
+              <text className='stats__value'>{formatDuration(elapsedSeconds)}</text>
             </view>
+            <view className='stats__item'>
+              <text className='stats__label'>Distance</text>
+              <text className='stats__value'>{distanceStatLabel}</text>
+            </view>
+            <view className='stats__item' bindtap={handleOpenPaceSettings}>
+              <text className='stats__label'>Pace</text>
+              <text
+                className={gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'}
+              >
+                {paceStatLabel}
+              </text>
+            </view>
+          </view>
 
-            {locationPromptLabel ? (
-              <view className='card'>
-                <text className='label'>Location</text>
-                <view className='stack'>
-                  <text className='copy'>{locationPromptLabel}</text>
-                  {shouldShowLocationSettingsButton ? (
-                    <view className='secondary' bindtap={handleOpenLocationSettings}>
-                      <text className='secondary__text'>Open Location Settings</text>
-                    </view>
-                  ) : null}
+          <view className='stack'>
+            <view className='primary' bindtap={isFresh ? handleStart : handlePauseToggle}>
+              <text className='primary__text'>{toggleLabel}</text>
+            </view>
+            {isFresh ? null : (
+              <>
+                <view className='secondary' bindtap={completeWorkout}>
+                  <text className='secondary__text'>Debug: complete workout</text>
                 </view>
-              </view>
-            ) : null}
-
-            <view className='card'>
-              <text className='label'>Session flow</text>
-              <view className='stack'>
-                <text className='copy'>Warmup walk: 5 minutes</text>
-                <text className='copy'>Interval block: 20 minutes</text>
-                <text className='copy'>Cooldown walk: 5 minutes</text>
-              </view>
-            </view>
-
-            <view className='primary' bindtap={handleStart}>
-              <text className='primary__text'>Start Workout</text>
-            </view>
-          </>
-        ) : (
-          <>
-            <view className='card timer-card'>
-              <view className='timer-card__header'>
-                <text className='label'>{currentInterval?.type.toUpperCase() ?? 'COMPLETE'}</text>
-                <text
-                  className={
-                    isPaused ? 'timer-card__tag timer-card__tag--paused' : 'timer-card__tag'
-                  }
-                >
-                  {isPaused ? 'Paused' : 'Live'}
-                </text>
-              </view>
-
-              <text className='timer'>{formatDuration(displayedRemainingSeconds)}</text>
-
-              <view className='timer-card__meta'>
-                <text className='copy'>{currentDistanceLabel}</text>
-                <text className='copy'>{currentPaceLabel}</text>
-                <text className='copy'>
-                  Elapsed {formatDuration(elapsedSeconds)} / {formatDuration(totalSeconds)}
-                </text>
-                <text className='copy'>{nextUpLabel}</text>
-              </view>
-            </view>
-
-            {locationPromptLabel ? (
-              <view className='card'>
-                <text className='label'>Location</text>
-                <view className='stack'>
-                  <text className='copy'>{locationPromptLabel}</text>
-                  {shouldShowLocationSettingsButton ? (
-                    <view className='secondary' bindtap={handleOpenLocationSettings}>
-                      <text className='secondary__text'>Open Location Settings</text>
-                    </view>
-                  ) : null}
+                <view className='secondary' bindtap={handleStop}>
+                  <text className='secondary__text'>Stop</text>
                 </view>
-              </view>
-            ) : null}
-
-            <view className='card'>
-              <text className='label'>Session flow</text>
-              <view className='stack'>
-                <text className='copy'>Warmup walk: 5 minutes</text>
-                <text className='copy'>Interval block: 20 minutes</text>
-                <text className='copy'>Cooldown walk: 5 minutes</text>
-              </view>
-            </view>
-
-            <view className='stack'>
-              <view className='primary' bindtap={handlePauseToggle}>
-                <text className='primary__text'>{isPaused ? 'Resume' : 'Pause'}</text>
-              </view>
-              <view className='secondary' bindtap={completeWorkout}>
-                <text className='secondary__text'>Debug: complete workout</text>
-              </view>
-              <view className='secondary' bindtap={handleStop}>
-                <text className='secondary__text'>Stop</text>
-              </view>
-            </view>
-          </>
-        )
+              </>
+            )}
+          </view>
+        </>
       ) : (
         <>
           <view className='hero hero--tight'>

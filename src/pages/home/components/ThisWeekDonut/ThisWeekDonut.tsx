@@ -22,14 +22,18 @@ const buildSvgContent = (completedCount: number, totalCount: number): string => 
   const fraction = clampCount(completedCount, safeTotal) / safeTotal
   const arcLength = (CIRCUMFERENCE * fraction).toFixed(2)
   const gapLength = CIRCUMFERENCE.toFixed(2)
+  const progressCircle =
+    fraction <= 0
+      ? ''
+      : `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${ARC_COLOR}" ` +
+        `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
+        `stroke-dasharray="${arcLength} ${gapLength}" transform="rotate(-90 44 44)"/>`
 
   return (
     `<svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">` +
     `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${TRACK_COLOR}" ` +
     `stroke-width="${STROKE_WIDTH}"/>` +
-    `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${ARC_COLOR}" ` +
-    `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
-    `stroke-dasharray="${arcLength} ${gapLength}" transform="rotate(-90 44 44)"/>` +
+    progressCircle +
     `</svg>`
   )
 }

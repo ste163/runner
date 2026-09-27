@@ -182,7 +182,6 @@ export const Home = (props: {
       <view className='home__section home__section--full'>
         <view className='primary' bindtap={props.onStartWorkout}>
           <text className='primary__text'>Start Workout</text>
-          <text className='primary__icon'>→</text>
         </view>
       </view>
     </view>

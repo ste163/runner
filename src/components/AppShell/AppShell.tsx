@@ -14,6 +14,7 @@ const buildTabDisplay = (activeTab: Tab, tab: Tab): 'flex' | 'none' =>
 export const AppShell = (): ReactElement => {
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [isWorkoutLive, setIsWorkoutLive] = useState(false)
+  const [workoutStartRequest, setWorkoutStartRequest] = useState(0)
 
   const handleHome = useCallback((): void => {
     setActiveTab('home')
@@ -21,6 +22,11 @@ export const AppShell = (): ReactElement => {
 
   const handleWorkout = useCallback((): void => {
     setActiveTab('workout')
+  }, [])
+
+  const handleStartWorkout = useCallback((): void => {
+    setActiveTab('workout')
+    setWorkoutStartRequest((current) => current + 1)
   }, [])
 
   const handleSettings = useCallback((): void => {
@@ -37,14 +43,17 @@ export const AppShell = (): ReactElement => {
         <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'home') }}>
           <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
             <view className='appShell__page'>
-              <Home onStartWorkout={handleWorkout} />
+              <Home onStartWorkout={handleStartWorkout} />
             </view>
           </scroll-view>
         </view>
         <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'workout') }}>
           <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
             <view className='appShell__page'>
-              <Workout onLiveChange={handleWorkoutLiveChange} />
+              <Workout
+                onLiveChange={handleWorkoutLiveChange}
+                startRequestId={workoutStartRequest}
+              />
             </view>
           </scroll-view>
         </view>
