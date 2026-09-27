@@ -8,6 +8,7 @@ import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { CurrentIntervalChart } from './components/CurrentIntervalChart/index.js'
+import { SvgDonut } from './components/SvgDonut/index.js'
 
 const buildPageScheme = (bundle: string, title: string): string => {
   return (
@@ -210,6 +211,7 @@ export const Home = (props: { onMounted?: () => void }): ReactElement => {
 
           <view className='home__section home__section--full home__section--center'>
             <text className='dotChart__label'>Current interval</text>
+            <SvgDonut progress={runPercent / 100} />
           </view>
 
           <view className='home__section home__section--full'>
