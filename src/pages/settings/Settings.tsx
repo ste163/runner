@@ -106,6 +106,22 @@ const formatSessionDate = (completedAt: string): string => {
 const buildDistanceLabel = (totalDistanceMiles: number): string =>
   totalDistanceMiles === 0 ? '—' : `${totalDistanceMiles.toFixed(2)} mi`
 
+const buildUploadIconContent = (): string =>
+  `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
+  `fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>` +
+  `<polyline points="17 8 12 3 7 8"/>` +
+  `<line x1="12" x2="12" y1="3" y2="15"/>` +
+  `</svg>`
+
+const buildDownloadIconContent = (): string =>
+  `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
+  `fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>` +
+  `<polyline points="7 10 12 15 17 10"/>` +
+  `<line x1="12" x2="12" y1="15" y2="3"/>` +
+  `</svg>`
+
 const buildTrashIconContent = (): string =>
   `<svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
   `fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">` +
@@ -120,7 +136,6 @@ export const Settings = (): ReactElement => {
   const [profile, setProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
   )
-  const [storageStatus, setStorageStatus] = useState('')
   const [visibleMonth, setVisibleMonth] = useState<VisibleMonth>(() =>
     buildMonthFromDate(new Date())
   )
@@ -133,37 +148,11 @@ export const Settings = (): ReactElement => {
   }, [])
 
   const handleExportProfile = useCallback((): void => {
-    setStorageStatus('Choose where to save the JSON file.')
-    sharedProfileStore.exportProfile((result) => {
-      if (result.status === 'success') {
-        setStorageStatus('Exported current profile.')
-        return
-      }
-
-      if (result.status === 'cancelled') {
-        setStorageStatus('Export cancelled.')
-        return
-      }
-
-      setStorageStatus(result.message)
-    })
+    sharedProfileStore.exportProfile(() => {})
   }, [])
 
   const handleImportProfile = useCallback((): void => {
-    setStorageStatus('Choose the JSON file from your device.')
-    sharedProfileStore.importProfile((result) => {
-      if (result.status === 'success') {
-        setStorageStatus('Imported profile from device.')
-        return
-      }
-
-      if (result.status === 'cancelled') {
-        setStorageStatus('Import cancelled.')
-        return
-      }
-
-      setStorageStatus(result.message)
-    })
+    sharedProfileStore.importProfile(() => {})
   }, [])
 
   const handlePreviousMonth = useCallback((): void => {
@@ -202,18 +191,16 @@ export const Settings = (): ReactElement => {
     <view className='page settings'>
       <view className='card'>
         <text className='label'>Backup & restore</text>
-        <view className='stack'>
-          <text className='copy'>
-            Use Android pickers to export or import the current profile JSON.
-          </text>
-          <view className='secondary' bindtap={handleExportProfile}>
-            <text className='secondary__text'>Export JSON</text>
+        <view className='backupActions'>
+          <view className='backupActions__button' bindtap={handleExportProfile}>
+            <svg content={buildUploadIconContent()} style={{ width: '18px', height: '18px' }} />
+            <text className='backupActions__buttonText'>Export JSON</text>
           </view>
-          <view className='secondary' bindtap={handleImportProfile}>
-            <text className='secondary__text'>Import JSON</text>
+          <view className='backupActions__button' bindtap={handleImportProfile}>
+            <svg content={buildDownloadIconContent()} style={{ width: '18px', height: '18px' }} />
+            <text className='backupActions__buttonText'>Import JSON</text>
           </view>
         </view>
-        <text className='copy'>{storageStatus}</text>
       </view>
 
       <view className='card sessions'>

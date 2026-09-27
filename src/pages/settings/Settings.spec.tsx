@@ -96,9 +96,9 @@ describe('Settings', () => {
     fireEvent.tap(queries.getByText('Export JSON'))
     fireEvent.tap(queries.getByText('Import JSON'))
 
-    await queries.findByText('Imported profile from device.')
     await queries.findByText('Jan 10')
     await queries.findByText('33s')
+    await queries.findByText('1m 48s')
     await queries.findByText('1m 48s')
 
     expect(exportProfile).toHaveBeenCalledTimes(1)

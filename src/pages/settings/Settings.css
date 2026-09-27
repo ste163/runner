@@ -1,5 +1,29 @@
 @import url('../../global.css');
 
+.backupActions {
+  width: 100%;
+  display: flex;
+  gap: 0.625rem;
+}
+
+.backupActions__button {
+  flex: 1 1 auto;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 0.0625rem solid var(--color-secondary);
+  border-radius: 0.75rem;
+  background: var(--color-secondary-soft);
+}
+
+.backupActions__buttonText {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--color-secondary);
+}
+
 .sessions__month {
   font-size: 1rem;
   font-weight: 800;
