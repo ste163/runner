@@ -22,17 +22,20 @@
   flex-direction: column;
 }
 
-.appShell__tab .page-shell {
-  height: 100%;
+.appShell__scroll {
+  width: 100%;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-.appShell__overlay {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg);
+.appShell__page {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: calc(100vh - var(--app-safe-area-top) - var(--app-safe-area-bottom));
+  padding:
+    calc(var(--page-top-gap) + var(--app-safe-area-top))
+    var(--page-horizontal-gap)
+    calc(var(--page-bottom-gap) + 5rem + var(--app-safe-area-bottom));
 }

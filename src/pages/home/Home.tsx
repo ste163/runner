@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
+import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './Home.css'
 import { isGraduated } from '../../domain/intervals.js'
@@ -83,24 +83,17 @@ const buildRecommendationLabel = (
 
 export const Home = (props: {
   onMounted?: () => void
-  onOpenOnboarding: () => void
   onStartWorkout: () => void
 }): ReactElement => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
   const [showManualAdjust, setShowManualAdjust] = useState(false)
-  const hasOpenedOnboardingRef = useRef(false)
 
   useEffect(() => {
     const next = sharedProfileStore.hydrate()
 
     setProfile(next.profile)
     props.onMounted?.()
-
-    if (next.isFirstLaunch && !hasOpenedOnboardingRef.current) {
-      hasOpenedOnboardingRef.current = true
-      props.onOpenOnboarding()
-    }
-  }, [props.onMounted, props.onOpenOnboarding])
+  }, [props.onMounted])
 
   useEffect(() => {
     return sharedProfileStore.subscribe((nextProfile) => {
@@ -139,55 +132,51 @@ export const Home = (props: {
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
   const recommendationLabel = buildRecommendationLabel(profile, currentWindowSessions, new Date())
   return (
-    <view className='page-shell'>
-      <scroll-view className='page-scroll' scroll-orientation='vertical'>
-        <view className='app home'>
-          <view className='home__section home__section--full home__section--week'>
-            <ThisWeekDonut
-              completedCount={currentProgress}
-              totalCount={3}
-              subtitle={recommendationLabel}
-            />
-          </view>
+    <view className='page home'>
+      <view className='home__section home__section--full home__section--week'>
+        <ThisWeekDonut
+          completedCount={currentProgress}
+          totalCount={3}
+          subtitle={recommendationLabel}
+        />
+      </view>
 
-          <view className='home__section home__section--full home__section--center'>
-            <text className='home__sectionTitle'>Current interval</text>
-          </view>
+      <view className='home__section home__section--full home__section--center'>
+        <text className='home__sectionTitle'>Current interval</text>
+      </view>
 
-          <view className='home__section home__section--full'>
-            <CurrentIntervalChart
-              runAmount={runDurationLabel}
-              walkAmount={walkDurationLabel ?? 'Graduated'}
-              runPercent={runPercent}
-            />
-          </view>
+      <view className='home__section home__section--full'>
+        <CurrentIntervalChart
+          runAmount={runDurationLabel}
+          walkAmount={walkDurationLabel ?? 'Graduated'}
+          runPercent={runPercent}
+        />
+      </view>
 
-          <view className='home__section home__section--full'>
-            <view className='home__helperToggle' bindtap={toggleManualAdjust}>
-              <text className='home__helperToggleText'>
-                {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
-              </text>
-            </view>
-            {showManualAdjust ? (
-              <view className='actions-row'>
-                <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
-                  <text className='secondary__text'>- Decrease</text>
-                </view>
-                <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
-                  <text className='secondary__text'>+ Add</text>
-                </view>
-              </view>
-            ) : null}
-          </view>
-
-          <view className='home__section home__section--full'>
-            <view className='primary' bindtap={props.onStartWorkout}>
-              <text className='primary__text'>Start Workout</text>
-              <text className='primary__icon'>→</text>
-            </view>
-          </view>
+      <view className='home__section home__section--full'>
+        <view className='home__helperToggle' bindtap={toggleManualAdjust}>
+          <text className='home__helperToggleText'>
+            {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
+          </text>
         </view>
-      </scroll-view>
+        {showManualAdjust ? (
+          <view className='actions-row'>
+            <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
+              <text className='secondary__text'>- Decrease</text>
+            </view>
+            <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
+              <text className='secondary__text'>+ Add</text>
+            </view>
+          </view>
+        ) : null}
+      </view>
+
+      <view className='home__section home__section--full'>
+        <view className='primary' bindtap={props.onStartWorkout}>
+          <text className='primary__text'>Start Workout</text>
+          <text className='primary__icon'>→</text>
+        </view>
+      </view>
     </view>
   )
 }

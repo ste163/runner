@@ -1,9 +1,5 @@
 @import url('../../global.css');
 
-.app {
-  gap: 0.875rem;
-}
-
 .home__section--week {
   margin-top: 2rem;
 }

@@ -63,20 +63,8 @@ describe('Home', () => {
     vi.unstubAllGlobals()
   })
 
-  it('opens onboarding on first launch', async () => {
-    const onMounted = vi.fn()
-    const onOpenOnboarding = vi.fn()
-
-    render(
-      <Home onMounted={onMounted} onOpenOnboarding={onOpenOnboarding} onStartWorkout={vi.fn()} />
-    )
-
-    expect(onMounted).toBeCalledTimes(1)
-    expect(onOpenOnboarding).toHaveBeenCalledTimes(1)
-  })
-
   it('renders the sectioned home layout and current values', async () => {
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -98,7 +86,7 @@ describe('Home', () => {
   })
 
   it('updates the current interval when the user taps increase', async () => {
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('30s')
@@ -114,7 +102,7 @@ describe('Home', () => {
   it('shows a completed week message and the next cycle day after three sessions', async () => {
     sharedProfileStore.save(buildCompletedWeekProfile())
 
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -127,7 +115,7 @@ describe('Home', () => {
     vi.setSystemTime(new Date('2024-01-01T12:00:00.000Z'))
     sharedProfileStore.save(buildProfile())
 
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText } = getQueriesForElement(elementTree.root!)
 
@@ -138,7 +126,7 @@ describe('Home', () => {
   it('re-anchors the recommended days on the last session', async () => {
     sharedProfileStore.save(buildOneSessionProfile())
 
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
@@ -150,7 +138,7 @@ describe('Home', () => {
   it('updates the week section when the profile changes elsewhere', async () => {
     sharedProfileStore.save(buildProfile())
 
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText } = getQueriesForElement(elementTree.root!)
     await findByText('0/3')
@@ -183,7 +171,7 @@ describe('Home', () => {
     }
     sharedProfileStore.save(twoSessionProfile)
 
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+    render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText } = getQueriesForElement(elementTree.root!)
 
@@ -196,7 +184,7 @@ describe('Home', () => {
 
     const onStartWorkout = vi.fn()
 
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={onStartWorkout} />)
+    render(<Home onStartWorkout={onStartWorkout} />)
 
     const { findByText, getByText } = getQueriesForElement(elementTree.root!)
     await findByText('Start Workout')

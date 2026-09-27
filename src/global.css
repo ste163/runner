@@ -39,35 +39,12 @@ body,
   background: var(--color-bg);
 }
 
-.page-scroll {
+.page {
   width: 100%;
-  flex: 1 1 auto;
-  box-sizing: border-box;
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-.page-shell {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg);
-}
-
-.app,
-.workout {
-  min-height: calc(100vh - var(--app-safe-area-top) - var(--app-safe-area-bottom));
-  padding:
-    calc(var(--page-top-gap) + var(--app-safe-area-top))
-    var(--page-horizontal-gap)
-    calc(var(--page-bottom-gap) + 5rem + var(--app-safe-area-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.125rem;
-  background: var(--color-bg);
-  color: var(--color-text);
+  gap: 1rem;
 }
 
 .hero {

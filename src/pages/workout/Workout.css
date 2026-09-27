@@ -1,9 +1,5 @@
 @import url('../../global.css');
 
-.workout {
-  gap: 16px;
-}
-
 .hero {
   width: 100%;
   align-items: flex-start;

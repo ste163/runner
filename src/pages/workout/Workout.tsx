@@ -332,184 +332,182 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
   }, [currentPhaseIndex, displayedRemainingSeconds, isPaused, isStarted, summary])
 
   return (
-    <scroll-view className='page-scroll' scroll-orientation='vertical'>
-      <view className='workout'>
-        {summary === null ? (
-          !isStarted ? (
-            <>
-              <view className='hero hero--tight'>
-                <text className='eyebrow'>Workout</text>
-                <text className='title'>Runner</text>
-                <text className='subtitle'>
-                  Tap start when you are ready. The timer begins with the warmup walk.
-                </text>
-              </view>
-
-              <view className='card timer-card'>
-                <view className='timer-card__header'>
-                  <text className='label'>Ready</text>
-                  <text className='timer-card__tag'>Not started</text>
-                </view>
-
-                <text className='timer'>{levelLabel(sessionProfile.level)}</text>
-
-                <view className='timer-card__meta'>
-                  <text className='copy'>
-                    Warmup walk starts first, then the 20-minute interval block.
-                  </text>
-                  <text className='copy'>
-                    Haptics and countdown start after you tap Start Workout.
-                  </text>
-                </view>
-              </view>
-
-              {locationPromptLabel ? (
-                <view className='card'>
-                  <text className='label'>Location</text>
-                  <view className='stack'>
-                    <text className='copy'>{locationPromptLabel}</text>
-                    {shouldShowLocationSettingsButton ? (
-                      <view className='secondary' bindtap={handleOpenLocationSettings}>
-                        <text className='secondary__text'>Open Location Settings</text>
-                      </view>
-                    ) : null}
-                  </view>
-                </view>
-              ) : null}
-
-              <view className='card'>
-                <text className='label'>Session flow</text>
-                <view className='stack'>
-                  <text className='copy'>Warmup walk: 5 minutes</text>
-                  <text className='copy'>Interval block: 20 minutes</text>
-                  <text className='copy'>Cooldown walk: 5 minutes</text>
-                </view>
-              </view>
-
-              <view className='primary' bindtap={handleStart}>
-                <text className='primary__text'>Start Workout</text>
-              </view>
-            </>
-          ) : (
-            <>
-              <view className='hero hero--tight'>
-                <text className='eyebrow'>Workout</text>
-                <text className='title'>Runner</text>
-                <text className='subtitle'>
-                  Stay with the interval. Haptics pulse in the last 5 seconds.
-                </text>
-              </view>
-
-              <view className='card timer-card'>
-                <view className='timer-card__header'>
-                  <text className='label'>{currentInterval?.type.toUpperCase() ?? 'COMPLETE'}</text>
-                  <text
-                    className={
-                      isPaused ? 'timer-card__tag timer-card__tag--paused' : 'timer-card__tag'
-                    }
-                  >
-                    {isPaused ? 'Paused' : 'Live'}
-                  </text>
-                </view>
-
-                <text className='timer'>{formatDuration(displayedRemainingSeconds)}</text>
-
-                <view className='timer-card__meta'>
-                  <text className='copy'>{currentDistanceLabel}</text>
-                  <text className='copy'>{currentPaceLabel}</text>
-                  <text className='copy'>
-                    Elapsed {formatDuration(elapsedSeconds)} / {formatDuration(totalSeconds)}
-                  </text>
-                  <text className='copy'>{nextUpLabel}</text>
-                </view>
-              </view>
-
-              {locationPromptLabel ? (
-                <view className='card'>
-                  <text className='label'>Location</text>
-                  <view className='stack'>
-                    <text className='copy'>{locationPromptLabel}</text>
-                    {shouldShowLocationSettingsButton ? (
-                      <view className='secondary' bindtap={handleOpenLocationSettings}>
-                        <text className='secondary__text'>Open Location Settings</text>
-                      </view>
-                    ) : null}
-                  </view>
-                </view>
-              ) : null}
-
-              <view className='card'>
-                <text className='label'>Session flow</text>
-                <view className='stack'>
-                  <text className='copy'>Warmup walk: 5 minutes</text>
-                  <text className='copy'>Interval block: 20 minutes</text>
-                  <text className='copy'>Cooldown walk: 5 minutes</text>
-                </view>
-              </view>
-
-              <view className='stack'>
-                <view className='primary' bindtap={handlePauseToggle}>
-                  <text className='primary__text'>{isPaused ? 'Resume' : 'Pause'}</text>
-                </view>
-                <view className='secondary' bindtap={completeWorkout}>
-                  <text className='secondary__text'>Debug: complete workout</text>
-                </view>
-                <view className='secondary' bindtap={handleStop}>
-                  <text className='secondary__text'>Stop</text>
-                </view>
-              </view>
-            </>
-          )
-        ) : (
+    <view className='page workout'>
+      {summary === null ? (
+        !isStarted ? (
           <>
             <view className='hero hero--tight'>
-              <text className='eyebrow'>Workout complete</text>
-              <text className='title'>Nice work</text>
-              <text className='subtitle'>Session saved. Stay here or head back home.</text>
+              <text className='eyebrow'>Workout</text>
+              <text className='title'>Runner</text>
+              <text className='subtitle'>
+                Tap start when you are ready. The timer begins with the warmup walk.
+              </text>
             </view>
 
-            <view className='card'>
-              <text className='label'>Summary</text>
-              <view className='stack'>
+            <view className='card timer-card'>
+              <view className='timer-card__header'>
+                <text className='label'>Ready</text>
+                <text className='timer-card__tag'>Not started</text>
+              </view>
+
+              <text className='timer'>{levelLabel(sessionProfile.level)}</text>
+
+              <view className='timer-card__meta'>
                 <text className='copy'>
-                  Total distance: {formatDistance(summary.session.totalDistanceMiles)}
+                  Warmup walk starts first, then the 20-minute interval block.
                 </text>
                 <text className='copy'>
-                  {summary.session.totalDistanceMiles > 0
-                    ? 'GPS metrics recorded. No interval breakdown recorded.'
-                    : summary.session.intervals.length === 0
-                      ? 'GPS unavailable yet. No interval breakdown recorded.'
-                      : 'Interval breakdown recorded below.'}
+                  Haptics and countdown start after you tap Start Workout.
                 </text>
-                <text className='copy'>{workoutLevelMessage}</text>
               </view>
             </view>
 
-            {summary.session.intervals.length > 0 ? (
+            {locationPromptLabel ? (
               <view className='card'>
-                <text className='label'>Per-interval breakdown</text>
-                <view className='breakdown'>
-                  {summary.session.intervals.map((interval, index) => (
-                    <view className='breakdown__row' key={`${interval.type}-${index}`}>
-                      <text className='breakdown__label'>
-                        {interval.type.toUpperCase()} {formatDuration(interval.durationSeconds)}
-                      </text>
-                      <text className='breakdown__value'>
-                        {formatDistance(interval.distanceMiles)} ·{' '}
-                        {formatPace(interval.avgPaceMinPerMile)}
-                      </text>
+                <text className='label'>Location</text>
+                <view className='stack'>
+                  <text className='copy'>{locationPromptLabel}</text>
+                  {shouldShowLocationSettingsButton ? (
+                    <view className='secondary' bindtap={handleOpenLocationSettings}>
+                      <text className='secondary__text'>Open Location Settings</text>
                     </view>
-                  ))}
+                  ) : null}
                 </view>
               </view>
             ) : null}
 
-            <view className='primary' bindtap={handleDone}>
-              <text className='primary__text'>Done</text>
+            <view className='card'>
+              <text className='label'>Session flow</text>
+              <view className='stack'>
+                <text className='copy'>Warmup walk: 5 minutes</text>
+                <text className='copy'>Interval block: 20 minutes</text>
+                <text className='copy'>Cooldown walk: 5 minutes</text>
+              </view>
+            </view>
+
+            <view className='primary' bindtap={handleStart}>
+              <text className='primary__text'>Start Workout</text>
             </view>
           </>
-        )}
-      </view>
-    </scroll-view>
+        ) : (
+          <>
+            <view className='hero hero--tight'>
+              <text className='eyebrow'>Workout</text>
+              <text className='title'>Runner</text>
+              <text className='subtitle'>
+                Stay with the interval. Haptics pulse in the last 5 seconds.
+              </text>
+            </view>
+
+            <view className='card timer-card'>
+              <view className='timer-card__header'>
+                <text className='label'>{currentInterval?.type.toUpperCase() ?? 'COMPLETE'}</text>
+                <text
+                  className={
+                    isPaused ? 'timer-card__tag timer-card__tag--paused' : 'timer-card__tag'
+                  }
+                >
+                  {isPaused ? 'Paused' : 'Live'}
+                </text>
+              </view>
+
+              <text className='timer'>{formatDuration(displayedRemainingSeconds)}</text>
+
+              <view className='timer-card__meta'>
+                <text className='copy'>{currentDistanceLabel}</text>
+                <text className='copy'>{currentPaceLabel}</text>
+                <text className='copy'>
+                  Elapsed {formatDuration(elapsedSeconds)} / {formatDuration(totalSeconds)}
+                </text>
+                <text className='copy'>{nextUpLabel}</text>
+              </view>
+            </view>
+
+            {locationPromptLabel ? (
+              <view className='card'>
+                <text className='label'>Location</text>
+                <view className='stack'>
+                  <text className='copy'>{locationPromptLabel}</text>
+                  {shouldShowLocationSettingsButton ? (
+                    <view className='secondary' bindtap={handleOpenLocationSettings}>
+                      <text className='secondary__text'>Open Location Settings</text>
+                    </view>
+                  ) : null}
+                </view>
+              </view>
+            ) : null}
+
+            <view className='card'>
+              <text className='label'>Session flow</text>
+              <view className='stack'>
+                <text className='copy'>Warmup walk: 5 minutes</text>
+                <text className='copy'>Interval block: 20 minutes</text>
+                <text className='copy'>Cooldown walk: 5 minutes</text>
+              </view>
+            </view>
+
+            <view className='stack'>
+              <view className='primary' bindtap={handlePauseToggle}>
+                <text className='primary__text'>{isPaused ? 'Resume' : 'Pause'}</text>
+              </view>
+              <view className='secondary' bindtap={completeWorkout}>
+                <text className='secondary__text'>Debug: complete workout</text>
+              </view>
+              <view className='secondary' bindtap={handleStop}>
+                <text className='secondary__text'>Stop</text>
+              </view>
+            </view>
+          </>
+        )
+      ) : (
+        <>
+          <view className='hero hero--tight'>
+            <text className='eyebrow'>Workout complete</text>
+            <text className='title'>Nice work</text>
+            <text className='subtitle'>Session saved. Stay here or head back home.</text>
+          </view>
+
+          <view className='card'>
+            <text className='label'>Summary</text>
+            <view className='stack'>
+              <text className='copy'>
+                Total distance: {formatDistance(summary.session.totalDistanceMiles)}
+              </text>
+              <text className='copy'>
+                {summary.session.totalDistanceMiles > 0
+                  ? 'GPS metrics recorded. No interval breakdown recorded.'
+                  : summary.session.intervals.length === 0
+                    ? 'GPS unavailable yet. No interval breakdown recorded.'
+                    : 'Interval breakdown recorded below.'}
+              </text>
+              <text className='copy'>{workoutLevelMessage}</text>
+            </view>
+          </view>
+
+          {summary.session.intervals.length > 0 ? (
+            <view className='card'>
+              <text className='label'>Per-interval breakdown</text>
+              <view className='breakdown'>
+                {summary.session.intervals.map((interval, index) => (
+                  <view className='breakdown__row' key={`${interval.type}-${index}`}>
+                    <text className='breakdown__label'>
+                      {interval.type.toUpperCase()} {formatDuration(interval.durationSeconds)}
+                    </text>
+                    <text className='breakdown__value'>
+                      {formatDistance(interval.distanceMiles)} ·{' '}
+                      {formatPace(interval.avgPaceMinPerMile)}
+                    </text>
+                  </view>
+                ))}
+              </view>
+            </view>
+          ) : null}
+
+          <view className='primary' bindtap={handleDone}>
+            <text className='primary__text'>Done</text>
+          </view>
+        </>
+      )}
+    </view>
   )
 }

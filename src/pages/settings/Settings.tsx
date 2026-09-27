@@ -56,36 +56,32 @@ export const Settings = (): ReactElement => {
   }, [profile])
 
   return (
-    <view className='page-shell'>
-      <scroll-view className='page-scroll' scroll-orientation='vertical'>
-        <view className='settings'>
-          <view className='hero hero--tight'>
-            <text className='eyebrow'>Settings</text>
-            <text className='title'>Runner</text>
-            <text className='subtitle'>Back up or restore your training profile.</text>
-          </view>
+    <view className='page settings'>
+      <view className='hero hero--tight'>
+        <text className='eyebrow'>Settings</text>
+        <text className='title'>Runner</text>
+        <text className='subtitle'>Back up or restore your training profile.</text>
+      </view>
 
-          <view className='card'>
-            <text className='label'>Backup & restore</text>
-            <view className='stack'>
-              <text className='copy'>
-                Use Android pickers to export or import the current profile JSON.
-              </text>
-              <view className='secondary' bindtap={handleExportProfile}>
-                <text className='secondary__text'>Export JSON</text>
-              </view>
-              <view className='secondary' bindtap={handleImportProfile}>
-                <text className='secondary__text'>Import JSON</text>
-              </view>
-              <view className='secondary' bindtap={handleShowCurrentJson}>
-                <text className='secondary__text'>Show current JSON</text>
-              </view>
-            </view>
-            <text className='copy'>{storageStatus}</text>
-            {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
+      <view className='card'>
+        <text className='label'>Backup & restore</text>
+        <view className='stack'>
+          <text className='copy'>
+            Use Android pickers to export or import the current profile JSON.
+          </text>
+          <view className='secondary' bindtap={handleExportProfile}>
+            <text className='secondary__text'>Export JSON</text>
+          </view>
+          <view className='secondary' bindtap={handleImportProfile}>
+            <text className='secondary__text'>Import JSON</text>
+          </view>
+          <view className='secondary' bindtap={handleShowCurrentJson}>
+            <text className='secondary__text'>Show current JSON</text>
           </view>
         </view>
-      </scroll-view>
+        <text className='copy'>{storageStatus}</text>
+        {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
+      </view>
     </view>
   )
 }
