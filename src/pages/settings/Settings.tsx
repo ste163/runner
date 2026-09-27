@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/re
 import './Settings.css'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingProfile } from '../../domain/types.js'
+import { Card } from '../../components/Card/index.js'
 
 const MONTH_NAMES = [
   'January',
@@ -189,8 +190,7 @@ export const Settings = (): ReactElement => {
 
   return (
     <view className='page settings'>
-      <view className='card'>
-        <text className='label'>Backup & restore</text>
+      <Card title='Backup & restore'>
         <view className='backupActions'>
           <view className='backupActions__button' bindtap={handleExportProfile}>
             <svg content={buildUploadIconContent()} style={{ width: '18px', height: '18px' }} />
@@ -201,10 +201,9 @@ export const Settings = (): ReactElement => {
             <text className='backupActions__buttonText'>Import JSON</text>
           </view>
         </view>
-      </view>
+      </Card>
 
-      <view className='card sessions'>
-        <text className='label'>Runs</text>
+      <Card title='Runs' className='sessions'>
         <text className='sessions__month'>{buildMonthLabel(visibleMonth)}</text>
         {visibleSessions.length === 0 ? (
           <text className='sessions__empty'>No runs this month</text>
@@ -271,7 +270,7 @@ export const Settings = (): ReactElement => {
             )}
           </view>
         )}
-      </view>
+      </Card>
     </view>
   )
 }

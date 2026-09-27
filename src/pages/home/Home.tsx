@@ -7,6 +7,7 @@ import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.j
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
+import { Card } from '../../components/Card/index.js'
 
 const formatDuration = (seconds: number): string => {
   const roundedSeconds = Math.round(seconds)
@@ -141,26 +142,27 @@ export const Home = (props: {
   const recommendationLabel = buildRecommendationLabel(profile, currentWindowSessions, new Date())
   return (
     <view className='page home'>
-      <view className='home__section home__section--full home__section--week'>
-        <ThisWeekDonut
-          completedCount={currentProgress}
-          totalCount={3}
-          subtitle={recommendationLabel}
-        />
-      </view>
+      <Card
+        title='This Week'
+        subtitle={recommendationLabel}
+        className='home__section--week'
+        headerContent={<ThisWeekDonut completedCount={currentProgress} totalCount={3} />}
+      />
 
-      <view className='home__section home__section--full home__section--interval'>
-        <view className='home__sectionHeader'>
-          <text className='home__sectionTitle'>Current interval</text>
+      <Card
+        title='Current interval'
+        className='home__section--interval'
+        headerContent={
           <view className='home__infoIcon' data-testid='adjust-info' bindtap={toggleManualAdjust}>
             <svg content={buildInfoIconContent()} style={{ width: '20px', height: '20px' }} />
           </view>
-        </view>
+        }
+      >
         {showManualAdjust ? (
           <view className='home__adjustPanel'>
             <text className='home__adjustSubtitle'>
               Run intervals increase by 10% dynamically after three completed runs, or you can
-              adjust it manually to suit your needs.
+              adjust intervals manually to suit your needs.
             </text>
             <view className='actions-row'>
               <view className='actions-row__button' bindtap={handleDecreaseLevel}>
@@ -177,9 +179,9 @@ export const Home = (props: {
           walkLabel={walkDurationLabel === null ? 'Graduated' : `Walk ${walkDurationLabel}`}
           runPercent={runPercent}
         />
-      </view>
+      </Card>
 
-      <view className='home__section home__section--full'>
+      <view className='home__section'>
         <view className='primary' bindtap={props.onStartWorkout}>
           <text className='primary__text'>Start Workout</text>
         </view>

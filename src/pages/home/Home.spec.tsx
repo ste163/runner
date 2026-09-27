@@ -79,7 +79,7 @@ describe('Home', () => {
     expect(queryByText('Increase 10%')).toBeNull()
     fireEvent.tap(getByTestId('adjust-info'))
     await findByText(
-      'Run intervals increase by 10% dynamically after three completed runs, or you can adjust it manually to suit your needs.'
+      'Run intervals increase by 10% dynamically after three completed runs, or you can adjust intervals manually to suit your needs.'
     )
     await findByText('Decrease 10%')
     await findByText('Increase 10%')

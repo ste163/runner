@@ -5,7 +5,6 @@ import './ThisWeekDonut.css'
 type ThisWeekDonutProps = {
   completedCount: number
   totalCount: number
-  subtitle: string
 }
 
 const RADIUS = 36
@@ -38,27 +37,17 @@ const buildSvgContent = (completedCount: number, totalCount: number): string => 
   )
 }
 
-export const ThisWeekDonut = ({
-  completedCount,
-  totalCount,
-  subtitle,
-}: ThisWeekDonutProps): ReactElement => {
+export const ThisWeekDonut = ({ completedCount, totalCount }: ThisWeekDonutProps): ReactElement => {
   const countLabel = `${completedCount}/${totalCount}`
 
   return (
-    <view className='thisWeekDonut'>
-      <view className='thisWeekDonut__text'>
-        <text className='thisWeekDonut__label'>This Week</text>
-        <text className='thisWeekDonut__detail'>{subtitle}</text>
-      </view>
-      <view className='thisWeekDonut__ring'>
-        <svg
-          content={buildSvgContent(completedCount, totalCount)}
-          style={{ width: '88px', height: '88px' }}
-        />
-        <view className='thisWeekDonut__center'>
-          <text className='thisWeekDonut__count'>{countLabel}</text>
-        </view>
+    <view className='thisWeekDonut__ring'>
+      <svg
+        content={buildSvgContent(completedCount, totalCount)}
+        style={{ width: '88px', height: '88px' }}
+      />
+      <view className='thisWeekDonut__center'>
+        <text className='thisWeekDonut__count'>{countLabel}</text>
       </view>
     </view>
   )

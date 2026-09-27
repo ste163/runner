@@ -17,6 +17,7 @@ import { runnerHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen } from '../../native-bridge/screen.js'
 import { runnerWorkoutTimer, type WorkoutTimerState } from '../../native-bridge/workout-timer.js'
 import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
+import { Card } from '../../components/Card/index.js'
 
 type WorkoutInterval = ReturnType<typeof calculateIntervals>[number]
 
@@ -359,7 +360,7 @@ export const Workout = ({
         <>
           <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
 
-          <view className='stats'>
+          <Card className='stats'>
             <view className='stats__item'>
               <text className='stats__label'>Elapsed</text>
               <text className='stats__value'>{formatDuration(elapsedSeconds)}</text>
@@ -376,7 +377,7 @@ export const Workout = ({
                 {paceStatLabel}
               </text>
             </view>
-          </view>
+          </Card>
 
           <view className='stack'>
             <view className='primary' bindtap={isFresh ? handleStart : handlePauseToggle}>
@@ -402,8 +403,7 @@ export const Workout = ({
             <text className='subtitle'>Session saved. Stay here or head back home.</text>
           </view>
 
-          <view className='card'>
-            <text className='label'>Summary</text>
+          <Card title='Summary'>
             <view className='stack'>
               <text className='copy'>
                 Total distance: {formatDistance(summary.session.totalDistanceMiles)}
@@ -417,11 +417,10 @@ export const Workout = ({
               </text>
               <text className='copy'>{workoutLevelMessage}</text>
             </view>
-          </view>
+          </Card>
 
           {summary.session.intervals.length > 0 ? (
-            <view className='card'>
-              <text className='label'>Per-interval breakdown</text>
+            <Card title='Per-interval breakdown'>
               <view className='breakdown'>
                 {summary.session.intervals.map((interval, index) => (
                   <view className='breakdown__row' key={`${interval.type}-${index}`}>
@@ -435,7 +434,7 @@ export const Workout = ({
                   </view>
                 ))}
               </view>
-            </view>
+            </Card>
           ) : null}
 
           <view className='primary' bindtap={handleDone}>
