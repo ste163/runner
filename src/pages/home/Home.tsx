@@ -48,27 +48,37 @@ const countWindowSessions = (profile: TrainingProfile): number => {
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-const buildSuggestedSessionLabel = (
+const buildDayList = (anchorDate: Date, dayOffsets: number[]): string =>
+  dayOffsets
+    .map((offset) => {
+      const date = new Date(anchorDate)
+      date.setUTCDate(date.getUTCDate() + offset)
+      return weekdayNames[date.getUTCDay()]
+    })
+    .join(', ')
+
+const buildRecommendationLabel = (
   profile: TrainingProfile,
   completedSessions: number,
   referenceDate: Date
 ): string => {
-  const lastSession = profile.sessions[profile.sessions.length - 1]
-  const sourceDate =
-    completedSessions >= 3 && profile.window.windowStart !== ''
-      ? new Date(profile.window.windowStart)
-      : lastSession === undefined
-        ? referenceDate
-        : new Date(lastSession.completedAt)
-  const suggestedDate = new Date(sourceDate)
-
-  if (completedSessions >= 3) {
-    suggestedDate.setUTCDate(suggestedDate.getUTCDate() + 7)
-  } else {
-    suggestedDate.setUTCDate(suggestedDate.getUTCDate() + 2)
+  if (completedSessions === 0) {
+    return `Recommended days: run on ${buildDayList(referenceDate, [0, 2, 4])}`
   }
 
-  return `Exercise again on ${weekdayNames[suggestedDate.getUTCDay()]}`
+  const lastSession = profile.sessions[profile.sessions.length - 1]
+  const anchorDate = lastSession === undefined ? referenceDate : new Date(lastSession.completedAt)
+
+  if (completedSessions >= 3) {
+    const nextDate = new Date(anchorDate)
+    nextDate.setUTCDate(nextDate.getUTCDate() + 2)
+    return `Exercise again on ${weekdayNames[nextDate.getUTCDay()]}`
+  }
+
+  const remainingSessions = 3 - completedSessions
+  const dayOffsets = [2, 4, 6].slice(0, remainingSessions)
+
+  return `Recommended days: run on ${buildDayList(anchorDate, dayOffsets)}`
 }
 
 export const Home = (props: {
@@ -77,8 +87,6 @@ export const Home = (props: {
   onStartWorkout: () => void
 }): ReactElement => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
-  const [storageStatus, setStorageStatus] = useState('')
-  const [debugJson, setDebugJson] = useState('')
   const [showManualAdjust, setShowManualAdjust] = useState(false)
   const hasOpenedOnboardingRef = useRef(false)
 
@@ -93,6 +101,12 @@ export const Home = (props: {
       props.onOpenOnboarding()
     }
   }, [props.onMounted, props.onOpenOnboarding])
+
+  useEffect(() => {
+    return sharedProfileStore.subscribe((nextProfile) => {
+      setProfile(nextProfile)
+    })
+  }, [])
 
   const handleLevelAdjustment = useCallback((direction: 'up' | 'down'): void => {
     setProfile((currentProfile) => {
@@ -115,45 +129,6 @@ export const Home = (props: {
     handleLevelAdjustment('up')
   }, [handleLevelAdjustment])
 
-  const handleExportProfile = useCallback((): void => {
-    setStorageStatus('Choose where to save the JSON file.')
-    sharedProfileStore.exportProfile((result) => {
-      if (result.status === 'success') {
-        setStorageStatus('Exported current profile.')
-        return
-      }
-
-      if (result.status === 'cancelled') {
-        setStorageStatus('Export cancelled.')
-        return
-      }
-
-      setStorageStatus(result.message)
-    })
-  }, [])
-
-  const handleImportProfile = useCallback((): void => {
-    setStorageStatus('Choose the JSON file from your device.')
-    sharedProfileStore.importProfile((result) => {
-      if (result.status === 'success') {
-        setProfile(result.profile)
-        setStorageStatus('Imported profile from device.')
-        return
-      }
-
-      if (result.status === 'cancelled') {
-        setStorageStatus('Import cancelled.')
-        return
-      }
-
-      setStorageStatus(result.message)
-    })
-  }, [])
-
-  const handleShowCurrentJson = useCallback((): void => {
-    setDebugJson(JSON.stringify(profile, null, 2))
-  }, [profile])
-
   const toggleManualAdjust = useCallback((): void => {
     setShowManualAdjust((currentValue) => !currentValue)
   }, [])
@@ -162,20 +137,16 @@ export const Home = (props: {
   const currentProgress = Math.min(currentWindowSessions, 3)
   const runPercent = buildRunPercent(profile.level)
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
-  const suggestedSessionLabel = buildSuggestedSessionLabel(
-    profile,
-    currentWindowSessions,
-    new Date()
-  )
+  const recommendationLabel = buildRecommendationLabel(profile, currentWindowSessions, new Date())
   return (
     <view className='page-shell'>
       <scroll-view className='page-scroll' scroll-orientation='vertical'>
         <view className='app home'>
-          <view className='home__section home__section--full home__section--week home__section--center'>
+          <view className='home__section home__section--full home__section--week'>
             <ThisWeekDonut
               completedCount={currentProgress}
               totalCount={3}
-              {...(currentProgress >= 3 ? { detail: suggestedSessionLabel } : {})}
+              subtitle={recommendationLabel}
             />
           </view>
 
@@ -214,31 +185,6 @@ export const Home = (props: {
               <text className='primary__text'>Start Workout</text>
               <text className='primary__icon'>→</text>
             </view>
-          </view>
-
-          <view className='home__section home__section--full'>
-            <text className='label'>This month</text>
-            <text className='copy'>Coming soon.</text>
-          </view>
-
-          <view className='home__section home__section--full'>
-            <text className='label'>Backup & restore</text>
-            <view className='stack'>
-              <text className='copy'>
-                Use Android pickers to export or import the current profile JSON.
-              </text>
-              <view className='secondary' bindtap={handleExportProfile}>
-                <text className='secondary__text'>Export JSON</text>
-              </view>
-              <view className='secondary' bindtap={handleImportProfile}>
-                <text className='secondary__text'>Import JSON</text>
-              </view>
-              <view className='secondary' bindtap={handleShowCurrentJson}>
-                <text className='secondary__text'>Show current JSON</text>
-              </view>
-            </view>
-            <text className='copy'>{storageStatus}</text>
-            {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
           </view>
         </view>
       </scroll-view>

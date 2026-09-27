@@ -4,9 +4,10 @@ import './AppShell.css'
 import { BottomNav } from '../BottomNav/index.js'
 import { Home } from '../../pages/home/Home.js'
 import { Onboarding } from '../../pages/onboarding/Onboarding.js'
+import { Settings } from '../../pages/settings/Settings.js'
 import { Workout } from '../../pages/workout/Workout.js'
 
-type Tab = 'home' | 'workout'
+type Tab = 'home' | 'workout' | 'settings'
 
 const buildTabDisplay = (activeTab: Tab, tab: Tab): 'flex' | 'none' =>
   activeTab === tab ? 'flex' : 'none'
@@ -22,6 +23,10 @@ export const AppShell = (): ReactElement => {
 
   const handleWorkout = useCallback((): void => {
     setActiveTab('workout')
+  }, [])
+
+  const handleSettings = useCallback((): void => {
+    setActiveTab('settings')
   }, [])
 
   const handleOpenOnboarding = useCallback((): void => {
@@ -45,6 +50,9 @@ export const AppShell = (): ReactElement => {
         <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'workout') }}>
           <Workout onLiveChange={handleWorkoutLiveChange} />
         </view>
+        <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'settings') }}>
+          <Settings />
+        </view>
         {showOnboarding ? (
           <view className='appShell__overlay'>
             <Onboarding onClose={handleCloseOnboarding} />
@@ -52,7 +60,12 @@ export const AppShell = (): ReactElement => {
         ) : null}
       </view>
       {isWorkoutLive ? null : (
-        <BottomNav activeTab={activeTab} onHome={handleHome} onWorkout={handleWorkout} />
+        <BottomNav
+          activeTab={activeTab}
+          onHome={handleHome}
+          onWorkout={handleWorkout}
+          onSettings={handleSettings}
+        />
       )}
     </view>
   )

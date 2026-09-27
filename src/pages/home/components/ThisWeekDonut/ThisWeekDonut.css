@@ -1,8 +1,17 @@
 .thisWeekDonut {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.thisWeekDonut__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1 1 auto;
+  align-items: flex-start;
 }
 
 .thisWeekDonut__label {
@@ -13,8 +22,9 @@
 
 .thisWeekDonut__ring {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
 }
 
 .thisWeekDonut__center {
@@ -29,13 +39,13 @@
 }
 
 .thisWeekDonut__count {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--color-text);
 }
 
 .thisWeekDonut__detail {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.25rem;
   color: var(--color-text-muted);
 }

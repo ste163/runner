@@ -5,13 +5,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Home } from './Home.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
-import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
 
 const buildProfile = (): TrainingProfile => ({
   schemaVersion: 1,
   level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
   window: { windowStart: '2024-01-01T00:00:00.000Z', consecutiveMissed: 0 },
   sessions: [],
+})
+
+const buildOneSessionProfile = (): TrainingProfile => ({
+  ...buildProfile(),
+  sessions: [
+    {
+      id: 'session-1',
+      completedAt: '2024-01-01T12:00:00.000Z',
+      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      intervals: [],
+      totalDistanceMiles: 0,
+    },
+  ],
 })
 
 const buildCompletedWeekProfile = (): TrainingProfile => ({
@@ -33,7 +45,7 @@ const buildCompletedWeekProfile = (): TrainingProfile => ({
     },
     {
       id: 'session-3',
-      completedAt: '2024-01-05T12:00:00.000Z',
+      completedAt: '2024-01-06T12:00:00.000Z',
       level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
       intervals: [],
       totalDistanceMiles: 0,
@@ -44,12 +56,10 @@ const buildCompletedWeekProfile = (): TrainingProfile => ({
 describe('Home', () => {
   beforeEach(() => {
     sharedProfileStore.reset()
-    runnerProfileStorage.configure(null)
     vi.clearAllMocks()
   })
 
   afterEach(() => {
-    runnerProfileStorage.configure(null)
     vi.unstubAllGlobals()
   })
 
@@ -85,9 +95,6 @@ describe('Home', () => {
     fireEvent.tap(await findByText('Manually adjust interval'))
     await findByText('- Decrease')
     await findByText('+ Add')
-    await findByText('This month')
-    await findByText('Coming soon.')
-    await findByText('Backup & restore')
   })
 
   it('updates the current interval when the user taps increase', async () => {
@@ -116,6 +123,74 @@ describe('Home', () => {
     await findByText('Exercise again on Monday')
   })
 
+  it('recommends today plus two rest days when no sessions are complete', async () => {
+    vi.setSystemTime(new Date('2024-01-01T12:00:00.000Z'))
+    sharedProfileStore.save(buildProfile())
+
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('0/3')
+    await findByText('Recommended days: run on Monday, Wednesday, Friday')
+  })
+
+  it('re-anchors the recommended days on the last session', async () => {
+    sharedProfileStore.save(buildOneSessionProfile())
+
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+
+    const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('1/3')
+    await findByText('Recommended days: run on Wednesday, Friday')
+    expect(queryByText(/Saturday/)).toBeNull()
+  })
+
+  it('updates the week section when the profile changes elsewhere', async () => {
+    sharedProfileStore.save(buildProfile())
+
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+    await findByText('0/3')
+
+    sharedProfileStore.save(buildOneSessionProfile())
+
+    await findByText('1/3')
+    await findByText('Recommended days: run on Wednesday, Friday')
+  })
+
+  it('shows only the last remaining session day after two sessions', async () => {
+    const twoSessionProfile: TrainingProfile = {
+      ...buildProfile(),
+      sessions: [
+        {
+          id: 'session-1',
+          completedAt: '2024-01-01T12:00:00.000Z',
+          level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+          intervals: [],
+          totalDistanceMiles: 0,
+        },
+        {
+          id: 'session-2',
+          completedAt: '2024-01-02T12:00:00.000Z',
+          level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+          intervals: [],
+          totalDistanceMiles: 0,
+        },
+      ],
+    }
+    sharedProfileStore.save(twoSessionProfile)
+
+    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('2/3')
+    await findByText('Recommended days: run on Thursday')
+  })
+
   it('requests the workout tab when the start button is tapped', async () => {
     sharedProfileStore.save(buildProfile())
 
@@ -129,57 +204,5 @@ describe('Home', () => {
     fireEvent.tap(getByText('Start Workout'))
 
     expect(onStartWorkout).toHaveBeenCalledTimes(1)
-  })
-
-  it('exports and imports profile JSON with the native file pickers', async () => {
-    const importedProfile = {
-      ...buildProfile(),
-      level: { runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 },
-    }
-    const exportProfile = vi.fn((callback) => {
-      callback('success', 'content://runner-profile.json')
-    })
-    const importProfile = vi.fn((callback) => {
-      callback('success', JSON.stringify(importedProfile))
-    })
-
-    const module: RunnerStorageModule = {
-      exportProfile,
-      importProfile,
-      loadProfileJson: vi.fn(() => JSON.stringify(buildProfile())),
-      resetProfile: vi.fn(),
-      saveProfileJson: vi.fn(),
-    }
-
-    runnerProfileStorage.configure(module)
-
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
-
-    const queries = getQueriesForElement(elementTree.root!)
-    await queries.findByText('Export JSON')
-
-    fireEvent.tap(queries.getByText('Export JSON'))
-    fireEvent.tap(queries.getByText('Import JSON'))
-
-    await queries.findByText('Imported profile from device.')
-    await queries.findByText('33s')
-    await queries.findByText('1m 48s')
-
-    expect(exportProfile).toHaveBeenCalledTimes(1)
-    expect(importProfile).toHaveBeenCalledTimes(1)
-  })
-
-  it('shows the current profile JSON for debugging', async () => {
-    sharedProfileStore.save(buildProfile())
-
-    render(<Home onOpenOnboarding={vi.fn()} onStartWorkout={vi.fn()} />)
-
-    const queries = getQueriesForElement(elementTree.root!)
-    await queries.findByText('Show current JSON')
-
-    fireEvent.tap(queries.getByText('Show current JSON'))
-
-    await queries.findByText(/"schemaVersion": 1/)
-    await queries.findByText(/"runSeconds": 30/)
   })
 })

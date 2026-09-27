@@ -58,8 +58,17 @@ type SharedProfileLoadResult = {
 
 export class SharedProfileStore {
   private profile: TrainingProfile | null = null
+  private listeners = new Set<(profile: TrainingProfile) => void>()
 
   constructor(private storage: ProfilePersistence = runnerProfileStorage) {}
+
+  subscribe = (listener: (profile: TrainingProfile) => void): (() => void) => {
+    this.listeners.add(listener)
+
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
 
   loadOrCreate = (): SharedProfileLoadResult => {
     if (this.profile !== null) {
@@ -101,6 +110,9 @@ export class SharedProfileStore {
   save = (profile: TrainingProfile): void => {
     this.profile = cloneProfile(profile)
     this.storage.save(profile)
+    this.listeners.forEach((listener) => {
+      listener(cloneProfile(profile))
+    })
   }
 
   exportProfile = (onComplete: (result: ExportProfileResult) => void): void => {
@@ -111,6 +123,9 @@ export class SharedProfileStore {
     this.storage.importProfile((result) => {
       if (result.status === 'success') {
         this.profile = cloneProfile(result.profile)
+        this.listeners.forEach((listener) => {
+          listener(cloneProfile(result.profile))
+        })
         onComplete({ profile: cloneProfile(result.profile), status: 'success' })
         return
       }

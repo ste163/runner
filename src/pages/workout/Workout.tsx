@@ -146,7 +146,7 @@ const buildPaceLabel = (gpsState: WorkoutGpsState | null, elapsedSeconds: number
 }
 
 export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement => {
-  const [sessionProfile] = useState<TrainingProfile>(
+  const [sessionProfile, setSessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
   )
   const workoutIntervals = useMemo(
@@ -253,6 +253,8 @@ export const Workout = ({ onMounted, onLiveChange }: WorkoutProps): ReactElement
   }, [onLiveChange])
 
   const handleDone = useCallback((): void => {
+    completionHandledRef.current = false
+    setSessionProfile(sharedProfileStore.loadOrCreate().profile)
     setSummary(null)
     setTimerState(null)
     setIsStarted(false)

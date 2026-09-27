@@ -2,7 +2,7 @@ import type { ReactElement } from '@lynx-js/react'
 
 import './BottomNav.css'
 
-type BottomNavTab = 'home' | 'workout'
+type BottomNavTab = 'home' | 'workout' | 'settings'
 
 interface BottomNavItem {
   key: BottomNavTab
@@ -20,12 +20,19 @@ interface BottomNavProps {
   activeTab: BottomNavTab
   onHome?: () => void
   onWorkout?: () => void
+  onSettings?: () => void
 }
 
-export const BottomNav = ({ activeTab, onHome, onWorkout }: BottomNavProps): ReactElement => {
+export const BottomNav = ({
+  activeTab,
+  onHome,
+  onWorkout,
+  onSettings,
+}: BottomNavProps): ReactElement => {
   const items: BottomNavItem[] = [
     { key: 'home', label: 'Home', ...(onHome ? { action: onHome } : {}) },
     { key: 'workout', label: 'Workout', ...(onWorkout ? { action: onWorkout } : {}) },
+    { key: 'settings', label: 'Settings', ...(onSettings ? { action: onSettings } : {}) },
   ]
 
   return (
