@@ -59,6 +59,16 @@ android {
         implementation("com.tiktok.sparkling:sparkling-method:2.0.1")
         implementation("com.squareup.okhttp3:okhttp:4.9.0")
 
+        implementation(libs.lynx)
+        implementation(libs.lynx.jssdk)
+        implementation(libs.lynx.trace)
+        implementation(libs.lynx.devtool)
+        implementation(libs.primjs)
+        implementation(libs.lynx.service.image)
+        implementation(libs.lynx.service.log)
+        implementation(libs.lynx.service.http)
+        implementation(libs.lynx.service.devtool)
+
         implementation(libs.fresco)
         implementation(libs.fresco.animated.gif)
         implementation(libs.fresco.animated.webp)

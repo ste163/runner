@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from '@lynx-js/react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from '@lynx-js/react'
 
 import { close } from 'sparkling-navigation'
 
@@ -140,7 +147,7 @@ const buildPaceLabel = (gpsState: WorkoutGpsState | null, elapsedSeconds: number
   return gpsState.distanceMiles <= 0 ? 'Pace: No pace yet' : `Pace: ${formatPace(paceMinPerMile)}`
 }
 
-export const ActiveWorkout = ({ haptics, onMounted }: ActiveWorkoutProps): JSX.Element => {
+export const ActiveWorkout = ({ haptics, onMounted }: ActiveWorkoutProps): ReactElement => {
   const [sessionProfile] = useState<TrainingProfile>(
     () => sharedProfileStore.loadOrCreate().profile
   )

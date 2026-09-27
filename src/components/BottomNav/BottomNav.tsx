@@ -1,3 +1,5 @@
+import type { ReactElement } from '@lynx-js/react'
+
 import './BottomNav.css'
 
 type BottomNavTab = 'home' | 'workout'
@@ -20,7 +22,7 @@ interface BottomNavProps {
   onWorkout?: () => void
 }
 
-export const BottomNav = ({ activeTab, onHome, onWorkout }: BottomNavProps): JSX.Element => {
+export const BottomNav = ({ activeTab, onHome, onWorkout }: BottomNavProps): ReactElement => {
   const items: BottomNavItem[] = [
     { key: 'home', label: 'Home', ...(onHome ? { action: onHome } : {}) },
     { key: 'workout', label: 'Workout', ...(onWorkout ? { action: onWorkout } : {}) },

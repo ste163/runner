@@ -1,3 +1,5 @@
+import type { ReactElement } from '@lynx-js/react'
+
 import './DotChart.css'
 
 type DotChartColor = 'primary' | 'secondary' | 'tertiary'
@@ -30,7 +32,7 @@ export const DotChart = ({
   completedCount,
   label,
   totalCount,
-}: DotChartProps): JSX.Element => {
+}: DotChartProps): ReactElement => {
   const dotStates = buildDotStates(completedCount, totalCount)
 
   return (

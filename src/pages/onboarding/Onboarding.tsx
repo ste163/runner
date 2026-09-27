@@ -1,9 +1,9 @@
-import { useCallback, useEffect } from '@lynx-js/react'
+import { useCallback, useEffect, type ReactElement } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Onboarding.css'
 
-export function Onboarding(props: { onMounted?: () => void }): JSX.Element {
+export function Onboarding(props: { onMounted?: () => void }): ReactElement {
   useEffect(() => {
     props.onMounted?.()
   }, [props.onMounted])

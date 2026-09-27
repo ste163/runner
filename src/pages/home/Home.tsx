@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
+import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 
 import './Home.css'
@@ -89,7 +89,7 @@ const buildSuggestedSessionLabel = (
   return `Exercise again on ${weekdayNames[suggestedDate.getUTCDay()]}`
 }
 
-export const Home = (props: { onMounted?: () => void }): JSX.Element => {
+export const Home = (props: { onMounted?: () => void }): ReactElement => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
   const [storageStatus, setStorageStatus] = useState('')
   const [debugJson, setDebugJson] = useState('')

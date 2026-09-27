@@ -1,10 +1,10 @@
-import { useCallback, useState } from '@lynx-js/react'
+import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 import * as router from 'sparkling-navigation'
 import { BottomNav } from '../BottomNav/index.js'
 import { PageContext, type CurrentPage } from '../../domain/currentPage.js'
 
 interface AppLayoutProps {
-  children: JSX.Element
+  children: ReactElement
   initialPage: CurrentPage
 }
 
@@ -24,7 +24,7 @@ const buildPageScheme = (bundle: string, title: string): string => {
 const homeScheme = buildPageScheme('home.lynx.bundle', 'Home')
 const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
 
-export const AppLayout = ({ children, initialPage }: AppLayoutProps): JSX.Element => {
+export const AppLayout = ({ children, initialPage }: AppLayoutProps): ReactElement => {
   const [activeTab, setActiveTab] = useState<'home' | 'workout'>(
     initialPage === 'home' ? 'home' : 'workout'
   )
