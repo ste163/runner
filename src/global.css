@@ -1,4 +1,5 @@
 :root {
+  font-size: 16.8px; /* Lynx default root font-size is 14px; 16.8px = +20% */
   --app-safe-area-top: env(safe-area-inset-top, 2rem);
   --app-safe-area-bottom: env(safe-area-inset-bottom, 2rem);
   --page-horizontal-gap: 1.125rem;
@@ -40,6 +41,7 @@ body,
 }
 
 .page {
+  flex: 1 1 auto;
   width: 100%;
   display: flex;
   flex-direction: column;

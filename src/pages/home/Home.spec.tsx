@@ -66,37 +66,36 @@ describe('Home', () => {
   it('renders the sectioned home layout and current values', async () => {
     render(<Home onStartWorkout={vi.fn()} />)
 
-    const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
+    const { findByText, queryByText, getByTestId } = getQueriesForElement(elementTree.root!)
 
     expect(queryByText('Runner')).toBeNull()
     expect(queryByText('3 sessions. 7-day windows.')).toBeNull()
     await findByText('This Week')
     await findByText('Current interval')
-    await findByText('Run')
-    await findByText('Walk')
+    await findByText('Run 30s')
+    await findByText('Walk 2m 0s')
     await findByText('0/3')
-    await findByText('30s')
-    await findByText('2m 0s')
-    await findByText('Manually adjust interval')
-    expect(queryByText('- Decrease')).toBeNull()
-    expect(queryByText('+ Add')).toBeNull()
-    fireEvent.tap(await findByText('Manually adjust interval'))
-    await findByText('- Decrease')
-    await findByText('+ Add')
+    expect(queryByText('Decrease 10%')).toBeNull()
+    expect(queryByText('Increase 10%')).toBeNull()
+    fireEvent.tap(getByTestId('adjust-info'))
+    await findByText(
+      'Run intervals increase by 10% dynamically after three completed runs, or you can adjust it manually to suit your needs.'
+    )
+    await findByText('Decrease 10%')
+    await findByText('Increase 10%')
   })
 
   it('updates the current interval when the user taps increase', async () => {
     render(<Home onStartWorkout={vi.fn()} />)
 
-    const { findByText, getByText } = getQueriesForElement(elementTree.root!)
-    await findByText('30s')
-    await findByText('Manually adjust interval')
+    const { findByText, getByTestId, getByText } = getQueriesForElement(elementTree.root!)
+    await findByText('Run 30s')
 
-    fireEvent.tap(getByText('Manually adjust interval'))
-    fireEvent.tap(getByText('+ Add'))
+    fireEvent.tap(getByTestId('adjust-info'))
+    fireEvent.tap(getByText('Increase 10%'))
 
-    await findByText('33s')
-    await findByText('1m 48s')
+    await findByText('Run 33s')
+    await findByText('Walk 1m 48s')
   })
 
   it('shows a completed week message and the next cycle day after three sessions', async () => {

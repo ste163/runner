@@ -5,7 +5,7 @@ import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
-import { CurrentIntervalChart } from './components/CurrentIntervalChart/index.js'
+import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
 
 const formatDuration = (seconds: number): string => {
@@ -47,6 +47,14 @@ const countWindowSessions = (profile: TrainingProfile): number => {
 }
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+const buildInfoIconContent = (): string =>
+  `<svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
+  `fill="none" stroke="#b6c5bc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `<circle cx="12" cy="12" r="10"/>` +
+  `<path d="M12 16v-4"/>` +
+  `<circle cx="12" cy="8" r="1" fill="#b6c5bc" stroke="none"/>` +
+  `</svg>`
 
 const buildDayList = (anchorDate: Date, dayOffsets: number[]): string =>
   dayOffsets
@@ -141,34 +149,34 @@ export const Home = (props: {
         />
       </view>
 
-      <view className='home__section home__section--full home__section--center'>
-        <text className='home__sectionTitle'>Current interval</text>
-      </view>
-
-      <view className='home__section home__section--full'>
-        <CurrentIntervalChart
-          runAmount={runDurationLabel}
-          walkAmount={walkDurationLabel ?? 'Graduated'}
-          runPercent={runPercent}
-        />
-      </view>
-
-      <view className='home__section home__section--full'>
-        <view className='home__helperToggle' bindtap={toggleManualAdjust}>
-          <text className='home__helperToggleText'>
-            {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
-          </text>
+      <view className='home__section home__section--full home__section--interval'>
+        <view className='home__sectionHeader'>
+          <text className='home__sectionTitle'>Current interval</text>
+          <view className='home__infoIcon' data-testid='adjust-info' bindtap={toggleManualAdjust}>
+            <svg content={buildInfoIconContent()} style={{ width: '20px', height: '20px' }} />
+          </view>
         </view>
         {showManualAdjust ? (
-          <view className='actions-row'>
-            <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
-              <text className='secondary__text'>- Decrease</text>
-            </view>
-            <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
-              <text className='secondary__text'>+ Add</text>
+          <view className='home__adjustPanel'>
+            <text className='home__adjustSubtitle'>
+              Run intervals increase by 10% dynamically after three completed runs, or you can
+              adjust it manually to suit your needs.
+            </text>
+            <view className='actions-row'>
+              <view className='actions-row__button' bindtap={handleDecreaseLevel}>
+                <text className='actions-row__buttonText'>Decrease 10%</text>
+              </view>
+              <view className='actions-row__button' bindtap={handleIncreaseLevel}>
+                <text className='actions-row__buttonText'>Increase 10%</text>
+              </view>
             </view>
           </view>
         ) : null}
+        <CurrentIntervalDonut
+          runLabel={`Run ${runDurationLabel}`}
+          walkLabel={walkDurationLabel === null ? 'Graduated' : `Walk ${walkDurationLabel}`}
+          runPercent={runPercent}
+        />
       </view>
 
       <view className='home__section home__section--full'>

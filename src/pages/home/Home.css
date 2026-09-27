@@ -1,7 +1,12 @@
 @import url('../../global.css');
 
-.home__section--week {
+.home__section--interval {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   margin-top: 2rem;
+  margin-bottom: 4rem;
 }
 
 .home__sectionTitle {
@@ -20,28 +25,47 @@
 .actions-row__button {
   flex: 1 1 9rem;
   min-width: 9rem;
-  padding-inline: 1.125rem;
+  padding: 0.75rem 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.0625rem solid rgba(182, 197, 188, 0.28);
+  border-radius: 0.75rem;
+  background: rgba(182, 197, 188, 0.08);
+}
+
+.actions-row__buttonText {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .home__section {
   width: 100%;
 }
 
-.home__section--center {
+.home__sectionHeader {
+  width: 100%;
+  display: flex;
   align-items: center;
-  text-align: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
 }
 
-.home__helperToggle {
-  align-self: flex-start;
+.home__infoIcon {
+  padding: 0.125rem;
 }
 
-.home__helperToggleText {
+.home__adjustPanel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.home__adjustSubtitle {
   font-size: 0.8125rem;
   line-height: 1.125rem;
   color: var(--color-text-muted);
-}
-
-.home__helperToggleText:active {
-  color: var(--color-text);
 }
