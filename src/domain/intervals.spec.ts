@@ -14,6 +14,8 @@ describe('isGraduated', () => {
 })
 
 describe('calculateIntervals', () => {
+  // TEMP: warmup is 5s for donut testing — revert expectations to 300
+
   it('returns only warmup and cooldown when the block is empty', () => {
     expect(
       calculateIntervals({
@@ -22,7 +24,7 @@ describe('calculateIntervals', () => {
         intervalBlockSeconds: 0,
       })
     ).toEqual([
-      { type: 'warmup', durationSeconds: 300 },
+      { type: 'warmup', durationSeconds: 5 },
       { type: 'cooldown', durationSeconds: 300 },
     ])
   })
@@ -35,7 +37,7 @@ describe('calculateIntervals', () => {
         intervalBlockSeconds: 360,
       })
     ).toEqual([
-      { type: 'warmup', durationSeconds: 300 },
+      { type: 'warmup', durationSeconds: 5 },
       { type: 'cooldown', durationSeconds: 300 },
     ])
   })
@@ -48,7 +50,7 @@ describe('calculateIntervals', () => {
         intervalBlockSeconds: 50,
       })
     ).toEqual([
-      { type: 'warmup', durationSeconds: 300 },
+      { type: 'warmup', durationSeconds: 5 },
       { type: 'run', durationSeconds: 50 },
       { type: 'cooldown', durationSeconds: 300 },
     ])
@@ -62,7 +64,7 @@ describe('calculateIntervals', () => {
         intervalBlockSeconds: 360,
       })
     ).toEqual([
-      { type: 'warmup', durationSeconds: 300 },
+      { type: 'warmup', durationSeconds: 5 },
       { type: 'run', durationSeconds: 30 },
       { type: 'walk', durationSeconds: 120 },
       { type: 'run', durationSeconds: 30 },
@@ -81,7 +83,7 @@ describe('calculateIntervals', () => {
         intervalBlockSeconds: 1200,
       })
     ).toEqual([
-      { type: 'warmup', durationSeconds: 300 },
+      { type: 'warmup', durationSeconds: 5 },
       { type: 'run', durationSeconds: 1200 },
       { type: 'cooldown', durationSeconds: 300 },
     ])

@@ -9,22 +9,34 @@ describe('haptics bridge', () => {
 
   it('does nothing when the native module is unavailable', () => {
     expect(() => runnerHaptics.cancel()).not.toThrow()
-    expect(() => runnerHaptics.vibrate(200)).not.toThrow()
+    expect(() => runnerHaptics.vibratePattern([0, 200])).not.toThrow()
   })
 
   it('calls through to the native runner haptics module', () => {
     const module: WorkoutHaptics = {
       cancel: vi.fn(),
-      vibrate: vi.fn(),
+      vibratePattern: vi.fn(),
     }
 
     runnerHaptics.configure(module)
 
     runnerHaptics.cancel()
-    runnerHaptics.vibrate(500)
+    runnerHaptics.vibratePattern([0, 500])
 
     expect(module.cancel).toHaveBeenCalledTimes(1)
-    expect(module.vibrate).toHaveBeenCalledTimes(1)
-    expect(module.vibrate).toHaveBeenCalledWith(500)
+    expect(module.vibratePattern).toHaveBeenCalledTimes(1)
+    expect(module.vibratePattern).toHaveBeenCalledWith('[0,500]')
+  })
+
+  it('serializes multi-segment patterns as JSON', () => {
+    const module: WorkoutHaptics = {
+      cancel: vi.fn(),
+      vibratePattern: vi.fn(),
+    }
+
+    runnerHaptics.configure(module)
+    runnerHaptics.vibratePattern([0, 60, 90, 60])
+
+    expect(module.vibratePattern).toHaveBeenCalledWith('[0,60,90,60]')
   })
 })

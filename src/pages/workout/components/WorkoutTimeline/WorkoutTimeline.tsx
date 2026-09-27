@@ -29,7 +29,6 @@ interface DonutPhase {
   status: PhaseStatus
   arcFraction: number
   arcColor: string
-  checkColor: string
   centerText: string | null
   centerTextTone: CountdownTone
   subtext: string | null
@@ -45,13 +44,13 @@ const TRACK_COLOR = '#1b231c'
 const RUN_MUTED_COLOR = 'rgba(45, 211, 95, 0.35)'
 const WALK_MUTED_COLOR = 'rgba(245, 158, 11, 0.35)'
 const SMALL_DONUT_SIZE = 100
-const SMALL_DONUT_RADIUS = 44
+const SMALL_DONUT_RADIUS = 45
 const SMALL_DONUT_STROKE = 10
 const BLOCK_DONUT_SIZE = 240
-const BLOCK_DONUT_RADIUS = 104
+const BLOCK_DONUT_RADIUS = 110
 const BLOCK_DONUT_STROKE = 20
-const ANIMATION_FRAME_MS = 33
-const ANIMATION_DURATION_MS = 600
+const ANIMATION_FRAME_MS = 8
+const ANIMATION_DURATION_MS = 1000
 
 const formatDuration = (seconds: number): string => {
   const roundedSeconds = Math.max(Math.round(seconds), 0)
@@ -106,8 +105,7 @@ const buildWarmupPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
     arcColor: done || isDimmed ? WALK_MUTED_COLOR : WALK_COLOR,
-    checkColor: WALK_COLOR,
-    centerText: done ? null : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || isDimmed ? 'muted' : 'walk',
     subtext: null,
     radius: SMALL_DONUT_RADIUS,
@@ -141,9 +139,8 @@ const buildBlockPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, currentDuration),
     arcColor: done ? RUN_MUTED_COLOR : resolveArcColor(tone, blockActive && !isDimmed),
-    checkColor: RUN_COLOR,
     centerText: done
-      ? null
+      ? 'Done'
       : `${tone === 'run' ? 'Run' : 'Walk'} ${formatDuration(remainingSeconds)}`,
     centerTextTone: done || !blockActive || isDimmed ? 'muted' : tone,
     subtext: done ? null : buildRemainingLabel(buildRunIntervalsRemaining(intervals, currentIndex)),
@@ -173,8 +170,7 @@ const buildCooldownPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
     arcColor: done || isDimmed || status === 'upcoming' ? WALK_MUTED_COLOR : WALK_COLOR,
-    checkColor: WALK_COLOR,
-    centerText: done ? null : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || isDimmed || status === 'upcoming' ? 'muted' : 'walk',
     subtext: null,
     radius: SMALL_DONUT_RADIUS,
@@ -208,26 +204,6 @@ const buildDonutSvgContent = (
     `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${TRACK_COLOR}" ` +
     `stroke-width="${strokeWidth}"/>` +
     progressCircle +
-    `</svg>`
-  )
-}
-
-const buildCheckSvgContent = (size: number, color: string): string => {
-  const s = size
-  const path = [
-    `M ${(s * 0.22).toFixed(1)} ${(s * 0.5).toFixed(1)}`,
-    `L ${(s * 0.38).toFixed(1)} ${(s * 0.66).toFixed(1)}`,
-    `L ${(s * 0.38).toFixed(1)} ${(s * 0.76).toFixed(1)}`,
-    `L ${(s * 0.78).toFixed(1)} ${(s * 0.26).toFixed(1)}`,
-    `L ${(s * 0.68).toFixed(1)} ${(s * 0.22).toFixed(1)}`,
-    `L ${(s * 0.38).toFixed(1)} ${(s * 0.58).toFixed(1)}`,
-    `L ${(s * 0.22).toFixed(1)} ${(s * 0.42).toFixed(1)}`,
-    'Z',
-  ].join(' ')
-
-  return (
-    `<svg viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg">` +
-    `<path d="${path}" fill="${color}"/>` +
     `</svg>`
   )
 }
@@ -323,21 +299,14 @@ const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean })
 
   return (
     <view className={`timeline__donut ${sizeClass}`}>
-      {phase.status === 'done' ? (
-        <svg
-          content={buildCheckSvgContent(phase.size, phase.checkColor)}
-          style={{ width: `${phase.size}px`, height: `${phase.size}px` }}
-        />
-      ) : (
-        <AnimatedDonut
-          size={phase.size}
-          radius={phase.radius}
-          strokeWidth={phase.strokeWidth}
-          arcColor={phase.arcColor}
-          targetFraction={phase.arcFraction}
-          animate={animate}
-        />
-      )}
+      <AnimatedDonut
+        size={phase.size}
+        radius={phase.radius}
+        strokeWidth={phase.strokeWidth}
+        arcColor={phase.arcColor}
+        targetFraction={phase.arcFraction}
+        animate={animate}
+      />
       {phase.centerText !== null ? (
         <view className='timeline__center'>
           <text className={`timeline__countdown ${toneClass}`}>{phase.centerText}</text>

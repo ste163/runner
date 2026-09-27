@@ -15,7 +15,7 @@ const TRACK_COLOR = '#1b231c'
 const RUN_COLOR = '#2dd35f'
 const WALK_COLOR = '#f59e0b'
 const STROKE_WIDTH = 24
-const ANIMATION_FRAME_MS = 33
+const ANIMATION_FRAME_MS = 8
 const ANIMATION_DURATION_MS = 500
 
 const clampPercent = (value: number): number => Math.max(0, Math.min(value, 100))

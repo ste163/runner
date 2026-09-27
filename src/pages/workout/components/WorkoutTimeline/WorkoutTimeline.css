@@ -71,5 +71,5 @@
 }
 
 .timeline__connector--done {
-  background: var(--color-primary);
+  background: rgba(245, 158, 11, 0.35);
 }

@@ -61,12 +61,15 @@ const buildSessionId = (): string => {
 const buildWorkoutIntervals = (level: TrainingLevel): WorkoutInterval[] => calculateIntervals(level)
 
 const countdownHapticDurationMs = 150
+const countdownPulsePattern = [0, countdownHapticDurationMs]
+const phaseBoundaryPulsePattern = [0, 70, 150, 70]
+const startWorkoutPulsePattern = [0, 500]
 
 const buildCountdownPulseKey = (
   phaseIndex: number,
   displayedRemainingSeconds: number
 ): string | null =>
-  displayedRemainingSeconds >= 1 && displayedRemainingSeconds <= 5
+  displayedRemainingSeconds >= 1 && displayedRemainingSeconds <= 4
     ? `${phaseIndex}:${displayedRemainingSeconds}`
     : null
 
@@ -147,6 +150,7 @@ export const Workout = ({
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
   const countdownPulseKeyRef = useRef<string | null>(null)
+  const lastPhaseIndexRef = useRef<number | null>(null)
   const gpsUnavailable = isGpsUnavailable(gpsState)
 
   const completeWorkout = useCallback((): void => {
@@ -180,6 +184,7 @@ export const Workout = ({
     setGpsState(completedGpsState)
     onLiveChange(false)
     runnerHaptics.cancel()
+    runnerHaptics.vibratePattern(phaseBoundaryPulsePattern)
   }, [onLiveChange])
 
   const syncWorkoutState = useCallback((): void => {
@@ -223,7 +228,7 @@ export const Workout = ({
     setWorkoutGpsTracking(true)
     setScreenWakeLock(true)
     runnerWorkoutTimer.start(latestProfile.level)
-    runnerHaptics.vibrate(500)
+    runnerHaptics.vibratePattern(startWorkoutPulsePattern)
     onLiveChange(true)
     syncWorkoutState()
   }, [onLiveChange, syncWorkoutState])
@@ -276,7 +281,7 @@ export const Workout = ({
 
     const intervalId = setInterval(() => {
       syncWorkoutState()
-    }, 1000)
+    }, 250)
 
     return () => clearInterval(intervalId)
   }, [isStarted, summary, syncWorkoutState])
@@ -328,8 +333,25 @@ export const Workout = ({
     if (countdownPulseKeyRef.current === nextPulseKey) return
 
     countdownPulseKeyRef.current = nextPulseKey
-    runnerHaptics.vibrate(countdownHapticDurationMs)
+    runnerHaptics.vibratePattern(countdownPulsePattern)
   }, [currentPhaseIndex, displayedRemainingSeconds, isPaused, isStarted, summary])
+
+  useEffect(() => {
+    const nextPhaseIndex = timerState?.phaseIndex ?? null
+
+    if (nextPhaseIndex === null) {
+      lastPhaseIndexRef.current = null
+      return
+    }
+
+    const previousPhaseIndex = lastPhaseIndexRef.current
+
+    if (previousPhaseIndex !== null && nextPhaseIndex !== previousPhaseIndex) {
+      runnerHaptics.vibratePattern(phaseBoundaryPulsePattern)
+    }
+
+    lastPhaseIndexRef.current = nextPhaseIndex
+  }, [timerState])
 
   return (
     <view className='page workout'>

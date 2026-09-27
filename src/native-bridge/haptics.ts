@@ -1,6 +1,6 @@
 export interface WorkoutHaptics {
   cancel: () => void
-  vibrate: (durationMs: number) => void
+  vibratePattern: (patternJson: string) => void
 }
 
 class RunnerHapticsBridge {
@@ -17,11 +17,11 @@ class RunnerHapticsBridge {
     this.module.cancel()
   }
 
-  vibrate = (durationMs: number): void => {
+  vibratePattern = (pattern: number[]): void => {
     'background only'
 
     if (!this.module) return
-    this.module.vibrate(durationMs)
+    this.module.vibratePattern(JSON.stringify(pattern))
   }
 }
 
