@@ -2,13 +2,12 @@ import { useCallback, useEffect, useRef, useState, type ReactElement } from '@ly
 import * as router from 'sparkling-navigation'
 
 import './Home.css'
-import { DotChart } from '../../components/DotChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { CurrentIntervalChart } from './components/CurrentIntervalChart/index.js'
-import { SvgDonut } from './components/SvgDonut/index.js'
+import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
 
 const buildPageScheme = (bundle: string, title: string): string => {
   return (
@@ -199,19 +198,15 @@ export const Home = (props: { onMounted?: () => void }): ReactElement => {
       <scroll-view className='page-scroll' scroll-orientation='vertical'>
         <view className='app home'>
           <view className='home__section home__section--full home__section--week home__section--center'>
-            <DotChart
-              amountValue={`${currentProgress}/3 completed`}
-              color='primary'
+            <ThisWeekDonut
               completedCount={currentProgress}
-              label='This Week'
               totalCount={3}
               {...(currentProgress >= 3 ? { detail: suggestedSessionLabel } : {})}
             />
           </view>
 
           <view className='home__section home__section--full home__section--center'>
-            <text className='dotChart__label'>Current interval</text>
-            <SvgDonut progress={runPercent / 100} />
+            <text className='home__sectionTitle'>Current interval</text>
           </view>
 
           <view className='home__section home__section--full'>

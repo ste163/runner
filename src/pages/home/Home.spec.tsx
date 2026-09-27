@@ -102,7 +102,7 @@ describe('Home', () => {
     await findByText('Current interval')
     await findByText('Run')
     await findByText('Walk')
-    await findByText('0/3 completed')
+    await findByText('0/3')
     await findByText('30s')
     await findByText('2m 0s')
     await findByText('Manually adjust interval')
@@ -147,7 +147,7 @@ describe('Home', () => {
 
     const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
 
-    await findByText('3/3 completed')
+    await findByText('3/3')
     expect(queryByText('Completed!')).toBeNull()
     await findByText('Exercise again on Monday')
   })

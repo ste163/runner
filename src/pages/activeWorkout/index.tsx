@@ -3,6 +3,7 @@ import { root } from '@lynx-js/react'
 import { runnerGps } from '../../native-bridge/gps.js'
 import { runnerHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen } from '../../native-bridge/screen.js'
+import { runnerProfileStorage } from '../../native-bridge/storage.js'
 import { runnerWorkoutTimer } from '../../native-bridge/workout-timer.js'
 import { ActiveWorkout } from './ActiveWorkout.js'
 
@@ -12,10 +13,12 @@ const configureActiveWorkoutNativeModules = (): void => {
   const gpsModule = nativeModules?.['RunnerGpsModule'] ?? null
   const screenModule = nativeModules?.['RunnerScreenModule'] ?? null
   const workoutTimerModule = nativeModules?.['RunnerWorkoutTimerModule'] ?? null
+  const storageModule = nativeModules?.['RunnerStorageModule'] ?? null
   runnerHaptics.configure(hapticsModule)
   runnerGps.configure(gpsModule)
   runnerScreen.configure(screenModule)
   runnerWorkoutTimer.configure(workoutTimerModule)
+  runnerProfileStorage.configure(storageModule)
 }
 
 configureActiveWorkoutNativeModules()
