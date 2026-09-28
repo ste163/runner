@@ -12,6 +12,7 @@ import com.facebook.imagepipeline.memory.PoolFactory
 import com.lynx.tasm.behavior.Behavior
 import com.lynx.tasm.behavior.LynxContext
 import com.lynx.tasm.behavior.ui.LynxUI
+import com.lynx.xelement.svg.BehaviorGenerator
 import com.tiktok.sparkling.hybridkit.HybridKit
 import com.tiktok.sparkling.hybridkit.config.BaseInfoConfig
 import com.tiktok.sparkling.hybridkit.config.SparklingHybridConfig
@@ -55,7 +56,7 @@ class SparklingApplication : Application() {
                         return LynxInputComponent(context)
                     }
                 }
-            ))
+            ) + BehaviorGenerator.getBehaviors())
             addLynxModules(
                 mapOf(
                     "RunnerHapticModule" to SparklingLynxModuleWrapper(RunnerHapticModule::class.java),

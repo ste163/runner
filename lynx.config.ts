@@ -6,9 +6,7 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 export default defineConfig({
   source: {
     entry: {
-      home: './src/pages/home/index.tsx',
-      onboarding: './src/pages/onboarding/index.tsx',
-      workout: './src/pages/workout/index.tsx',
+      home: './src/index.tsx',
     },
   },
   output: {

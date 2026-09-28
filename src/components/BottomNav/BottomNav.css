@@ -8,33 +8,24 @@
 .bottomNav__surface {
   width: 100%;
   display: flex;
-  border-top: 0.0625rem solid var(--color-border);
 }
 
 .bottomNav__item {
   flex: 1;
-  padding: 1rem;
+  padding: 0.625rem 1rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
   border-radius: 0;
   background: transparent;
 }
 
 .bottomNav__item--active {
-  background: var(--color-primary);
+  background: var(--color-walk-muted);
 }
 
 .bottomNav__item--inactive {
   opacity: 1;
-}
-
-.bottomNav__text {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-
-.bottomNav__text--active {
-  color: var(--color-surface);
 }

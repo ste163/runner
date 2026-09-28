@@ -1,11 +1,17 @@
 @import url('../../global.css');
 
-.app {
-  gap: 0.875rem;
+.home__section--interval {
+  align-items: flex-start;
+  gap: 1rem;
 }
 
-.home__section--week {
-  margin-top: 2rem;
+.home__infoIcon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 62.4375rem;
 }
 
 .actions-row {
@@ -18,46 +24,35 @@
 .actions-row__button {
   flex: 1 1 9rem;
   min-width: 9rem;
-  padding-inline: 1.125rem;
+  padding: 0.75rem 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.0625rem solid var(--color-neutral-border);
+  border-radius: 0.75rem;
+  background: var(--color-neutral-soft);
+}
+
+.actions-row__buttonText {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .home__section {
   width: 100%;
 }
 
-.home__section--center {
-  align-items: center;
-  text-align: center;
+.home__adjustPanel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
-.home__helperToggle {
-  align-self: flex-start;
-}
-
-.home__helperToggleText {
-  font-size: 0.8125rem;
+.home__adjustSubtitle {
+  font-size: 0.875rem;
   line-height: 1.125rem;
   color: var(--color-text-muted);
-}
-
-.home__helperToggleText:active {
-  color: var(--color-text);
-}
-
-.home__galleryButton {
-  width: 100%;
-  min-height: 2.875rem;
-  padding: 0.875rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0.0625rem solid var(--color-border-strong);
-  border-radius: 0.875rem;
-  background: var(--color-surface-raised);
-}
-
-.home__galleryButtonText {
-  font-size: 0.9375rem;
-  font-weight: 800;
-  color: var(--color-primary);
 }

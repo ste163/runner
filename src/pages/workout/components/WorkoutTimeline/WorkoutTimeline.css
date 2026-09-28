@@ -1,0 +1,187 @@
+.timeline {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.857rem;
+}
+
+.timeline__donuts {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline__donut {
+  position: relative;
+}
+
+.timeline__donut--small {
+  width: 116px;
+  height: 116px;
+}
+
+.timeline__donut--block {
+  width: 276px;
+  height: 276px;
+}
+
+.timeline__center {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.timeline__countdown {
+  font-weight: 800;
+  text-align: center;
+}
+
+.timeline__donut--block .timeline__countdown {
+  font-size: 2rem;
+}
+
+.timeline__donut--small .timeline__countdown {
+  font-size: 1rem;
+}
+
+.timeline__countdown--run {
+  color: var(--color-primary);
+}
+
+.timeline__countdown--walk {
+  color: var(--color-walk);
+}
+
+.timeline__countdown--muted {
+  color: var(--color-text-muted);
+}
+
+.timeline__phaseLabel {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.timeline__phaseLabel--run {
+  color: var(--color-primary);
+}
+
+.timeline__phaseLabel--walk {
+  color: var(--color-walk);
+}
+
+.timeline__phaseLabel--muted {
+  color: var(--color-text-muted);
+}
+
+.timeline__connector {
+  width: 2px;
+  flex: 1 1 auto;
+  min-height: 1.5rem;
+  background: var(--color-connector);
+}
+
+.timeline__connector--done {
+  background: var(--color-walk-muted);
+}
+
+.timeline__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline__infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.timeline__infoRow--small {
+  height: 116px;
+}
+
+.timeline__infoRow--block {
+  align-items: center;
+}
+
+.timeline__infoSpacer {
+  flex: 1 1 auto;
+  min-height: 1.5rem;
+}
+
+.timeline__infoLabel {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.timeline__infoLabel--active {
+  font-weight: 600;
+  color: var(--color-walk);
+}
+
+.timeline__infoLabel--done {
+  text-decoration: line-through;
+  color: var(--color-walk-muted);
+}
+
+.timeline__list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.375rem;
+}
+
+.timeline__listLine {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.timeline__segment {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.timeline__segment--active--run {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.timeline__segment--active--walk {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-walk);
+}
+
+.timeline__segment--done--run {
+  font-size: 0.875rem;
+  text-decoration: line-through;
+  color: var(--color-primary-muted);
+}
+
+.timeline__segment--done--walk {
+  font-size: 0.875rem;
+  text-decoration: line-through;
+  color: var(--color-walk-muted);
+}
+
+.timeline__slash {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.timeline__slash--done {
+  color: var(--color-text-soft);
+}

@@ -53,12 +53,4 @@ Automatic path-triggered reminders live in `.pi/rules/*.md`. The global `file-pa
 
 ## Verification
 
-The `hooks` extension runs the verification chain automatically on `agent_settled` when the session touched source files — the result shows in the widget below the editor (`hooks  Verification, running/complete/failed`). Do not run the chain manually after edits; rely on the extension to save tokens.
-
-Run checks manually only when:
-
-- The widget shows `failed` — run the failing step to see the full output and fix it.
-- You changed files outside the hook's paths (README.md, plan.md, `.github/`) and need a check.
-- You need a result mid-task before continuing (e.g. TDD red-green).
-
-The chain is `bun typecheck && bun run test && bun lint && bun run verify-docs`. Use `bun run test` (Vitest) — `bun test` runs bun's native runner, which ignores `vitest.config.ts` and fails on Lynx component specs.
+The `hooks` extension runs the verification chain automatically on `agent_settled` when the session touched source files — result shows in the widget below the editor (`hooks  Verification, running/complete/failed`). NEVER run the chain, bundle build, or Android build manually. Banned in-session: `bun typecheck`, `bun run test`, `bun lint`, `bun run verify-docs`, `rspeedy build`, `./gradlew`. No exceptions — not after edits, not after failures, not mid-task. When the widget shows `failed`, read the failure output, fix the code, and stop; the hook re-runs on the next `agent_settled`.

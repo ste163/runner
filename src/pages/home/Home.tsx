@@ -1,30 +1,16 @@
-import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
-import * as router from 'sparkling-navigation'
+import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './Home.css'
-import { DotChart } from '../../components/DotChart/index.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
-import { CurrentIntervalChart } from './components/CurrentIntervalChart/index.js'
-
-const buildPageScheme = (bundle: string, title: string): string => {
-  return (
-    `hybrid://lynxview_page?bundle=${bundle}` +
-    '&container_bg_color=%23000000' +
-    '&force_theme_style=dark' +
-    '&hide_nav_bar=1' +
-    '&nav_bar_color=%23000000' +
-    '&screen_orientation=portrait' +
-    `&title=${encodeURIComponent(title)}` +
-    '&trans_status_bar=0'
-  )
-}
-
-const onboardingScheme = buildPageScheme('onboarding.lynx.bundle', 'How It Works')
-const graphsScheme = buildPageScheme('graphs.lynx.bundle', 'Text Graph Gallery')
-const workoutScheme = buildPageScheme('workout.lynx.bundle', 'Workout')
+import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
+import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
+import { Button, buildPlayIconContent } from '../../components/Button/index.js'
+import { Card } from '../../components/Card/index.js'
+import { Pressable } from '../../components/Pressable/index.js'
+import { themeColors } from '../../theme.js'
 
 const formatDuration = (seconds: number): string => {
   const roundedSeconds = Math.round(seconds)
@@ -66,59 +52,66 @@ const countWindowSessions = (profile: TrainingProfile): number => {
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-const buildSuggestedSessionLabel = (
+const buildInfoIconContent = (): string =>
+  `<svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
+  `fill="none" stroke="${themeColors.iconMuted}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `<circle cx="12" cy="12" r="10"/>` +
+  `<path d="M12 16v-4"/>` +
+  `<circle cx="12" cy="8" r="1" fill="${themeColors.iconMuted}" stroke="none"/>` +
+  `</svg>`
+
+const buildDayList = (anchorDate: Date, dayOffsets: number[]): string =>
+  dayOffsets
+    .map((offset) => {
+      const date = new Date(anchorDate)
+      date.setUTCDate(date.getUTCDate() + offset)
+      return weekdayNames[date.getUTCDay()]
+    })
+    .join(', ')
+
+const buildRecommendationLabel = (
   profile: TrainingProfile,
   completedSessions: number,
   referenceDate: Date
 ): string => {
-  const lastSession = profile.sessions[profile.sessions.length - 1]
-  const sourceDate =
-    completedSessions >= 3 && profile.window.windowStart !== ''
-      ? new Date(profile.window.windowStart)
-      : lastSession === undefined
-        ? referenceDate
-        : new Date(lastSession.completedAt)
-  const suggestedDate = new Date(sourceDate)
-
-  if (completedSessions >= 3) {
-    suggestedDate.setUTCDate(suggestedDate.getUTCDate() + 7)
-  } else {
-    suggestedDate.setUTCDate(suggestedDate.getUTCDate() + 2)
+  if (completedSessions === 0) {
+    return `Recommended days: run on ${buildDayList(referenceDate, [0, 2, 4])}`
   }
 
-  return `Exercise again on ${weekdayNames[suggestedDate.getUTCDay()]}`
+  const lastSession = profile.sessions[profile.sessions.length - 1]
+  const anchorDate = lastSession === undefined ? referenceDate : new Date(lastSession.completedAt)
+
+  if (completedSessions >= 3) {
+    const nextDate = new Date(anchorDate)
+    nextDate.setUTCDate(nextDate.getUTCDate() + 2)
+    return `Exercise again on ${weekdayNames[nextDate.getUTCDay()]}`
+  }
+
+  const remainingSessions = 3 - completedSessions
+  const dayOffsets = [2, 4, 6].slice(0, remainingSessions)
+
+  return `Recommended days: run on ${buildDayList(anchorDate, dayOffsets)}`
 }
 
-export const Home = (props: { onMounted?: () => void }): ReactElement => {
+export const Home = (props: {
+  onMounted?: () => void
+  onStartWorkout: () => void
+}): ReactElement => {
   const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
-  const [storageStatus, setStorageStatus] = useState('')
-  const [debugJson, setDebugJson] = useState('')
   const [showManualAdjust, setShowManualAdjust] = useState(false)
-  const hasOpenedOnboardingRef = useRef(false)
-
-  const openOnboarding = useCallback((): void => {
-    router.open({ scheme: onboardingScheme }, () => undefined)
-  }, [])
-
-  const openWorkout = useCallback((): void => {
-    router.open({ scheme: workoutScheme }, () => undefined)
-  }, [])
-
-  const openGraphGallery = useCallback((): void => {
-    router.open({ scheme: graphsScheme }, () => undefined)
-  }, [])
 
   useEffect(() => {
     const next = sharedProfileStore.hydrate()
 
     setProfile(next.profile)
     props.onMounted?.()
+  }, [props.onMounted])
 
-    if (next.isFirstLaunch && !hasOpenedOnboardingRef.current) {
-      hasOpenedOnboardingRef.current = true
-      openOnboarding()
-    }
-  }, [openOnboarding, props.onMounted])
+  useEffect(() => {
+    return sharedProfileStore.subscribe((nextProfile) => {
+      setProfile(nextProfile)
+    })
+  }, [])
 
   const handleLevelAdjustment = useCallback((direction: 'up' | 'down'): void => {
     setProfile((currentProfile) => {
@@ -141,45 +134,6 @@ export const Home = (props: { onMounted?: () => void }): ReactElement => {
     handleLevelAdjustment('up')
   }, [handleLevelAdjustment])
 
-  const handleExportProfile = useCallback((): void => {
-    setStorageStatus('Choose where to save the JSON file.')
-    sharedProfileStore.exportProfile((result) => {
-      if (result.status === 'success') {
-        setStorageStatus('Exported current profile.')
-        return
-      }
-
-      if (result.status === 'cancelled') {
-        setStorageStatus('Export cancelled.')
-        return
-      }
-
-      setStorageStatus(result.message)
-    })
-  }, [])
-
-  const handleImportProfile = useCallback((): void => {
-    setStorageStatus('Choose the JSON file from your device.')
-    sharedProfileStore.importProfile((result) => {
-      if (result.status === 'success') {
-        setProfile(result.profile)
-        setStorageStatus('Imported profile from device.')
-        return
-      }
-
-      if (result.status === 'cancelled') {
-        setStorageStatus('Import cancelled.')
-        return
-      }
-
-      setStorageStatus(result.message)
-    })
-  }, [])
-
-  const handleShowCurrentJson = useCallback((): void => {
-    setDebugJson(JSON.stringify(profile, null, 2))
-  }, [profile])
-
   const toggleManualAdjust = useCallback((): void => {
     setShowManualAdjust((currentValue) => !currentValue)
   }, [])
@@ -188,99 +142,51 @@ export const Home = (props: { onMounted?: () => void }): ReactElement => {
   const currentProgress = Math.min(currentWindowSessions, 3)
   const runPercent = buildRunPercent(profile.level)
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
-  const suggestedSessionLabel = buildSuggestedSessionLabel(
-    profile,
-    currentWindowSessions,
-    new Date()
-  )
+  const recommendationLabel = buildRecommendationLabel(profile, currentWindowSessions, new Date())
   return (
-    <view className='page-shell'>
-      <scroll-view className='page-scroll' scroll-orientation='vertical'>
-        <view className='app home'>
-          <view className='home__section home__section--full home__section--week home__section--center'>
-            <DotChart
-              amountValue={`${currentProgress}/3 completed`}
-              color='primary'
-              completedCount={currentProgress}
-              label='This Week'
-              totalCount={3}
-              {...(currentProgress >= 3 ? { detail: suggestedSessionLabel } : {})}
-            />
-          </view>
+    <view className='page home'>
+      <Card
+        title='This Week'
+        subtitle={recommendationLabel}
+        className='home__section--week'
+        headerContent={<ThisWeekDonut completedCount={currentProgress} totalCount={3} />}
+      />
 
-          <view className='home__section home__section--full home__section--center'>
-            <text className='dotChart__label'>Current interval</text>
-          </view>
-
-          <view className='home__section home__section--full'>
-            <CurrentIntervalChart
-              runAmount={runDurationLabel}
-              walkAmount={walkDurationLabel ?? 'Graduated'}
-              runPercent={runPercent}
-            />
-          </view>
-
-          <view className='home__section home__section--full'>
-            <view className='home__helperToggle' bindtap={toggleManualAdjust}>
-              <text className='home__helperToggleText'>
-                {showManualAdjust ? 'Hide manually adjusted interval' : 'Manually adjust interval'}
-              </text>
-            </view>
-            {showManualAdjust ? (
-              <view className='actions-row'>
-                <view className='secondary actions-row__button' bindtap={handleDecreaseLevel}>
-                  <text className='secondary__text'>- Decrease</text>
-                </view>
-                <view className='secondary actions-row__button' bindtap={handleIncreaseLevel}>
-                  <text className='secondary__text'>+ Add</text>
-                </view>
-              </view>
-            ) : null}
-          </view>
-
-          <view className='home__section home__section--full'>
-            <view className='primary' bindtap={openWorkout}>
-              <text className='primary__text'>Start Workout</text>
-              <text className='primary__icon'>→</text>
-            </view>
-          </view>
-
-          <view className='home__section home__section--full'>
-            <text className='label'>Text graph gallery</text>
-            <text className='copy'>
-              Braille, blocks, dots, and squares at a few different font sizes.
+      <Card
+        title='Current interval'
+        className='home__section--interval'
+        headerContent={
+          <Pressable className='home__infoIcon' testId='adjust-info' onTap={toggleManualAdjust}>
+            <svg content={buildInfoIconContent()} style={{ width: '20px', height: '20px' }} />
+          </Pressable>
+        }
+      >
+        {showManualAdjust ? (
+          <view className='home__adjustPanel'>
+            <text className='home__adjustSubtitle'>
+              Run intervals increase by 10% dynamically after three completed runs, or you can
+              adjust intervals manually to suit your needs.
             </text>
-            <view className='home__galleryButton' bindtap={openGraphGallery}>
-              <text className='home__galleryButtonText'>Open graph examples</text>
+            <view className='actions-row'>
+              <Pressable className='actions-row__button' onTap={handleDecreaseLevel}>
+                <text className='actions-row__buttonText'>Decrease 10%</text>
+              </Pressable>
+              <Pressable className='actions-row__button' onTap={handleIncreaseLevel}>
+                <text className='actions-row__buttonText'>Increase 10%</text>
+              </Pressable>
             </view>
           </view>
+        ) : null}
+        <CurrentIntervalDonut
+          runLabel={`Run ${runDurationLabel}`}
+          walkLabel={walkDurationLabel === null ? 'Graduated' : `Walk ${walkDurationLabel}`}
+          runPercent={runPercent}
+        />
+      </Card>
 
-          <view className='home__section home__section--full'>
-            <text className='label'>This month</text>
-            <text className='copy'>Coming soon.</text>
-          </view>
-
-          <view className='home__section home__section--full'>
-            <text className='label'>Backup & restore</text>
-            <view className='stack'>
-              <text className='copy'>
-                Use Android pickers to export or import the current profile JSON.
-              </text>
-              <view className='secondary' bindtap={handleExportProfile}>
-                <text className='secondary__text'>Export JSON</text>
-              </view>
-              <view className='secondary' bindtap={handleImportProfile}>
-                <text className='secondary__text'>Import JSON</text>
-              </view>
-              <view className='secondary' bindtap={handleShowCurrentJson}>
-                <text className='secondary__text'>Show current JSON</text>
-              </view>
-            </view>
-            <text className='copy'>{storageStatus}</text>
-            {debugJson ? <text className='result pill--mono'>{debugJson}</text> : null}
-          </view>
-        </view>
-      </scroll-view>
+      <view className='home__section'>
+        <Button label='Start Workout' icon={buildPlayIconContent()} onTap={props.onStartWorkout} />
+      </view>
     </view>
   )
 }

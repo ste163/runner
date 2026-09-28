@@ -3,7 +3,17 @@ import type { TrainingLevel } from './types.js'
 const warmupSeconds = 300
 const cooldownSeconds = 300
 
-export const isGraduated = (level: TrainingLevel): boolean => level.walkSeconds <= 10
+export const isGraduated = (level: TrainingLevel): boolean =>
+  level.runSeconds >= level.intervalBlockSeconds
+
+const buildBlockIntervals = (
+  level: TrainingLevel
+): Array<{ type: 'run' | 'walk'; durationSeconds: number }> =>
+  level.intervalBlockSeconds <= 0
+    ? []
+    : isGraduated(level)
+      ? [{ type: 'run', durationSeconds: level.intervalBlockSeconds }]
+      : buildWorkoutIntervals(level, level.intervalBlockSeconds, 'run')
 
 const buildWorkoutIntervals = (
   level: TrainingLevel,
@@ -36,8 +46,6 @@ export const calculateIntervals = (
   level: TrainingLevel
 ): Array<{ type: 'warmup' | 'run' | 'walk' | 'cooldown'; durationSeconds: number }> => [
   { type: 'warmup', durationSeconds: warmupSeconds },
-  ...(isGraduated(level)
-    ? [{ type: 'run' as const, durationSeconds: level.intervalBlockSeconds }]
-    : buildWorkoutIntervals(level, level.intervalBlockSeconds, 'run')),
+  ...buildBlockIntervals(level),
   { type: 'cooldown', durationSeconds: cooldownSeconds },
 ]

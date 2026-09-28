@@ -1,0 +1,45 @@
+@import url('../../global.css');
+
+.button {
+  width: 100%;
+  min-height: 3.429rem;
+  padding: 0.857rem 1.143rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+}
+
+.button--primary {
+  border: 0.0625rem solid var(--color-border-strong);
+  background: var(--color-primary-soft);
+}
+
+.button--danger {
+  border: 0.0625rem solid var(--color-danger-border);
+  background: var(--color-danger-soft);
+}
+
+.button--neutral {
+  border: 0.0625rem solid var(--color-neutral-border);
+  background: var(--color-neutral-soft);
+}
+
+.button__label {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.button--primary .button__label {
+  color: var(--color-primary);
+}
+
+.button--danger .button__label {
+  color: var(--color-danger);
+}
+
+.button--neutral .button__label {
+  color: var(--color-text-muted);
+}

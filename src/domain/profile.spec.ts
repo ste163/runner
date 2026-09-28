@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { InMemoryProfileStorage, SharedProfileStore, createDefaultProfile } from './profile.js'
+import type { TrainingProfile } from './types.js'
 import type { ExportProfileResult, ImportProfileResult } from '../native-bridge/storage.js'
 
 describe('createDefaultProfile', () => {
   it('returns the starting training state', () => {
     expect(createDefaultProfile()).toEqual({
       schemaVersion: 1,
-      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      level: { runSeconds: 30, walkSeconds: 90, intervalBlockSeconds: 1200 },
       window: { windowStart: '', consecutiveMissed: 0 },
       sessions: [],
     })
@@ -237,5 +238,36 @@ describe('SharedProfileStore', () => {
       isFirstLaunch: false,
       profile: createDefaultProfile(),
     })
+  })
+
+  it('notifies subscribers with a cloned profile on save', () => {
+    const storage = {
+      exportProfile: vi.fn(),
+      importProfile: vi.fn(() => null),
+      load: vi.fn(() => null),
+      reset: vi.fn(),
+      save: vi.fn(),
+    }
+    const store = new SharedProfileStore(storage)
+    const received: TrainingProfile[] = []
+    const profile = {
+      ...createDefaultProfile(),
+      level: { runSeconds: 31, walkSeconds: 118, intervalBlockSeconds: 1200 },
+    }
+
+    const unsubscribe = store.subscribe((nextProfile) => {
+      received.push(nextProfile)
+    })
+
+    store.save(profile)
+
+    expect(received).toHaveLength(1)
+    expect(received[0]).toEqual(profile)
+    expect(received[0]).not.toBe(profile)
+
+    unsubscribe()
+    store.save(profile)
+
+    expect(received).toHaveLength(1)
   })
 })

@@ -7,11 +7,7 @@ import type { AppConfig } from 'sparkling-app-cli'
 const lynxConfig = defineConfig({
   source: {
     entry: {
-      home: './src/pages/home/index.tsx',
-      graphs: './src/pages/graphs/index.tsx',
-      onboarding: './src/pages/onboarding/index.tsx',
-      workout: './src/pages/workout/index.tsx',
-      activeWorkout: './src/pages/activeWorkout/index.tsx',
+      home: './src/index.tsx',
     },
   },
   output: {
@@ -46,23 +42,6 @@ const config: AppConfig = {
     androidAssets: 'android/app/src/main/assets',
   },
   appIcon: './resource/app_icon.png',
-  router: {
-    home: {
-      path: './lynxPages/home',
-    },
-    graphs: {
-      path: './lynxPages/graphs',
-    },
-    onboarding: {
-      path: './lynxPages/onboarding',
-    },
-    workout: {
-      path: './lynxPages/workout',
-    },
-    activeWorkout: {
-      path: './lynxPages/activeWorkout',
-    },
-  },
   plugin: [
     [
       'splash-screen',

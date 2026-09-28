@@ -68,6 +68,7 @@ android {
         implementation(libs.lynx.service.log)
         implementation(libs.lynx.service.http)
         implementation(libs.lynx.service.devtool)
+        implementation("org.lynxsdk.lynx:xelement-svg:4.1.0")
 
         implementation(libs.fresco)
         implementation(libs.fresco.animated.gif)
