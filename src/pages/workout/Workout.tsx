@@ -20,6 +20,7 @@ import {
   Button,
   buildPauseIconContent,
   buildPlayIconContent,
+  buildStopIconContent,
 } from '../../components/Button/index.js'
 import { Pressable } from '../../components/Pressable/index.js'
 import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
@@ -153,6 +154,7 @@ export const Workout = ({
   const [timerState, setTimerState] = useState<WorkoutTimerState | null>(null)
   const [gpsState, setGpsState] = useState<WorkoutGpsState | null>(() => runnerGps.loadState())
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
+  const [isConfirmingStop, setIsConfirmingStop] = useState(false)
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
@@ -220,6 +222,8 @@ export const Workout = ({
   }, [completeWorkout])
 
   const handlePauseToggle = useCallback((): void => {
+    setIsConfirmingStop(false)
+
     if (timerState?.isPaused) {
       setWorkoutGpsTracking(true)
       runnerWorkoutTimer.resume()
@@ -234,6 +238,7 @@ export const Workout = ({
 
   const handleStart = useCallback((): void => {
     startRequestedRef.current = true
+    setIsConfirmingStop(false)
     const latestProfile = sharedProfileStore.loadOrCreate().profile
 
     setSessionProfile(latestProfile)
@@ -248,6 +253,7 @@ export const Workout = ({
 
   const handleStop = useCallback((): void => {
     startRequestedRef.current = false
+    setIsConfirmingStop(false)
     setWorkoutGpsTracking(false)
     setScreenWakeLock(false)
     runnerWorkoutTimer.stop()
@@ -260,11 +266,20 @@ export const Workout = ({
 
   const handleDone = useCallback((): void => {
     completionHandledRef.current = false
+    setIsConfirmingStop(false)
     setSessionProfile(sharedProfileStore.loadOrCreate().profile)
     setSummary(null)
     setTimerState(null)
     setIsStarted(false)
     setGpsState(runnerGps.loadState())
+  }, [])
+
+  const handleRequestStop = useCallback((): void => {
+    setIsConfirmingStop(true)
+  }, [])
+
+  const handleCancelStop = useCallback((): void => {
+    setIsConfirmingStop(false)
   }, [])
 
   const handleOpenPaceSettings = useCallback((): void => {
@@ -373,37 +388,56 @@ export const Workout = ({
         <>
           <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
 
-          <Card className='stats'>
-            <view className='stats__item'>
-              <text className='stats__label'>Elapsed</text>
-              <text className='stats__value'>{formatDuration(elapsedSeconds)}</text>
-            </view>
-            <view className='stats__item'>
-              <text className='stats__label'>Distance</text>
-              <text className='stats__value'>{distanceStatLabel}</text>
-            </view>
-            <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
-              <text className='stats__label'>Pace</text>
-              <text
-                className={gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'}
-              >
-                {paceStatLabel}
-              </text>
-            </Pressable>
-          </Card>
+          <view className='workout__bottom'>
+            <Card className='stats'>
+              <view className='stats__item'>
+                <text className='stats__label'>Elapsed</text>
+                <text className='stats__value'>{formatDuration(elapsedSeconds)}</text>
+              </view>
+              <view className='stats__item'>
+                <text className='stats__label'>Distance</text>
+                <text className='stats__value'>{distanceStatLabel}</text>
+              </view>
+              <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
+                <text className='stats__label'>Pace</text>
+                <text
+                  className={gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'}
+                >
+                  {paceStatLabel}
+                </text>
+              </Pressable>
+            </Card>
 
-          <view className='stack'>
-            <Button
-              label={toggleLabel}
-              icon={toggleIconContent}
-              onTap={isFresh ? handleStart : handlePauseToggle}
-            />
-            {isFresh ? null : (
-              <>
-                <Button label='Debug: complete workout' variant='danger' onTap={completeWorkout} />
-                <Button label='Stop' variant='danger' onTap={handleStop} />
-              </>
-            )}
+            <view className='stack'>
+              <Button
+                label={toggleLabel}
+                icon={toggleIconContent}
+                onTap={isFresh ? handleStart : handlePauseToggle}
+              />
+              {isFresh ? null : isConfirmingStop ? (
+                <>
+                  <text className='stopConfirm__text'>
+                    If you stop before the cool-down walk, your progress will not be saved.
+                  </text>
+                  <view className='stopConfirm__actions'>
+                    <Button label='Cancel' variant='neutral' onTap={handleCancelStop} />
+                    <Button
+                      label='Stop'
+                      variant='danger'
+                      icon={buildStopIconContent()}
+                      onTap={handleStop}
+                    />
+                  </view>
+                </>
+              ) : (
+                <Button
+                  label='Stop'
+                  variant='danger'
+                  icon={buildStopIconContent()}
+                  onTap={handleRequestStop}
+                />
+              )}
+            </view>
           </view>
         </>
       ) : (

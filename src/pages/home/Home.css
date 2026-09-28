@@ -3,8 +3,6 @@
 .home__section--interval {
   align-items: flex-start;
   gap: 1rem;
-  margin-top: 2rem;
-  margin-bottom: 4rem;
 }
 
 .home__infoIcon {
@@ -54,7 +52,7 @@
 }
 
 .home__adjustSubtitle {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.125rem;
   color: var(--color-text-muted);
 }

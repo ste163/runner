@@ -27,7 +27,7 @@
 }
 
 .button__label {
-  font-size: 1.071rem;
+  font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: 0.2px;
 }
@@ -41,7 +41,5 @@
 }
 
 .button--neutral .button__label {
-  font-size: 0.8125rem;
-  font-weight: 800;
   color: var(--color-text-muted);
 }

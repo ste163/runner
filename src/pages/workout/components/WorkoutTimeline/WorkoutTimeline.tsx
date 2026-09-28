@@ -32,19 +32,32 @@ interface DonutPhase {
   arcColor: string
   centerText: string | null
   centerTextTone: CountdownTone
-  subtext: string | null
+  centerLabel: string | null
+  centerLabelTone: CountdownTone
   radius: number
   size: number
   strokeWidth: number
 }
 
+interface IntervalSegment {
+  key: string
+  label: string
+  status: PhaseStatus
+  tone: 'run' | 'walk'
+}
+
+interface IntervalLine {
+  key: string
+  segments: IntervalSegment[]
+}
+
 const WARMUP_INDEX = 0
-const SMALL_DONUT_SIZE = 100
-const SMALL_DONUT_RADIUS = 45
-const SMALL_DONUT_STROKE = 10
-const BLOCK_DONUT_SIZE = 240
-const BLOCK_DONUT_RADIUS = 110
-const BLOCK_DONUT_STROKE = 20
+const SMALL_DONUT_SIZE = 116
+const SMALL_DONUT_RADIUS = 52
+const SMALL_DONUT_STROKE = 12
+const BLOCK_DONUT_SIZE = 276
+const BLOCK_DONUT_RADIUS = 127
+const BLOCK_DONUT_STROKE = 22
 const ANIMATION_FRAME_MS = 8
 const ANIMATION_DURATION_MS = 1000
 
@@ -58,14 +71,6 @@ const formatDuration = (seconds: number): string => {
 
 const buildLastBlockIndex = (intervals: TimelineInterval[]): number =>
   Math.max(intervals.length - 2, 0)
-
-const buildRunIntervalsRemaining = (intervals: TimelineInterval[], currentIndex: number): number =>
-  intervals.slice(currentIndex + 1).filter((interval) => interval.type === 'run').length
-
-const buildRemainingLabel = (remainingIntervals: number): string =>
-  remainingIntervals === 1
-    ? '1 run/walk interval left'
-    : `${remainingIntervals} run/walk intervals left`
 
 const buildArcFraction = (
   status: PhaseStatus,
@@ -103,7 +108,8 @@ const buildWarmupPhase = (
     arcColor: done || isDimmed ? themeColors.walkMuted : themeColors.walk,
     centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || isDimmed ? 'muted' : 'walk',
-    subtext: null,
+    centerLabel: null,
+    centerLabelTone: 'muted',
     radius: SMALL_DONUT_RADIUS,
     size: SMALL_DONUT_SIZE,
     strokeWidth: SMALL_DONUT_STROKE,
@@ -135,11 +141,10 @@ const buildBlockPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, currentDuration),
     arcColor: done ? themeColors.runMuted : resolveArcColor(tone, blockActive && !isDimmed),
-    centerText: done
-      ? 'Done'
-      : `${tone === 'run' ? 'Run' : 'Walk'} ${formatDuration(remainingSeconds)}`,
+    centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || !blockActive || isDimmed ? 'muted' : tone,
-    subtext: done ? null : buildRemainingLabel(buildRunIntervalsRemaining(intervals, currentIndex)),
+    centerLabel: done ? null : tone === 'run' ? 'Run' : 'walk',
+    centerLabelTone: done || !blockActive || isDimmed ? 'muted' : tone,
     radius: BLOCK_DONUT_RADIUS,
     size: BLOCK_DONUT_SIZE,
     strokeWidth: BLOCK_DONUT_STROKE,
@@ -168,12 +173,72 @@ const buildCooldownPhase = (
     arcColor: done || isDimmed || status === 'upcoming' ? themeColors.walkMuted : themeColors.walk,
     centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || isDimmed || status === 'upcoming' ? 'muted' : 'walk',
-    subtext: null,
+    centerLabel: null,
+    centerLabelTone: 'muted',
     radius: SMALL_DONUT_RADIUS,
     size: SMALL_DONUT_SIZE,
     strokeWidth: SMALL_DONUT_STROKE,
   }
 }
+
+const buildIntervalSegments = (
+  intervals: TimelineInterval[],
+  currentIndex: number
+): IntervalSegment[] =>
+  intervals.slice(1, -1).map((interval, index) => {
+    const rowIndex = index + 1
+
+    return {
+      key: `${interval.type}-${rowIndex}`,
+      label: `${interval.type === 'run' ? 'Run' : 'walk'} ${formatDuration(interval.durationSeconds)}`,
+      status: currentIndex > rowIndex ? 'done' : currentIndex === rowIndex ? 'active' : 'upcoming',
+      tone: interval.type === 'run' ? 'run' : 'walk',
+    }
+  })
+
+const chunkByTwo = (segments: IntervalSegment[]): IntervalSegment[][] =>
+  segments.length <= 2 ? [segments] : [segments.slice(0, 2), ...chunkByTwo(segments.slice(2))]
+
+const buildIntervalLines = (segments: IntervalSegment[]): IntervalLine[] =>
+  segments.length === 0
+    ? []
+    : chunkByTwo(segments).map((pair, index) => ({ key: `line-${index}`, segments: pair }))
+
+const buildIntervalSegmentClassName = (segment: IntervalSegment): string =>
+  `timeline__segment timeline__segment--${segment.status}--${segment.tone}`
+
+const buildInfoLabelClassName = (status: PhaseStatus, dimmed: boolean): string => {
+  if (status === 'done') return 'timeline__infoLabel timeline__infoLabel--done'
+  if (status === 'active' && !dimmed) return 'timeline__infoLabel timeline__infoLabel--active'
+
+  return 'timeline__infoLabel'
+}
+
+const isLineComplete = (line: IntervalLine): boolean =>
+  line.segments.every((segment) => segment.status === 'done')
+
+const renderLineSegments = (line: IntervalLine): ReactElement[] =>
+  line.segments.flatMap((segment, index) => {
+    const segmentText = (
+      <text className={buildIntervalSegmentClassName(segment)} key={segment.key}>
+        {segment.label}
+      </text>
+    )
+
+    if (index === 0) return [segmentText]
+
+    return [
+      <text
+        className={
+          isLineComplete(line) ? 'timeline__slash timeline__slash--done' : 'timeline__slash'
+        }
+        key={`${segment.key}-slash`}
+      >
+        {' / '}
+      </text>,
+      segmentText,
+    ]
+  })
 
 const buildDonutSvgContent = (
   size: number,
@@ -292,6 +357,12 @@ const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean })
       : phase.centerTextTone === 'walk'
         ? 'timeline__countdown--walk'
         : 'timeline__countdown--muted'
+  const labelToneClass =
+    phase.centerLabelTone === 'run'
+      ? 'timeline__phaseLabel--run'
+      : phase.centerLabelTone === 'walk'
+        ? 'timeline__phaseLabel--walk'
+        : 'timeline__phaseLabel--muted'
 
   return (
     <view className={`timeline__donut ${sizeClass}`}>
@@ -306,8 +377,8 @@ const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean })
       {phase.centerText !== null ? (
         <view className='timeline__center'>
           <text className={`timeline__countdown ${toneClass}`}>{phase.centerText}</text>
-          {phase.subtext !== null ? (
-            <text className='timeline__subtext'>{phase.subtext}</text>
+          {phase.centerLabel !== null ? (
+            <text className={`timeline__phaseLabel ${labelToneClass}`}>{phase.centerLabel}</text>
           ) : null}
         </view>
       ) : null}
@@ -322,6 +393,7 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   const warmupPhase = buildWarmupPhase(currentIndex, isDimmed, timerState, intervals)
   const blockPhase = buildBlockPhase(currentIndex, isDimmed, timerState, intervals, lastBlockIndex)
   const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals)
+  const intervalLines = buildIntervalLines(buildIntervalSegments(intervals, currentIndex))
   const warmupDone = warmupPhase.status === 'done'
   const blockDone = blockPhase.status === 'done'
 
@@ -331,19 +403,44 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
 
   return (
     <view className='timeline'>
-      <PhaseDonut phase={warmupPhase} animate={warmupAnimated} />
-      <view
-        className={
-          warmupDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
-        }
-      />
-      <PhaseDonut phase={blockPhase} animate={blockAnimated} />
-      <view
-        className={
-          blockDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
-        }
-      />
-      <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
+      <view className='timeline__donuts'>
+        <PhaseDonut phase={warmupPhase} animate={warmupAnimated} />
+        <view
+          className={
+            warmupDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
+          }
+        />
+        <PhaseDonut phase={blockPhase} animate={blockAnimated} />
+        <view
+          className={
+            blockDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
+          }
+        />
+        <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
+      </view>
+      <view className='timeline__info'>
+        <view className='timeline__infoRow timeline__infoRow--small'>
+          <text className={buildInfoLabelClassName(warmupPhase.status, isDimmed)}>
+            Warm-up walk
+          </text>
+        </view>
+        <view className='timeline__infoSpacer' />
+        <view className='timeline__infoRow timeline__infoRow--block'>
+          <view className='timeline__list'>
+            {intervalLines.map((line) => (
+              <text className='timeline__listLine' key={line.key}>
+                {renderLineSegments(line)}
+              </text>
+            ))}
+          </view>
+        </view>
+        <view className='timeline__infoSpacer' />
+        <view className='timeline__infoRow timeline__infoRow--small'>
+          <text className={buildInfoLabelClassName(cooldownPhase.status, isDimmed)}>
+            Cool-down walk
+          </text>
+        </view>
+      </view>
     </view>
   )
 }

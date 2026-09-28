@@ -96,10 +96,10 @@ describe('Settings', () => {
     render(<Settings />)
 
     const queries = getQueriesForElement(elementTree.root!)
-    await queries.findByText('Export JSON')
+    await queries.findByText('Export')
 
-    fireEvent.tap(queries.getByText('Export JSON'))
-    fireEvent.tap(queries.getByText('Import JSON'))
+    fireEvent.tap(queries.getByText('Export'))
+    fireEvent.tap(queries.getByText('Import'))
 
     await queries.findByText('Jan 10')
     await queries.findByText('33s')

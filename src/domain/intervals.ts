@@ -1,6 +1,6 @@
 import type { TrainingLevel } from './types.js'
 
-const warmupSeconds = 5 // TEMP: shortened for donut testing — revert to 300
+const warmupSeconds = 300
 const cooldownSeconds = 300
 
 export const isGraduated = (level: TrainingLevel): boolean => level.walkSeconds <= 10

@@ -19,6 +19,7 @@
   --color-primary: #2dd35f;
   --color-primary-strong: #16a34a;
   --color-primary-soft: rgba(45, 211, 95, 0.14);
+  --color-primary-muted: rgba(45, 211, 95, 0.35);
   --color-walk: #2563eb;
   --color-walk-muted: rgba(37, 99, 235, 0.35);
   --color-connector: #2a382f;
@@ -47,7 +48,7 @@ body,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .hero {

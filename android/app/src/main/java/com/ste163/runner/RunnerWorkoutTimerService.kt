@@ -316,8 +316,7 @@ class RunnerWorkoutTimerService : Service() {
         }
 
         return listOf(
-            // TEMP: shortened for donut testing — revert to 300.0
-            WorkoutInterval(durationSeconds = 5.0, type = WorkoutPhaseType.WARMUP),
+            WorkoutInterval(durationSeconds = 300.0, type = WorkoutPhaseType.WARMUP),
             *workoutIntervals.toTypedArray(),
             WorkoutInterval(durationSeconds = 300.0, type = WorkoutPhaseType.COOLDOWN),
         )

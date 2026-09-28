@@ -1,5 +1,18 @@
 @import url('../../global.css');
 
+.workout {
+  justify-content: space-between;
+}
+
+.workout__bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
 .hero {
   width: 100%;
   align-items: flex-start;
@@ -39,7 +52,7 @@
 }
 
 .stats__value {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--color-text);
   text-align: center;
@@ -49,15 +62,36 @@
   color: var(--color-walk);
 }
 
+.stopConfirm__text {
+  padding: 0.857rem;
+  border: 0.0625rem solid var(--color-danger-border);
+  border-radius: 1rem;
+  background: var(--color-danger-soft);
+  font-size: 1rem;
+  line-height: 1.375rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.stopConfirm__actions {
+  width: 100%;
+  display: flex;
+  gap: 0.625rem;
+}
+
+.stopConfirm__actions .button {
+  flex: 1 1 auto;
+}
+
 .eyebrow {
-  font-size: 0.857rem;
+  font-size: 0.875rem;
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--color-primary);
 }
 
 .title {
-  font-size: 1.571rem;
+  font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: 0.2px;
   color: var(--color-text);
@@ -65,13 +99,13 @@
 
 .subtitle {
   font-size: 1rem;
-  line-height: 1.429rem;
+  line-height: 1.5rem;
   color: var(--color-text-muted);
 }
 
 .copy {
   font-size: 1rem;
-  line-height: 1.429rem;
+  line-height: 1.5rem;
   color: var(--color-text-muted);
 }
 
@@ -97,8 +131,8 @@
 
 .breakdown__label,
 .breakdown__value {
-  font-size: 0.929rem;
-  line-height: 1.286rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   color: var(--color-text-muted);
 }
 

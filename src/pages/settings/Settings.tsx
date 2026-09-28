@@ -202,13 +202,13 @@ export const Settings = (): ReactElement => {
       >
         <view className='backupActions'>
           <Button
-            label='Export JSON'
+            label='Export'
             variant='neutral'
             icon={buildUploadIconContent()}
             onTap={handleExportProfile}
           />
           <Button
-            label='Import JSON'
+            label='Import'
             variant='neutral'
             icon={buildDownloadIconContent()}
             onTap={handleImportProfile}
