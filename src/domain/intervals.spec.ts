@@ -3,13 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { calculateIntervals, isGraduated } from './intervals.js'
 
 describe('isGraduated', () => {
-  it('returns false when walkSeconds is above 10', () => {
-    expect(isGraduated({ runSeconds: 45, walkSeconds: 11, intervalBlockSeconds: 1200 })).toBe(false)
+  it('returns false when the run is shorter than the block', () => {
+    expect(isGraduated({ runSeconds: 45, walkSeconds: 90, intervalBlockSeconds: 1200 })).toBe(false)
   })
 
-  it('returns true when walkSeconds is 10 or less', () => {
-    expect(isGraduated({ runSeconds: 45, walkSeconds: 10, intervalBlockSeconds: 1200 })).toBe(true)
-    expect(isGraduated({ runSeconds: 45, walkSeconds: 5, intervalBlockSeconds: 1200 })).toBe(true)
+  it('returns true when the run fills the block', () => {
+    expect(isGraduated({ runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 })).toBe(
+      true
+    )
   })
 })
 
@@ -76,8 +77,8 @@ describe('calculateIntervals', () => {
   it('switches to continuous running when graduated', () => {
     expect(
       calculateIntervals({
-        runSeconds: 45,
-        walkSeconds: 10,
+        runSeconds: 1200,
+        walkSeconds: 30,
         intervalBlockSeconds: 1200,
       })
     ).toEqual([

@@ -8,7 +8,7 @@ describe('createDefaultProfile', () => {
   it('returns the starting training state', () => {
     expect(createDefaultProfile()).toEqual({
       schemaVersion: 1,
-      level: { runSeconds: 30, walkSeconds: 120, intervalBlockSeconds: 1200 },
+      level: { runSeconds: 30, walkSeconds: 90, intervalBlockSeconds: 1200 },
       window: { windowStart: '', consecutiveMissed: 0 },
       sessions: [],
     })

@@ -73,7 +73,7 @@ describe('Home', () => {
     await findByText('This Week')
     await findByText('Current interval')
     await findByText('Run 30s')
-    await findByText('Walk 2m 0s')
+    await findByText('Walk 1m 30s')
     await findByText('0/3')
     expect(queryByText('Decrease 10%')).toBeNull()
     expect(queryByText('Increase 10%')).toBeNull()
@@ -95,7 +95,7 @@ describe('Home', () => {
     fireEvent.tap(getByText('Increase 10%'))
 
     await findByText('Run 33s')
-    await findByText('Walk 1m 48s')
+    await findByText('Walk 1m 30s')
   })
 
   it('shows a completed week message and the next cycle day after three sessions', async () => {

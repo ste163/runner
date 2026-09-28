@@ -14,23 +14,36 @@ Every session = 3 phases:
 1. **Warmup walk** — always 300 seconds (5 min), no exceptions.
 2. **Interval block** — 1200 seconds (20 min) of alternating run/walk cycles.
    - Cycles repeat until block time is exhausted. Last cycle is truncated if it overruns.
-   - **Graduation trigger**: if `walkSeconds ≤ 10`, skip walk intervals → continuous run → graduation state.
+   - **Graduation trigger**: if `runSeconds ≥ intervalBlockSeconds`, the run owns the whole block → continuous run → graduation state.
 3. **Cooldown walk** — always 300 seconds (5 min), no exceptions.
 
-**Starting intervals**: Run = 30s, Walk = 120s.  
+**Starting intervals**: Run = 30s, Walk = 90s (1m30s).  
 **Precision**: decimal (no rounding). UI displays rounded to nearest second.
 
-## Progression Rules (rolling 7-day window)
+## Progression Rules (rolling 7-day window + phases)
 
 A window starts on the first session of a new cycle. If 7 days pass without 3 completions, the window expires.
 
-| Result                                  | Action              |
-| --------------------------------------- | ------------------- |
-| 3 sessions within 7 days                | Run ×1.1, Walk ×0.9 |
-| Window expired, first miss              | No change           |
-| Window expired, second consecutive miss | Run ×0.9, Walk ×1.1 |
+| Result                                  | Action    |
+| --------------------------------------- | --------- |
+| 3 sessions within 7 days                | Run ×1.1  |
+| Window expired, first miss              | No change |
+| Window expired, second consecutive miss | Run ×0.9  |
 
-**Bounds**: Run min 15s / max `intervalBlockSeconds`. Walk min 10s / max 300s.  
+**Phases**: the run range picks the phase; the walk is the phase anchor, not multiplied. Crossing a phase boundary re-anchors the walk.
+
+| Phase | Run range | Walk  |
+| ----- | --------- | ----- |
+| 1     | 15s – 30s | 2m    |
+| 2     | 30s – 1m  | 1m30s |
+| 3     | 1m – 2m   | 1m15s |
+| 4     | 2m – 4m   | 1m    |
+| 5     | 4m – 8m   | 45s   |
+| 6     | 8m – 12m  | 30s   |
+| 7     | 12m – 16m | 30s   |
+| 8     | 16m – 20m | 30s   |
+
+Run bounds: min 15s / max `intervalBlockSeconds`. Graduation = run reaches the block (end of phase 8). Decrease always works and rolls back through phases.
 **Multiple missed windows**: evaluate each individually, oldest first.  
 **Success resets** `consecutiveMissed` to 0.
 
@@ -41,13 +54,13 @@ on session completed (or app open after window expired):
   for each expired window (oldest first):
     if sessions in window >= 3:
       runSeconds = clamp(runSeconds * 1.1, 15, intervalBlockSeconds)
-      walkSeconds = clamp(walkSeconds * 0.9, 10, 300)
+      walkSeconds = phaseWalk(runSeconds)
       consecutiveMissed = 0
     else:
       consecutiveMissed += 1
       if consecutiveMissed >= 2:
         runSeconds = clamp(runSeconds * 0.9, 15, intervalBlockSeconds)
-        walkSeconds = clamp(walkSeconds * 1.1, 10, 300)
+        walkSeconds = phaseWalk(runSeconds)
   window.windowStart = now  // advance atomically with level update
 ```
 
@@ -55,8 +68,8 @@ on session completed (or app open after window expired):
 
 ```typescript
 interface TrainingLevel {
-  runSeconds: number // starts 30
-  walkSeconds: number // starts 120
+  runSeconds: number // starts 30; picks the phase
+  walkSeconds: number // phase anchor (2m – 30s)
   intervalBlockSeconds: number // starts 1200 (20 min)
 }
 
@@ -93,11 +106,11 @@ Storage: single JSON file at `context.filesDir/training_profile.json`.
 
 ## Manual Adjustment
 
-User can tap +/− on Home to adjust level (same 10% step as auto-progression). Same bounds apply (run min 15s, walk min 10s).
+User can tap +/− on Home to adjust level (same 10% step as auto-progression). The walk follows the phase anchor.
 
 ## Graduation State
 
-When `walkSeconds ≤ 10`: no walk intervals, session = warmup + 20-min continuous run + cooldown. App shows celebration/completion UI.
+When `runSeconds ≥ intervalBlockSeconds`: no walk intervals, session = warmup + 20-min continuous run + cooldown. Graduation is terminal on the way up — the run is capped at the block, so up-steps are no-ops. Decrease always works: the user (or missed-window regression) can step back down into intervals at any time.
 
 ## NativeModules Bridge
 

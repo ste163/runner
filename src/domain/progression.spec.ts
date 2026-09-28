@@ -7,7 +7,7 @@ const createProfile = (overrides: Partial<TrainingProfile> = {}): TrainingProfil
   schemaVersion: 1,
   level: {
     runSeconds: 30,
-    walkSeconds: 120,
+    walkSeconds: 90,
     intervalBlockSeconds: 1200,
     ...overrides.level,
   },
@@ -24,7 +24,7 @@ const createSession = (completedAt: string): TrainingProfile['sessions'][number]
   completedAt,
   level: {
     runSeconds: 30,
-    walkSeconds: 120,
+    walkSeconds: 90,
     intervalBlockSeconds: 1200,
   },
   intervals: [],
@@ -36,17 +36,15 @@ describe('evaluateWindows', () => {
     const firstMiss = evaluateWindows(createProfile(), new Date('2024-01-15T00:00:00.000Z'))
     const secondMiss = evaluateWindows(createProfile(), new Date('2024-01-22T00:00:00.000Z'))
 
-    expect(firstMiss.level).toEqual({
-      runSeconds: 27,
-      walkSeconds: 132,
-      intervalBlockSeconds: 1200,
-    })
+    expect(firstMiss.level.runSeconds).toBeCloseTo(27)
+    expect(firstMiss.level.walkSeconds).toBe(120)
+    expect(firstMiss.level.intervalBlockSeconds).toBe(1200)
     expect(firstMiss.window).toEqual({
       windowStart: '2024-01-15T00:00:00.000Z',
       consecutiveMissed: 2,
     })
     expect(secondMiss.level.runSeconds).toBeCloseTo(24.3)
-    expect(secondMiss.level.walkSeconds).toBeCloseTo(145.2)
+    expect(secondMiss.level.walkSeconds).toBe(120)
     expect(secondMiss.window.consecutiveMissed).toBe(3)
   })
 
@@ -83,7 +81,9 @@ describe('evaluateWindows', () => {
       new Date('2024-01-15T00:00:00.000Z')
     )
 
-    expect(updated.level).toEqual({ runSeconds: 27, walkSeconds: 132, intervalBlockSeconds: 1200 })
+    expect(updated.level.runSeconds).toBeCloseTo(27)
+    expect(updated.level.walkSeconds).toBe(120)
+    expect(updated.level.intervalBlockSeconds).toBe(1200)
     expect(updated.window).toEqual({
       windowStart: '2024-01-15T00:00:00.000Z',
       consecutiveMissed: 2,
@@ -102,7 +102,7 @@ describe('evaluateWindows', () => {
       new Date('2024-01-08T00:00:00.000Z')
     )
 
-    expect(updated.level).toEqual({ runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 })
+    expect(updated.level).toEqual({ runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 })
     expect(updated.window).toEqual({
       windowStart: '2024-01-08T00:00:00.000Z',
       consecutiveMissed: 0,
@@ -111,30 +111,32 @@ describe('evaluateWindows', () => {
 })
 
 describe('adjustLevelManually', () => {
-  it('increases run and decreases walk', () => {
+  it('increases run and keeps the phase walk', () => {
     expect(
       adjustLevelManually(
         {
           runSeconds: 30,
-          walkSeconds: 120,
+          walkSeconds: 90,
           intervalBlockSeconds: 1200,
         },
         'up'
       )
-    ).toEqual({ runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 })
+    ).toEqual({ runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 })
   })
 
-  it('decreases run and increases walk', () => {
-    expect(
-      adjustLevelManually(
-        {
-          runSeconds: 30,
-          walkSeconds: 120,
-          intervalBlockSeconds: 1200,
-        },
-        'down'
-      )
-    ).toEqual({ runSeconds: 27, walkSeconds: 132, intervalBlockSeconds: 1200 })
+  it('decreases run and re-anchors the walk when crossing down', () => {
+    const adjusted = adjustLevelManually(
+      {
+        runSeconds: 30,
+        walkSeconds: 90,
+        intervalBlockSeconds: 1200,
+      },
+      'down'
+    )
+
+    expect(adjusted.runSeconds).toBeCloseTo(27)
+    expect(adjusted.walkSeconds).toBe(120)
+    expect(adjusted.intervalBlockSeconds).toBe(1200)
   })
 
   it('clamps levels to bounds when decreasing', () => {
@@ -147,7 +149,54 @@ describe('adjustLevelManually', () => {
         },
         'down'
       )
-    ).toEqual({ runSeconds: 15, walkSeconds: 300, intervalBlockSeconds: 1200 })
+    ).toEqual({ runSeconds: 15, walkSeconds: 120, intervalBlockSeconds: 1200 })
+  })
+
+  it('re-anchors the walk when crossing up into the next phase', () => {
+    const adjusted = adjustLevelManually(
+      {
+        runSeconds: 29.7,
+        walkSeconds: 120,
+        intervalBlockSeconds: 1200,
+      },
+      'up'
+    )
+
+    expect(adjusted.runSeconds).toBeCloseTo(32.67)
+    expect(adjusted.walkSeconds).toBe(90)
+    expect(adjusted.intervalBlockSeconds).toBe(1200)
+  })
+
+  it('keeps the phase walk when stepping within a phase', () => {
+    const adjusted = adjustLevelManually(
+      {
+        runSeconds: 100,
+        walkSeconds: 75,
+        intervalBlockSeconds: 1200,
+      },
+      'up'
+    )
+
+    expect(adjusted.runSeconds).toBeCloseTo(110)
+    expect(adjusted.walkSeconds).toBe(75)
+    expect(adjusted.intervalBlockSeconds).toBe(1200)
+  })
+
+  it('keeps a graduated level at the block when increasing', () => {
+    const graduated = { runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 }
+
+    expect(adjustLevelManually(graduated, 'up')).toEqual(graduated)
+  })
+
+  it('always steps a graduated level back down', () => {
+    const adjusted = adjustLevelManually(
+      { runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 },
+      'down'
+    )
+
+    expect(adjusted.runSeconds).toBeCloseTo(1080)
+    expect(adjusted.walkSeconds).toBe(30)
+    expect(adjusted.intervalBlockSeconds).toBe(1200)
   })
 
   it('clamps runSeconds to the interval block when increasing', () => {
@@ -155,11 +204,11 @@ describe('adjustLevelManually', () => {
       adjustLevelManually(
         {
           runSeconds: 1190,
-          walkSeconds: 120,
+          walkSeconds: 30,
           intervalBlockSeconds: 1200,
         },
         'up'
       )
-    ).toEqual({ runSeconds: 1200, walkSeconds: 108, intervalBlockSeconds: 1200 })
+    ).toEqual({ runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 })
   })
 })
