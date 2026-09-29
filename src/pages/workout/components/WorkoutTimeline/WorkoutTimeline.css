@@ -185,3 +185,13 @@
 .timeline__slash--done {
   color: var(--color-text-soft);
 }
+
+.timeline__setNumber {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.timeline__setNumber--done {
+  text-decoration: line-through;
+  color: var(--color-text-soft);
+}

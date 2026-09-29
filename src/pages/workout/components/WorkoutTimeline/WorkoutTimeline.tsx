@@ -48,6 +48,7 @@ interface IntervalSegment {
 
 interface IntervalLine {
   key: string
+  setNumber: number
   segments: IntervalSegment[]
 }
 
@@ -143,7 +144,7 @@ const buildBlockPhase = (
     arcColor: done ? themeColors.runMuted : resolveArcColor(tone, blockActive && !isDimmed),
     centerText: done ? 'Done' : formatDuration(remainingSeconds),
     centerTextTone: done || !blockActive || isDimmed ? 'muted' : tone,
-    centerLabel: done ? null : tone === 'run' ? 'Run' : 'walk',
+    centerLabel: done ? null : tone === 'run' ? 'Run' : 'Walk',
     centerLabelTone: done || !blockActive || isDimmed ? 'muted' : tone,
     radius: BLOCK_DONUT_RADIUS,
     size: BLOCK_DONUT_SIZE,
@@ -190,7 +191,7 @@ const buildIntervalSegments = (
 
     return {
       key: `${interval.type}-${rowIndex}`,
-      label: `${interval.type === 'run' ? 'Run' : 'walk'} ${formatDuration(interval.durationSeconds)}`,
+      label: `${interval.type === 'run' ? 'Run' : 'Walk'} ${formatDuration(interval.durationSeconds)}`,
       status: currentIndex > rowIndex ? 'done' : currentIndex === rowIndex ? 'active' : 'upcoming',
       tone: interval.type === 'run' ? 'run' : 'walk',
     }
@@ -202,7 +203,11 @@ const chunkByTwo = (segments: IntervalSegment[]): IntervalSegment[][] =>
 const buildIntervalLines = (segments: IntervalSegment[]): IntervalLine[] =>
   segments.length === 0
     ? []
-    : chunkByTwo(segments).map((pair, index) => ({ key: `line-${index}`, segments: pair }))
+    : chunkByTwo(segments).map((pair, index) => ({
+        key: `line-${index}`,
+        setNumber: index + 1,
+        segments: pair,
+      }))
 
 const buildIntervalSegmentClassName = (segment: IntervalSegment): string =>
   `timeline__segment timeline__segment--${segment.status}--${segment.tone}`
@@ -217,28 +222,41 @@ const buildInfoLabelClassName = (status: PhaseStatus, dimmed: boolean): string =
 const isLineComplete = (line: IntervalLine): boolean =>
   line.segments.every((segment) => segment.status === 'done')
 
-const renderLineSegments = (line: IntervalLine): ReactElement[] =>
-  line.segments.flatMap((segment, index) => {
-    const segmentText = (
-      <text className={buildIntervalSegmentClassName(segment)} key={segment.key}>
-        {segment.label}
-      </text>
-    )
+const buildSetNumberClassName = (line: IntervalLine): string =>
+  isLineComplete(line) ? 'timeline__setNumber timeline__setNumber--done' : 'timeline__setNumber'
 
-    if (index === 0) return [segmentText]
+const renderLineSegments = (line: IntervalLine): ReactElement[] => {
+  const setNumberText = (
+    <text className={buildSetNumberClassName(line)} key={`${line.key}-setNumber`}>
+      {`${line.setNumber}. `}
+    </text>
+  )
 
-    return [
-      <text
-        className={
-          isLineComplete(line) ? 'timeline__slash timeline__slash--done' : 'timeline__slash'
-        }
-        key={`${segment.key}-slash`}
-      >
-        {' / '}
-      </text>,
-      segmentText,
-    ]
-  })
+  return [
+    setNumberText,
+    ...line.segments.flatMap((segment, index) => {
+      const segmentText = (
+        <text className={buildIntervalSegmentClassName(segment)} key={segment.key}>
+          {segment.label}
+        </text>
+      )
+
+      if (index === 0) return [segmentText]
+
+      return [
+        <text
+          className={
+            isLineComplete(line) ? 'timeline__slash timeline__slash--done' : 'timeline__slash'
+          }
+          key={`${segment.key}-slash`}
+        >
+          {' / '}
+        </text>,
+        segmentText,
+      ]
+    }),
+  ]
+}
 
 const buildDonutSvgContent = (
   size: number,

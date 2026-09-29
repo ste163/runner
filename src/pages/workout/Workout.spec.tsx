@@ -113,7 +113,8 @@ describe('Workout', () => {
     const { findAllByText } = getQueriesForElement(elementTree.root!)
 
     expect((await findAllByText('Run 33s')).length).toBeGreaterThan(0)
-    expect((await findAllByText('walk 1m 30s')).length).toBeGreaterThan(0)
+    expect((await findAllByText('Walk 1m 30s')).length).toBeGreaterThan(0)
+    expect((await findAllByText('1.')).length).toBeGreaterThan(0)
   })
 
   it('updates the timeline when the profile changes on another page', async () => {
