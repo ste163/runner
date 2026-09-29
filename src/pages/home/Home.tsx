@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './Home.css'
+import { formatClockDuration } from '../../format.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
@@ -13,20 +14,12 @@ import { Card } from '../../components/Card/index.js'
 import { Pressable } from '../../components/Pressable/index.js'
 import { themeColors } from '../../theme.js'
 
-const formatDuration = (seconds: number): string => {
-  const roundedSeconds = Math.round(seconds)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainingSeconds = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainingSeconds}s` : `${minutes}m ${remainingSeconds}s`
-}
-
 const buildIntervalDurationLines = (level: TrainingLevel): [string, string | null] => {
   if (isGraduated(level)) {
-    return [formatDuration(level.intervalBlockSeconds), null]
+    return [formatClockDuration(level.intervalBlockSeconds), null]
   }
 
-  return [formatDuration(level.runSeconds), formatDuration(level.walkSeconds)]
+  return [formatClockDuration(level.runSeconds), formatClockDuration(level.walkSeconds)]
 }
 
 const buildRunPercent = (level: TrainingLevel): number => {

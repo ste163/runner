@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
 
 import './WorkoutTimeline.css'
+import { formatClockDuration } from '../../../../format.js'
 import { themeColors } from '../../../../theme.js'
 
 export interface TimelineInterval {
@@ -53,22 +54,14 @@ interface IntervalLine {
 }
 
 const WARMUP_INDEX = 0
-const SMALL_DONUT_SIZE = 116
-const SMALL_DONUT_RADIUS = 52
-const SMALL_DONUT_STROKE = 12
+const SMALL_DONUT_SIZE = 88
+const SMALL_DONUT_RADIUS = 36
+const SMALL_DONUT_STROKE = 10
 const BLOCK_DONUT_SIZE = 276
 const BLOCK_DONUT_RADIUS = 127
 const BLOCK_DONUT_STROKE = 22
 const ANIMATION_FRAME_MS = 8
 const ANIMATION_DURATION_MS = 1000
-
-const formatDuration = (seconds: number): string => {
-  const roundedSeconds = Math.max(Math.round(seconds), 0)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainder = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainder}s` : `${minutes}m ${remainder}s`
-}
 
 const buildLastBlockIndex = (intervals: TimelineInterval[]): number =>
   Math.max(intervals.length - 2, 0)
@@ -107,7 +100,7 @@ const buildWarmupPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
     arcColor: done || isDimmed ? themeColors.walkMuted : themeColors.walk,
-    centerText: done ? 'Done' : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatClockDuration(remainingSeconds),
     centerTextTone: done || isDimmed ? 'muted' : 'walk',
     centerLabel: null,
     centerLabelTone: 'muted',
@@ -142,7 +135,7 @@ const buildBlockPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, currentDuration),
     arcColor: done ? themeColors.runMuted : resolveArcColor(tone, blockActive && !isDimmed),
-    centerText: done ? 'Done' : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatClockDuration(remainingSeconds),
     centerTextTone: done || !blockActive || isDimmed ? 'muted' : tone,
     centerLabel: done ? null : tone === 'run' ? 'Run' : 'Walk',
     centerLabelTone: done || !blockActive || isDimmed ? 'muted' : tone,
@@ -172,7 +165,7 @@ const buildCooldownPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
     arcColor: done || isDimmed || status === 'upcoming' ? themeColors.walkMuted : themeColors.walk,
-    centerText: done ? 'Done' : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatClockDuration(remainingSeconds),
     centerTextTone: done || isDimmed || status === 'upcoming' ? 'muted' : 'walk',
     centerLabel: null,
     centerLabelTone: 'muted',
@@ -191,7 +184,7 @@ const buildIntervalSegments = (
 
     return {
       key: `${interval.type}-${rowIndex}`,
-      label: `${interval.type === 'run' ? 'Run' : 'Walk'} ${formatDuration(interval.durationSeconds)}`,
+      label: `${interval.type === 'run' ? 'Run' : 'Walk'} ${formatClockDuration(interval.durationSeconds)}`,
       status: currentIndex > rowIndex ? 'done' : currentIndex === rowIndex ? 'active' : 'upcoming',
       tone: interval.type === 'run' ? 'run' : 'walk',
     }
@@ -279,7 +272,8 @@ const buildDonutSvgContent = (
         `transform="rotate(-90 ${center} ${center})"/>`
 
   return (
-    `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">` +
+    `<svg viewBox="0 0 ${size} ${size}" preserveAspectRatio="xMidYMid meet" ` +
+    `xmlns="http://www.w3.org/2000/svg">` +
     `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${themeColors.track}" ` +
     `stroke-width="${strokeWidth}"/>` +
     progressCircle +
@@ -358,10 +352,15 @@ const AnimatedDonut = ({
     }, ANIMATION_FRAME_MS)
   }, [animate, applyFraction, stopAnimation, targetFraction])
 
+  const svgStyle =
+    size === BLOCK_DONUT_SIZE
+      ? { width: '100%', height: '100%' }
+      : { width: `${size}px`, height: `${size}px` }
+
   return (
     <svg
       content={buildDonutSvgContent(size, radius, strokeWidth, displayedFraction, arcColor)}
-      style={{ width: `${size}px`, height: `${size}px` }}
+      style={svgStyle}
     />
   )
 }
@@ -437,13 +436,12 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
         <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
       </view>
       <view className='timeline__info'>
-        <view className='timeline__infoRow timeline__infoRow--small'>
+        <view className='timeline__infoZone timeline__infoZone--small'>
           <text className={buildInfoLabelClassName(warmupPhase.status, isDimmed)}>
             Warm-up walk
           </text>
         </view>
-        <view className='timeline__infoSpacer' />
-        <view className='timeline__infoRow timeline__infoRow--block'>
+        <view className='timeline__infoZone timeline__infoZone--block'>
           <view className='timeline__list'>
             {intervalLines.map((line) => (
               <text className='timeline__listLine' key={line.key}>
@@ -452,8 +450,7 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
             ))}
           </view>
         </view>
-        <view className='timeline__infoSpacer' />
-        <view className='timeline__infoRow timeline__infoRow--small'>
+        <view className='timeline__infoZone timeline__infoZone--small'>
           <text className={buildInfoLabelClassName(cooldownPhase.status, isDimmed)}>
             Cool-down walk
           </text>

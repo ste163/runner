@@ -72,8 +72,8 @@ describe('Home', () => {
     expect(queryByText('3 sessions. 7-day windows.')).toBeNull()
     await findByText('This Week')
     await findByText('Current interval')
-    await findByText('Run 30s')
-    await findByText('Walk 1m 30s')
+    await findByText('Run 0:30')
+    await findByText('Walk 1:30')
     await findByText('0/3')
     expect(queryByText('Decrease 10%')).toBeNull()
     expect(queryByText('Increase 10%')).toBeNull()
@@ -89,13 +89,13 @@ describe('Home', () => {
     render(<Home onStartWorkout={vi.fn()} />)
 
     const { findByText, getByTestId, getByText } = getQueriesForElement(elementTree.root!)
-    await findByText('Run 30s')
+    await findByText('Run 0:30')
 
     fireEvent.tap(getByTestId('adjust-info'))
     fireEvent.tap(getByText('Increase 10%'))
 
-    await findByText('Run 33s')
-    await findByText('Walk 1m 30s')
+    await findByText('Run 0:33')
+    await findByText('Walk 1:30')
   })
 
   it('shows a completed week message and the next cycle day after three sessions', async () => {

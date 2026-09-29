@@ -101,8 +101,8 @@ describe('Settings', () => {
     fireEvent.tap(queries.getByText('Import'))
 
     await queries.findByText('Jan 10')
-    await queries.findByText('33s')
-    await queries.findByText('1m 48s')
+    await queries.findByText('0:33')
+    await queries.findByText('1:48')
     await queries.findByText('1.50 mi')
     await queries.findByText('5.50 min/mi')
     await queries.findByText('18.00 min/mi')
@@ -129,8 +129,8 @@ describe('Settings', () => {
     const queries = getQueriesForElement(elementTree.root!)
 
     await queries.findByText('January 2024')
-    expect(await queries.findAllByText('30s')).toHaveLength(3)
-    expect(await queries.findAllByText('2m 0s')).toHaveLength(3)
+    expect(await queries.findAllByText('0:30')).toHaveLength(3)
+    expect(await queries.findAllByText('2:00')).toHaveLength(3)
     expect(await queries.findAllByText('5.00 min/mi')).toHaveLength(3)
     expect(await queries.findAllByText('40.00 min/mi')).toHaveLength(3)
     await queries.findByText('1.23 mi')
@@ -156,8 +156,8 @@ describe('Settings', () => {
     const queries = getQueriesForElement(elementTree.root!)
 
     await queries.findByText('Jan 10')
-    await queries.findByText('30s')
-    await queries.findByText('2m 0s')
+    await queries.findByText('0:30')
+    await queries.findByText('2:00')
     expect(await queries.findAllByText('—')).toHaveLength(3)
   })
 

@@ -8,6 +8,7 @@ import {
 } from '@lynx-js/react'
 
 import './Workout.css'
+import { formatClockDuration } from '../../format.js'
 import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
 import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
@@ -45,14 +46,6 @@ interface WorkoutProps {
   startRequestId: number
 }
 
-const formatDuration = (seconds: number): string => {
-  const roundedSeconds = Math.max(Math.round(seconds), 0)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainder = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainder}s` : `${minutes}m ${remainder}s`
-}
-
 const formatDistance = (miles: number): string => `${miles.toFixed(2)} mi`
 
 const formatPace = (paceMinPerMile: number): string =>
@@ -60,8 +53,8 @@ const formatPace = (paceMinPerMile: number): string =>
 
 const levelLabel = (level: TrainingLevel): string =>
   isGraduated(level)
-    ? `Running ${formatDuration(level.intervalBlockSeconds)}`
-    : `Run ${formatDuration(level.runSeconds)} · Walk ${formatDuration(level.walkSeconds)}`
+    ? `Running ${formatClockDuration(level.intervalBlockSeconds)}`
+    : `Run ${formatClockDuration(level.runSeconds)} · Walk ${formatClockDuration(level.walkSeconds)}`
 
 const buildSessionId = (): string => {
   const randomId = globalThis.crypto?.randomUUID?.()
@@ -430,7 +423,7 @@ export const Workout = ({
             <Card className='stats'>
               <view className='stats__item'>
                 <text className='stats__label'>Elapsed</text>
-                <text className='stats__value'>{formatDuration(elapsedSeconds)}</text>
+                <text className='stats__value'>{formatClockDuration(elapsedSeconds)}</text>
               </view>
               <view className='stats__item'>
                 <text className='stats__label'>Distance</text>
@@ -528,7 +521,7 @@ export const Workout = ({
                 {summary.session.intervals.map((interval, index) => (
                   <view className='breakdown__row' key={`${interval.type}-${index}`}>
                     <text className='breakdown__label'>
-                      {interval.type.toUpperCase()} {formatDuration(interval.durationSeconds)}
+                      {interval.type.toUpperCase()} {formatClockDuration(interval.durationSeconds)}
                     </text>
                     <text className='breakdown__value'>
                       {formatDistance(interval.distanceMiles)} ·{' '}

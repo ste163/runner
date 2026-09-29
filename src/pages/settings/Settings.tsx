@@ -1,6 +1,7 @@
 import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 
 import './Settings.css'
+import { formatClockDuration } from '../../format.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import { buildSessionPace } from '../../domain/stats.js'
@@ -80,20 +81,12 @@ const filterSessionsForMonth = (sessions: Session[], month: VisibleMonth): Sessi
 
 const buildIntervalLabel = (session: Session, type: 'run' | 'walk'): string => {
   if (isGraduated(session.level)) {
-    return type === 'run' ? formatSessionDuration(session.level.intervalBlockSeconds) : '—'
+    return type === 'run' ? formatClockDuration(session.level.intervalBlockSeconds) : '—'
   }
 
   const seconds = type === 'run' ? session.level.runSeconds : session.level.walkSeconds
 
-  return formatSessionDuration(seconds)
-}
-
-const formatSessionDuration = (seconds: number): string => {
-  const roundedSeconds = Math.round(seconds)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainingSeconds = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainingSeconds}s` : `${minutes}m ${remainingSeconds}s`
+  return formatClockDuration(seconds)
 }
 
 const formatSessionDate = (completedAt: string): string => {

@@ -112,8 +112,8 @@ describe('Workout', () => {
 
     const { findAllByText } = getQueriesForElement(elementTree.root!)
 
-    expect((await findAllByText('Run 33s')).length).toBeGreaterThan(0)
-    expect((await findAllByText('Walk 1m 30s')).length).toBeGreaterThan(0)
+    expect((await findAllByText('Run 0:33')).length).toBeGreaterThan(0)
+    expect((await findAllByText('Walk 1:30')).length).toBeGreaterThan(0)
     expect((await findAllByText('1.')).length).toBeGreaterThan(0)
   })
 
@@ -122,12 +122,12 @@ describe('Workout', () => {
 
     const { findAllByText, queryByText } = getQueriesForElement(elementTree.root!)
 
-    expect((await findAllByText('Run 30s')).length).toBeGreaterThan(0)
+    expect((await findAllByText('Run 0:30')).length).toBeGreaterThan(0)
 
     sharedProfileStore.save(buildProfile(33, 90))
 
-    expect((await findAllByText('Run 33s')).length).toBeGreaterThan(0)
-    expect(queryByText('Run 30s')).toBeNull()
+    expect((await findAllByText('Run 0:33')).length).toBeGreaterThan(0)
+    expect(queryByText('Run 0:30')).toBeNull()
   })
 
   it('recovers a live workout from the native timer state on mount', async () => {

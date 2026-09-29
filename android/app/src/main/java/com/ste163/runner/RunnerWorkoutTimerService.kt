@@ -432,11 +432,7 @@ class RunnerWorkoutTimerService : Service() {
         val minutes = roundedSeconds / 60L
         val remainder = roundedSeconds % 60L
 
-        return if (minutes == 0L) {
-            "${remainder}s"
-        } else {
-            "${minutes}m ${remainder}s"
-        }
+        return "$minutes:${remainder.toString().padStart(2, '0')}"
     }
 
     private fun isGraduated(level: WorkoutLevel): Boolean {
