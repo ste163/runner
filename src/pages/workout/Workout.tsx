@@ -12,6 +12,7 @@ import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
 import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingLevel, TrainingProfile } from '../../domain/types.js'
+import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
 import { runnerHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen } from '../../native-bridge/screen.js'
@@ -143,18 +144,18 @@ export const Workout = ({
   onLiveChange,
   startRequestId,
 }: WorkoutProps): ReactElement => {
-  const [sessionProfile, setSessionProfile] = useState<TrainingProfile>(
-    () => sharedProfileStore.loadOrCreate().profile
-  )
-  const workoutIntervals = useMemo(
-    () => buildWorkoutIntervals(sessionProfile.level),
-    [sessionProfile.level]
-  )
   const [isStarted, setIsStarted] = useState(false)
   const [timerState, setTimerState] = useState<WorkoutTimerState | null>(null)
   const [gpsState, setGpsState] = useState<WorkoutGpsState | null>(() => runnerGps.loadState())
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
   const [isConfirmingStop, setIsConfirmingStop] = useState(false)
+  const { profile: sessionProfile, refresh: refreshSessionProfile } = useSharedProfile({
+    active: !isStarted && summary === null,
+  })
+  const workoutIntervals = useMemo(
+    () => buildWorkoutIntervals(sessionProfile.level),
+    [sessionProfile.level]
+  )
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
@@ -241,7 +242,7 @@ export const Workout = ({
     setIsConfirmingStop(false)
     const latestProfile = sharedProfileStore.loadOrCreate().profile
 
-    setSessionProfile(latestProfile)
+    refreshSessionProfile()
     setIsStarted(true)
     setWorkoutGpsTracking(true)
     setScreenWakeLock(true)
@@ -249,7 +250,7 @@ export const Workout = ({
     runnerHaptics.vibratePattern(startWorkoutPulsePattern)
     onLiveChange(true)
     syncWorkoutState()
-  }, [onLiveChange, syncWorkoutState])
+  }, [onLiveChange, refreshSessionProfile, syncWorkoutState])
 
   const handleStop = useCallback((): void => {
     startRequestedRef.current = false
@@ -267,12 +268,12 @@ export const Workout = ({
   const handleDone = useCallback((): void => {
     completionHandledRef.current = false
     setIsConfirmingStop(false)
-    setSessionProfile(sharedProfileStore.loadOrCreate().profile)
+    refreshSessionProfile()
     setSummary(null)
     setTimerState(null)
     setIsStarted(false)
     setGpsState(runnerGps.loadState())
-  }, [])
+  }, [refreshSessionProfile])
 
   const handleRequestStop = useCallback((): void => {
     setIsConfirmingStop(true)

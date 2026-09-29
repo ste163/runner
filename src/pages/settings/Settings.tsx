@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
+import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 
 import './Settings.css'
 import { isGraduated } from '../../domain/intervals.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { Session, TrainingProfile } from '../../domain/types.js'
+import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { Button } from '../../components/Button/index.js'
 import { Card } from '../../components/Card/index.js'
 import { Pressable } from '../../components/Pressable/index.js'
@@ -140,19 +141,11 @@ const buildTrashIconContent = (): string =>
   `</svg>`
 
 export const Settings = (): ReactElement => {
-  const [profile, setProfile] = useState<TrainingProfile>(
-    () => sharedProfileStore.loadOrCreate().profile
-  )
+  const { profile } = useSharedProfile()
   const [visibleMonth, setVisibleMonth] = useState<VisibleMonth>(() =>
     buildMonthFromDate(new Date())
   )
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
-
-  useEffect(() => {
-    return sharedProfileStore.subscribe((nextProfile) => {
-      setProfile(nextProfile)
-    })
-  }, [])
 
   const handleExportProfile = useCallback((): void => {
     sharedProfileStore.exportProfile(() => {})

@@ -3,8 +3,9 @@ import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/re
 import './Home.css'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
-import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
+import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
+import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
 import { Button, buildPlayIconContent } from '../../components/Button/index.js'
@@ -97,33 +98,21 @@ export const Home = (props: {
   onMounted?: () => void
   onStartWorkout: () => void
 }): ReactElement => {
-  const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
+  const { profile } = useSharedProfile()
   const [showManualAdjust, setShowManualAdjust] = useState(false)
 
   useEffect(() => {
-    const next = sharedProfileStore.hydrate()
-
-    setProfile(next.profile)
     props.onMounted?.()
   }, [props.onMounted])
 
-  useEffect(() => {
-    return sharedProfileStore.subscribe((nextProfile) => {
-      setProfile(nextProfile)
-    })
-  }, [])
-
   const handleLevelAdjustment = useCallback((direction: 'up' | 'down'): void => {
-    setProfile((currentProfile) => {
-      const nextProfile = {
-        ...currentProfile,
-        level: adjustLevelManually(currentProfile.level, direction),
-      }
+    const currentProfile = sharedProfileStore.loadOrCreate().profile
+    const nextProfile = {
+      ...currentProfile,
+      level: adjustLevelManually(currentProfile.level, direction),
+    }
 
-      sharedProfileStore.save(nextProfile)
-
-      return nextProfile
-    })
+    sharedProfileStore.save(nextProfile)
   }, [])
 
   const handleDecreaseLevel = useCallback((): void => {
