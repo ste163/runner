@@ -23,7 +23,31 @@
 }
 
 .bottomNav__item--active {
+  background: transparent;
+}
+
+.bottomNav__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottomNav__item--active .bottomNav__icon {
   background: var(--color-walk-muted);
+}
+
+.bottomNav__label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.bottomNav__item--active .bottomNav__label {
+  color: var(--color-walk);
 }
 
 .bottomNav__item--inactive {

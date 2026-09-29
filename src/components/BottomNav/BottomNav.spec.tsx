@@ -11,7 +11,11 @@ describe('BottomNav', () => {
 
     render(<BottomNav activeTab='home' onHome={onHome} onWorkout={onWorkout} />)
 
-    const { findByTestId } = getQueriesForElement(elementTree.root!)
+    const { findByTestId, findByText } = getQueriesForElement(elementTree.root!)
+
+    expect(await findByText('Home')).toBeInTheDocument()
+    expect(await findByText('Workout')).toBeInTheDocument()
+    expect(await findByText('Settings')).toBeInTheDocument()
 
     const homeTab = await findByTestId('bottomNav-home')
     const workoutTab = await findByTestId('bottomNav-workout')

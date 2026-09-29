@@ -34,6 +34,7 @@ const buildSettingsIconContent = (color: string): string =>
 
 interface BottomNavItem {
   key: BottomNavTab
+  label: string
   icon: (color: string) => string
   action?: () => void
 }
@@ -57,16 +58,19 @@ export const BottomNav = ({
   const items: BottomNavItem[] = [
     {
       key: 'home',
+      label: 'Home',
       icon: buildHomeIconContent,
       ...(onHome ? { action: onHome } : {}),
     },
     {
       key: 'workout',
+      label: 'Workout',
       icon: buildWorkoutIconContent,
       ...(onWorkout ? { action: onWorkout } : {}),
     },
     {
       key: 'settings',
+      label: 'Settings',
       icon: buildSettingsIconContent,
       ...(onSettings ? { action: onSettings } : {}),
     },
@@ -86,7 +90,10 @@ export const BottomNav = ({
               testId={`bottomNav-${item.key}`}
               {...(item.action ? { onTap: item.action } : {})}
             >
-              <svg content={item.icon(iconColor)} style={{ width: '24px', height: '24px' }} />
+              <view className='bottomNav__icon'>
+                <svg content={item.icon(iconColor)} style={{ width: '24px', height: '24px' }} />
+              </view>
+              <text className='bottomNav__label'>{item.label}</text>
             </Pressable>
           )
         })}
