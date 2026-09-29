@@ -417,7 +417,9 @@ export const Workout = ({
     <view className='page workout'>
       {summary === null ? (
         <>
-          <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
+          <Card>
+            <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
+          </Card>
 
           <view className='workout__bottom'>
             <Card className='stats'>
