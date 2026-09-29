@@ -49,6 +49,7 @@ describe('workout timer bridge', () => {
       phaseType: 'warmup',
       totalElapsedSeconds: 0,
       totalRemainingSeconds: 1800,
+      intervals: [],
     }
     const module: RunnerWorkoutTimerModule = {
       getWorkoutTimerState: vi.fn(() => JSON.stringify(state)),
@@ -76,5 +77,61 @@ describe('workout timer bridge', () => {
     expect(module.pauseWorkout).toHaveBeenCalledTimes(1)
     expect(module.resumeWorkout).toHaveBeenCalledTimes(1)
     expect(module.stopWorkout).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes native completed intervals through', () => {
+    const state: WorkoutTimerState = {
+      isComplete: true,
+      isPaused: false,
+      isRunning: false,
+      phaseDurationSeconds: 300,
+      phaseIndex: 0,
+      phaseLabel: 'COOLDOWN',
+      phaseRemainingSeconds: 0,
+      phaseType: 'cooldown',
+      totalElapsedSeconds: 1800,
+      totalRemainingSeconds: 0,
+      intervals: [
+        { type: 'warmup', durationSeconds: 300, distanceMiles: 0.25 },
+        { type: 'run', durationSeconds: 30, distanceMiles: 0.0625 },
+      ],
+    }
+    const module: RunnerWorkoutTimerModule = {
+      getWorkoutTimerState: vi.fn(() => JSON.stringify(state)),
+      pauseWorkout: vi.fn(),
+      resumeWorkout: vi.fn(),
+      startWorkout: vi.fn(),
+      stopWorkout: vi.fn(),
+    }
+
+    runnerWorkoutTimer.configure(module)
+
+    expect(runnerWorkoutTimer.loadState()).toEqual(state)
+  })
+
+  it('fills in an empty intervals list when the native state has none', () => {
+    const rawState = {
+      isComplete: true,
+      isPaused: false,
+      isRunning: false,
+      phaseDurationSeconds: 300,
+      phaseIndex: 0,
+      phaseLabel: 'COOLDOWN',
+      phaseRemainingSeconds: 0,
+      phaseType: 'cooldown',
+      totalElapsedSeconds: 1800,
+      totalRemainingSeconds: 0,
+    }
+    const module: RunnerWorkoutTimerModule = {
+      getWorkoutTimerState: vi.fn(() => JSON.stringify(rawState)),
+      pauseWorkout: vi.fn(),
+      resumeWorkout: vi.fn(),
+      startWorkout: vi.fn(),
+      stopWorkout: vi.fn(),
+    }
+
+    runnerWorkoutTimer.configure(module)
+
+    expect(runnerWorkoutTimer.loadState()?.intervals).toEqual([])
   })
 })

@@ -72,7 +72,6 @@ describe('Settings', () => {
           ),
           level: { runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 },
           totalElapsedSeconds: 540,
-          avgPaceMinPerMile: 6,
         },
       ],
     }
@@ -105,7 +104,8 @@ describe('Settings', () => {
     await queries.findByText('33s')
     await queries.findByText('1m 48s')
     await queries.findByText('1.50 mi')
-    await queries.findByText('6.00 min/mi')
+    await queries.findByText('5.50 min/mi')
+    await queries.findByText('18.00 min/mi')
 
     expect(exportProfile).toHaveBeenCalledTimes(1)
     expect(importProfile).toHaveBeenCalledTimes(1)
@@ -131,6 +131,8 @@ describe('Settings', () => {
     await queries.findByText('January 2024')
     expect(await queries.findAllByText('30s')).toHaveLength(3)
     expect(await queries.findAllByText('2m 0s')).toHaveLength(3)
+    expect(await queries.findAllByText('5.00 min/mi')).toHaveLength(3)
+    expect(await queries.findAllByText('40.00 min/mi')).toHaveLength(3)
     await queries.findByText('1.23 mi')
     expect(queries.queryByText('Previous')).toBeNull()
     expect(queries.queryByText('Next')).toBeNull()
@@ -156,7 +158,7 @@ describe('Settings', () => {
     await queries.findByText('Jan 10')
     await queries.findByText('30s')
     await queries.findByText('2m 0s')
-    expect(await queries.findAllByText('—')).toHaveLength(2)
+    expect(await queries.findAllByText('—')).toHaveLength(3)
   })
 
   it('shows an empty state for the current month when it has no sessions', async () => {

@@ -15,6 +15,7 @@ import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 
+import org.json.JSONArray
 import org.json.JSONObject
 
 import kotlin.math.max
@@ -41,6 +42,12 @@ private data class WorkoutInterval(
         get() = (durationSeconds * 1000.0).roundToLong()
 }
 
+private data class CompletedWorkoutInterval(
+    val type: String,
+    val durationSeconds: Double,
+    val distanceMiles: Double,
+)
+
 private data class WorkoutTimerState(
     val isComplete: Boolean,
     val isPaused: Boolean,
@@ -63,6 +70,8 @@ class RunnerWorkoutTimerService : Service() {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var intervals: List<WorkoutInterval> = emptyList()
+    private val completedIntervals = mutableListOf<CompletedWorkoutInterval>()
+    private var currentPhaseStartDistanceMiles = 0.0
     private var isPaused = false
     private var isRunning = false
     private var pausedRemainingMs = 0L
@@ -103,6 +112,8 @@ class RunnerWorkoutTimerService : Service() {
         cancelTick()
         RunnerWorkoutTimerStateStore.clear()
         intervals = buildWorkoutIntervals(level)
+        completedIntervals.clear()
+        currentPhaseStartDistanceMiles = RunnerWorkoutGpsTracker.state(this).distanceMiles
         totalWorkoutDurationMs = intervals.fold(0L) { total, interval -> total + interval.durationMs }
         phaseIndex = 0
         isPaused = false
@@ -184,6 +195,8 @@ class RunnerWorkoutTimerService : Service() {
         var remainingMs = phaseEndElapsedMs - now
 
         while (remainingMs <= 0L && isRunning && !isPaused) {
+            recordCompletedPhase()
+
             phaseIndex += 1
 
             if (phaseIndex >= intervals.size) {
@@ -199,6 +212,21 @@ class RunnerWorkoutTimerService : Service() {
         updateNotification(state)
         emitState(state)
         scheduleTick(computeNextTickDelayMs(phaseEndElapsedMs - SystemClock.elapsedRealtime()))
+    }
+
+    private fun recordCompletedPhase() {
+        val completedInterval = intervals.getOrNull(phaseIndex) ?: return
+        val gpsDistanceMiles = RunnerWorkoutGpsTracker.state(this).distanceMiles
+        val phaseDistanceMiles = max(gpsDistanceMiles - currentPhaseStartDistanceMiles, 0.0)
+
+        completedIntervals.add(
+            CompletedWorkoutInterval(
+                type = completedInterval.type.name.lowercase(),
+                durationSeconds = completedInterval.durationSeconds,
+                distanceMiles = phaseDistanceMiles,
+            ),
+        )
+        currentPhaseStartDistanceMiles = gpsDistanceMiles
     }
 
     private fun scheduleTick(delayMs: Long) {
@@ -383,6 +411,19 @@ class RunnerWorkoutTimerService : Service() {
             .put("phaseType", phaseType)
             .put("totalElapsedSeconds", totalElapsedSeconds)
             .put("totalRemainingSeconds", totalRemainingSeconds)
+            .put(
+                "intervals",
+                JSONArray().apply {
+                    completedIntervals.forEach { interval ->
+                        put(
+                            JSONObject()
+                                .put("type", interval.type)
+                                .put("durationSeconds", interval.durationSeconds)
+                                .put("distanceMiles", interval.distanceMiles),
+                        )
+                    }
+                },
+            )
             .toString()
     }
 

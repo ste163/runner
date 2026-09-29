@@ -15,7 +15,7 @@ import com.lynx.jsbridge.LynxMethod
 import com.lynx.jsbridge.LynxModule
 import android.provider.Settings
 
-private object RunnerWorkoutGpsTracker {
+internal object RunnerWorkoutGpsTracker {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var locationManager: LocationManager? = null
@@ -74,6 +74,11 @@ private object RunnerWorkoutGpsTracker {
         )
     }
 
+    fun reset() {
+        distanceMeters = 0.0
+        lastLocation = null
+    }
+
     fun setTrackingEnabled(context: Context, enabled: Boolean) {
         if (enabled) {
             startTracking(context)
@@ -101,7 +106,6 @@ private object RunnerWorkoutGpsTracker {
 
         val listener = ensureListener()
 
-        distanceMeters = 0.0
         lastLocation = null
 
         try {
@@ -121,18 +125,12 @@ private object RunnerWorkoutGpsTracker {
     }
 
     private fun stopTracking() {
-        if (!isTracking) {
-            distanceMeters = 0.0
-            lastLocation = null
-            return
-        }
+        if (!isTracking) return
 
         locationListener?.let { listener ->
             locationManager?.removeUpdates(listener)
         }
         isTracking = false
-        distanceMeters = 0.0
-        lastLocation = null
     }
 }
 
@@ -141,6 +139,11 @@ class RunnerGpsModule(context: Context) : LynxModule(context) {
     @LynxMethod
     fun getWorkoutGpsState(): String {
         return RunnerWorkoutGpsTracker.state(mContext).toJson()
+    }
+
+    @LynxMethod
+    fun resetWorkoutDistance() {
+        RunnerWorkoutGpsTracker.reset()
     }
 
     @LynxMethod

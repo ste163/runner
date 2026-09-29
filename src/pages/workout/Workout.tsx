@@ -11,6 +11,7 @@ import './Workout.css'
 import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
 import { evaluateWindows } from '../../domain/progression.js'
 import { sharedProfileStore } from '../../domain/profile.js'
+import { buildIntervalRecords, buildLiveIntervals, buildPace } from '../../domain/stats.js'
 import type { Session, TrainingLevel, TrainingProfile } from '../../domain/types.js'
 import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
@@ -56,9 +57,6 @@ const formatDistance = (miles: number): string => `${miles.toFixed(2)} mi`
 
 const formatPace = (paceMinPerMile: number): string =>
   paceMinPerMile <= 0 ? 'No pace' : `${paceMinPerMile.toFixed(2)} min/mi`
-
-const buildCurrentPace = (elapsedSeconds: number, distanceMiles: number): number =>
-  distanceMiles <= 0 ? 0 : elapsedSeconds / 60 / distanceMiles
 
 const levelLabel = (level: TrainingLevel): string =>
   isGraduated(level)
@@ -131,13 +129,19 @@ const isGpsUnavailable = (gpsState: WorkoutGpsState | null): boolean =>
 const buildDistanceStatLabel = (gpsState: WorkoutGpsState | null): string =>
   isGpsUnavailable(gpsState) ? 'N/A' : formatDistance(gpsState?.distanceMiles ?? 0)
 
-const buildPaceStatLabel = (gpsState: WorkoutGpsState | null, elapsedSeconds: number): string => {
-  if (isGpsUnavailable(gpsState)) return 'N/A - Location off'
+interface LivePaceLabel {
+  value: string
+  unit: string | null
+}
 
-  const distanceMiles = gpsState?.distanceMiles ?? 0
-  const paceMinPerMile = buildCurrentPace(elapsedSeconds, distanceMiles)
+const buildLivePaceLabel = (
+  gpsState: WorkoutGpsState | null,
+  pace: number | null
+): LivePaceLabel => {
+  if (isGpsUnavailable(gpsState)) return { value: 'N/A - Location off', unit: null }
+  if (!pace) return { value: 'No pace yet', unit: null }
 
-  return distanceMiles <= 0 ? 'No pace yet' : formatPace(paceMinPerMile)
+  return { value: pace.toFixed(2), unit: 'min/mi' }
 }
 
 export const Workout = ({
@@ -184,14 +188,10 @@ export const Workout = ({
     const session: Session = {
       id: buildSessionId(),
       completedAt: completedAt.toISOString(),
-      intervals: [],
+      intervals: buildIntervalRecords(completedTimerState?.intervals ?? []),
       level: { ...latestProfile.level },
       totalDistanceMiles: completedGpsState?.distanceMiles ?? 0,
       totalElapsedSeconds: completedTimerState?.totalElapsedSeconds ?? 0,
-      avgPaceMinPerMile: buildCurrentPace(
-        completedTimerState?.totalElapsedSeconds ?? 0,
-        completedGpsState?.distanceMiles ?? 0
-      ),
     }
     const nextProfile = buildCompletedProfile(latestProfile, session, completedAt)
 
@@ -246,6 +246,7 @@ export const Workout = ({
 
     refreshSessionProfile()
     setIsStarted(true)
+    runnerGps.reset()
     setWorkoutGpsTracking(true)
     setScreenWakeLock(true)
     runnerWorkoutTimer.start(latestProfile.level)
@@ -263,6 +264,7 @@ export const Workout = ({
     runnerHaptics.cancel()
     setTimerState(null)
     setIsStarted(false)
+    runnerGps.reset()
     setGpsState(runnerGps.loadState())
     onLiveChange(false)
   }, [onLiveChange])
@@ -274,6 +276,7 @@ export const Workout = ({
     setSummary(null)
     setTimerState(null)
     setIsStarted(false)
+    runnerGps.reset()
     setGpsState(runnerGps.loadState())
   }, [refreshSessionProfile])
 
@@ -360,7 +363,20 @@ export const Workout = ({
   const toggleIconContent = isFresh || isPaused ? buildPlayIconContent() : buildPauseIconContent()
   const elapsedSeconds = timerState?.totalElapsedSeconds ?? 0
   const distanceStatLabel = buildDistanceStatLabel(gpsState)
-  const paceStatLabel = buildPaceStatLabel(gpsState, elapsedSeconds)
+  const phaseElapsedSeconds =
+    timerState === null
+      ? 0
+      : Math.max(timerState.phaseDurationSeconds - timerState.phaseRemainingSeconds, 0)
+  const liveIntervals = buildLiveIntervals(
+    timerState?.intervals ?? [],
+    timerState?.phaseType ?? 'warmup',
+    phaseElapsedSeconds,
+    gpsState?.distanceMiles ?? 0
+  )
+  const runPace = buildPace(liveIntervals, 'run')
+  const walkPace = buildPace(liveIntervals, 'walk')
+  const runPaceLabel = buildLivePaceLabel(gpsState, runPace)
+  const walkPaceLabel = buildLivePaceLabel(gpsState, walkPace)
   const workoutLevel = summary === null ? sessionProfile.level : summary.profile.level
   const workoutLevelMessage = hasLevelChanged(sessionProfile.level, workoutLevel)
     ? `New level: ${levelLabel(workoutLevel)}`
@@ -421,12 +437,34 @@ export const Workout = ({
                 <text className='stats__value'>{distanceStatLabel}</text>
               </view>
               <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
-                <text className='stats__label'>Pace</text>
-                <text
-                  className={gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'}
-                >
-                  {paceStatLabel}
-                </text>
+                <text className='stats__label'>Run pace</text>
+                <view className='stats__pace'>
+                  <text
+                    className={
+                      gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'
+                    }
+                  >
+                    {runPaceLabel.value}
+                  </text>
+                  {runPaceLabel.unit ? (
+                    <text className='stats__unit'>{runPaceLabel.unit}</text>
+                  ) : null}
+                </view>
+              </Pressable>
+              <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
+                <text className='stats__label'>Walk pace</text>
+                <view className='stats__pace'>
+                  <text
+                    className={
+                      gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'
+                    }
+                  >
+                    {walkPaceLabel.value}
+                  </text>
+                  {walkPaceLabel.unit ? (
+                    <text className='stats__unit'>{walkPaceLabel.unit}</text>
+                  ) : null}
+                </view>
               </Pressable>
             </Card>
 
@@ -476,11 +514,9 @@ export const Workout = ({
                 Total distance: {formatDistance(summary.session.totalDistanceMiles)}
               </text>
               <text className='copy'>
-                {summary.session.totalDistanceMiles > 0
-                  ? 'GPS metrics recorded. No interval breakdown recorded.'
-                  : summary.session.intervals.length === 0
-                    ? 'GPS unavailable yet. No interval breakdown recorded.'
-                    : 'Interval breakdown recorded below.'}
+                {summary.session.intervals.length > 0
+                  ? 'Interval breakdown recorded below.'
+                  : 'GPS metrics recorded. No interval breakdown recorded.'}
               </text>
               <text className='copy'>{workoutLevelMessage}</text>
             </view>

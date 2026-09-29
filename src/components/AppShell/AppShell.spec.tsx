@@ -32,6 +32,7 @@ const buildLiveTimerState = (): WorkoutTimerState => ({
   phaseType: 'run',
   totalElapsedSeconds: 343,
   totalRemainingSeconds: 1457,
+  intervals: [],
 })
 
 describe('AppShell', () => {

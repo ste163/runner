@@ -23,7 +23,6 @@ export interface Session {
   intervals: IntervalRecord[]
   totalDistanceMiles: number
   totalElapsedSeconds?: number
-  avgPaceMinPerMile?: number
 }
 
 export interface TrainingProfile {

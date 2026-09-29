@@ -31,6 +31,7 @@ const buildTimerModule = (state: WorkoutTimerState | null): RunnerWorkoutTimerMo
 
 const buildGpsModule = (): RunnerGpsModule => ({
   getWorkoutGpsState: vi.fn(() => null),
+  resetWorkoutDistance: vi.fn(),
   setWorkoutTrackingEnabled: vi.fn(),
   openLocationSettings: vi.fn(),
 })
@@ -50,6 +51,7 @@ const buildLiveTimerState = (): WorkoutTimerState => ({
   phaseType: 'run',
   totalElapsedSeconds: 343,
   totalRemainingSeconds: 1457,
+  intervals: [],
 })
 
 const buildCompleteTimerState = (): WorkoutTimerState => ({
@@ -63,6 +65,12 @@ const buildCompleteTimerState = (): WorkoutTimerState => ({
   phaseType: 'cooldown',
   totalElapsedSeconds: 1800,
   totalRemainingSeconds: 0,
+  intervals: [
+    { type: 'warmup', durationSeconds: 300, distanceMiles: 0.25 },
+    { type: 'run', durationSeconds: 30, distanceMiles: 0.0625 },
+    { type: 'walk', durationSeconds: 120, distanceMiles: 0.25 },
+    { type: 'cooldown', durationSeconds: 300, distanceMiles: 0.25 },
+  ],
 })
 
 const buildStaleTimerState = (): WorkoutTimerState => ({
@@ -76,6 +84,7 @@ const buildStaleTimerState = (): WorkoutTimerState => ({
   phaseType: 'warmup',
   totalElapsedSeconds: 0,
   totalRemainingSeconds: 0,
+  intervals: [],
 })
 
 describe('Workout', () => {
@@ -131,12 +140,54 @@ describe('Workout', () => {
 
     render(<Workout onLiveChange={onLiveChange} startRequestId={0} />)
 
-    const { findByText } = getQueriesForElement(elementTree.root!)
+    const { findAllByText, findByText } = getQueriesForElement(elementTree.root!)
 
     await findByText('Pause')
+    await findByText('Run pace')
+    await findByText('Walk pace')
+    expect(await findAllByText('N/A - Location off')).toHaveLength(2)
     expect(onLiveChange).toHaveBeenCalledWith(true)
     expect(screenModule.keepScreenOn).toHaveBeenCalledWith(true)
     expect(gpsModule.setWorkoutTrackingEnabled).not.toHaveBeenCalled()
+  })
+
+  it('shows run pace and walk pace during a live workout', async () => {
+    const liveState: WorkoutTimerState = {
+      ...buildLiveTimerState(),
+      phaseRemainingSeconds: 15,
+      intervals: [
+        { type: 'warmup', durationSeconds: 300, distanceMiles: 0.25 },
+        { type: 'run', durationSeconds: 30, distanceMiles: 0.125 },
+        { type: 'walk', durationSeconds: 120, distanceMiles: 0.0625 },
+      ],
+    }
+    const gpsModule: RunnerGpsModule = {
+      getWorkoutGpsState: vi.fn(() =>
+        JSON.stringify({
+          distanceMiles: 0.5,
+          hasPermission: true,
+          isLocationEnabled: true,
+          isTracking: true,
+        })
+      ),
+      openLocationSettings: vi.fn(),
+      resetWorkoutDistance: vi.fn(),
+      setWorkoutTrackingEnabled: vi.fn(),
+    }
+
+    runnerWorkoutTimer.configure(buildTimerModule(liveState))
+    runnerGps.configure(gpsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findAllByText, findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Run pace')
+    await findByText('Walk pace')
+    await findByText('4.00')
+    await findByText('22.40')
+    expect(await findAllByText('min/mi')).toHaveLength(2)
   })
 
   it('records the session and shows the summary when the workout completed while closed', async () => {
@@ -149,8 +200,17 @@ describe('Workout', () => {
     const { findByText } = getQueriesForElement(elementTree.root!)
 
     await findByText('Workout complete')
+    await findByText('Interval breakdown recorded below.')
     expect(onLiveChange).toHaveBeenCalledWith(false)
-    expect(sharedProfileStore.loadOrCreate().profile.sessions).toHaveLength(1)
+
+    const storedSession = sharedProfileStore.loadOrCreate().profile.sessions[0]
+
+    expect(storedSession?.intervals).toEqual([
+      { type: 'warmup', durationSeconds: 300, distanceMiles: 0.25, avgPaceMinPerMile: 20 },
+      { type: 'run', durationSeconds: 30, distanceMiles: 0.0625, avgPaceMinPerMile: 8 },
+      { type: 'walk', durationSeconds: 120, distanceMiles: 0.25, avgPaceMinPerMile: 8 },
+      { type: 'cooldown', durationSeconds: 300, distanceMiles: 0.25, avgPaceMinPerMile: 20 },
+    ])
   })
 
   it('shows the fresh workout UI when the native timer state is empty', async () => {
