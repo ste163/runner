@@ -81,7 +81,7 @@ export const BottomNav = ({
       <view className='bottomNav__surface'>
         {items.map((item) => {
           const isActive = item.key === activeTab
-          const iconColor = isActive ? themeColors.walk : themeColors.iconMuted
+          const iconColor = isActive ? themeColors.run : themeColors.iconMuted
 
           return (
             <Pressable

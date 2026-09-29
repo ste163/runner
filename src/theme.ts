@@ -1,10 +1,10 @@
 export const themeColors = {
-  run: '#2dd35f',
-  runMuted: 'rgba(45, 211, 95, 0.35)',
-  walk: '#2563eb',
-  walkMuted: 'rgba(37, 99, 235, 0.35)',
+  run: '#f6c177',
+  runMuted: 'rgba(246, 193, 119, 0.35)',
+  walk: '#31748f',
+  walkMuted: 'rgba(49, 116, 143, 0.35)',
   track: '#1b231c',
   connector: '#2a382f',
   iconMuted: '#b6c5bc',
-  danger: '#ef4444',
+  danger: '#eb6f92',
 } as const

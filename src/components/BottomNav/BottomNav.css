@@ -36,7 +36,7 @@
 }
 
 .bottomNav__item--active .bottomNav__icon {
-  background: var(--color-walk-muted);
+  background: var(--color-primary-muted);
 }
 
 .bottomNav__label {
@@ -47,7 +47,7 @@
 }
 
 .bottomNav__item--active .bottomNav__label {
-  color: var(--color-walk);
+  color: var(--color-primary);
 }
 
 .bottomNav__item--inactive {
