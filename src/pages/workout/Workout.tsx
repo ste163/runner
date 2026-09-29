@@ -30,6 +30,7 @@ import {
   buildStopIconContent,
 } from '../../components/Button/index.js'
 import { Pressable } from '../../components/Pressable/index.js'
+import { themeColors } from '../../theme.js'
 import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
 import { Card } from '../../components/Card/index.js'
 
@@ -479,7 +480,7 @@ export const Workout = ({
                     <Button
                       label='Stop'
                       variant='danger'
-                      icon={buildStopIconContent()}
+                      icon={buildStopIconContent(themeColors.danger)}
                       onTap={handleStop}
                     />
                   </view>
@@ -487,8 +488,8 @@ export const Workout = ({
               ) : (
                 <Button
                   label='Stop'
-                  variant='danger'
-                  icon={buildStopIconContent()}
+                  variant='neutral'
+                  icon={buildStopIconContent(themeColors.iconMuted)}
                   onTap={handleRequestStop}
                 />
               )}

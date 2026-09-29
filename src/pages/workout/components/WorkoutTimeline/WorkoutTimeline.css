@@ -125,7 +125,7 @@
 
 .timeline__infoLabel--done {
   text-decoration: line-through;
-  color: var(--color-walk-muted);
+  color: var(--color-text-muted);
 }
 
 .timeline__list {
@@ -162,13 +162,13 @@
 .timeline__segment--done--run {
   font-size: 1rem;
   text-decoration: line-through;
-  color: var(--color-primary-muted);
+  color: var(--color-text-muted);
 }
 
 .timeline__segment--done--walk {
   font-size: 1rem;
   text-decoration: line-through;
-  color: var(--color-walk-muted);
+  color: var(--color-text-muted);
 }
 
 .timeline__slash {
@@ -178,7 +178,8 @@
 
 .timeline__slash--done {
   font-size: 1rem;
-  color: var(--color-text-soft);
+  text-decoration: line-through;
+  color: var(--color-text-muted);
 }
 
 .timeline__setNumber {
@@ -189,5 +190,5 @@
 .timeline__setNumber--done {
   font-size: 1rem;
   text-decoration: line-through;
-  color: var(--color-text-soft);
+  color: var(--color-text-muted);
 }
