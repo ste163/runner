@@ -38,6 +38,8 @@ interface DonutPhase {
   radius: number
   size: number
   strokeWidth: number
+  lineColor: string | null
+  lineSide: 'left' | 'right' | null
 }
 
 interface IntervalSegment {
@@ -107,6 +109,8 @@ const buildWarmupPhase = (
     radius: SMALL_DONUT_RADIUS,
     size: SMALL_DONUT_SIZE,
     strokeWidth: SMALL_DONUT_STROKE,
+    lineColor: done ? themeColors.walkMuted : themeColors.connector,
+    lineSide: 'right',
   }
 }
 
@@ -142,6 +146,8 @@ const buildBlockPhase = (
     radius: BLOCK_DONUT_RADIUS,
     size: BLOCK_DONUT_SIZE,
     strokeWidth: BLOCK_DONUT_STROKE,
+    lineColor: null,
+    lineSide: null,
   }
 }
 
@@ -149,7 +155,8 @@ const buildCooldownPhase = (
   currentIndex: number,
   isDimmed: boolean,
   timerState: TimelineTimerState | null,
-  intervals: TimelineInterval[]
+  intervals: TimelineInterval[],
+  blockDone: boolean
 ): DonutPhase => {
   const cooldownIndex = intervals.length - 1
   const status: PhaseStatus =
@@ -172,6 +179,8 @@ const buildCooldownPhase = (
     radius: SMALL_DONUT_RADIUS,
     size: SMALL_DONUT_SIZE,
     strokeWidth: SMALL_DONUT_STROKE,
+    lineColor: blockDone ? themeColors.walkMuted : themeColors.connector,
+    lineSide: 'left',
   }
 }
 
@@ -256,12 +265,25 @@ const buildDonutSvgContent = (
   radius: number,
   strokeWidth: number,
   arcFraction: number,
-  arcColor: string
+  arcColor: string,
+  lineColor: string | null,
+  lineSide: 'left' | 'right' | null
 ): string => {
   const center = size / 2
   const circumference = 2 * Math.PI * radius
   const safeFraction = Math.max(0, Math.min(arcFraction, 1))
   const dashLength = (circumference * safeFraction).toFixed(2)
+
+  const outlineEdge = radius + strokeWidth / 2
+
+  const centerLine =
+    lineColor === null || lineSide === null
+      ? ''
+      : lineSide === 'right'
+        ? `<line x1="${center + outlineEdge}" y1="${center}" x2="${size}" y2="${center}" ` +
+          `stroke="${lineColor}" stroke-width="2"/>`
+        : `<line x1="0" y1="${center}" x2="${center - outlineEdge}" y2="${center}" ` +
+          `stroke="${lineColor}" stroke-width="2"/>`
 
   const progressCircle =
     safeFraction <= 0
@@ -274,6 +296,7 @@ const buildDonutSvgContent = (
   return (
     `<svg viewBox="0 0 ${size} ${size}" preserveAspectRatio="xMidYMid meet" ` +
     `xmlns="http://www.w3.org/2000/svg">` +
+    centerLine +
     `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${themeColors.track}" ` +
     `stroke-width="${strokeWidth}"/>` +
     progressCircle +
@@ -291,6 +314,8 @@ interface AnimatedDonutProps {
   arcColor: string
   targetFraction: number
   animate: boolean
+  lineColor: string | null
+  lineSide: 'left' | 'right' | null
 }
 
 const AnimatedDonut = ({
@@ -300,6 +325,8 @@ const AnimatedDonut = ({
   arcColor,
   targetFraction,
   animate,
+  lineColor,
+  lineSide,
 }: AnimatedDonutProps): ReactElement => {
   const [displayedFraction, setDisplayedFraction] = useState(targetFraction)
   const displayedFractionRef = useRef(targetFraction)
@@ -359,7 +386,15 @@ const AnimatedDonut = ({
 
   return (
     <svg
-      content={buildDonutSvgContent(size, radius, strokeWidth, displayedFraction, arcColor)}
+      content={buildDonutSvgContent(
+        size,
+        radius,
+        strokeWidth,
+        displayedFraction,
+        arcColor,
+        lineColor,
+        lineSide
+      )}
       style={svgStyle}
     />
   )
@@ -390,6 +425,8 @@ const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean })
         arcColor={phase.arcColor}
         targetFraction={phase.arcFraction}
         animate={animate}
+        lineColor={phase.lineColor}
+        lineSide={phase.lineSide}
       />
       {phase.centerText !== null ? (
         <view className='timeline__center'>
@@ -409,10 +446,10 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   const lastBlockIndex = buildLastBlockIndex(intervals)
   const warmupPhase = buildWarmupPhase(currentIndex, isDimmed, timerState, intervals)
   const blockPhase = buildBlockPhase(currentIndex, isDimmed, timerState, intervals, lastBlockIndex)
-  const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals)
+  const blockDone = blockPhase.status === 'done'
+  const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals, blockDone)
   const intervalLines = buildIntervalLines(buildIntervalSegments(intervals, currentIndex))
   const warmupDone = warmupPhase.status === 'done'
-  const blockDone = blockPhase.status === 'done'
 
   const warmupAnimated = !isDimmed && warmupPhase.status === 'active'
   const blockAnimated = !isDimmed && blockPhase.status === 'active'
@@ -421,7 +458,14 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   return (
     <view className='timeline'>
       <view className='timeline__donuts'>
-        <PhaseDonut phase={warmupPhase} animate={warmupAnimated} />
+        <view className='timeline__donutColumn'>
+          <PhaseDonut phase={warmupPhase} animate={warmupAnimated} />
+          <text
+            className={`${buildInfoLabelClassName(warmupPhase.status, isDimmed)} timeline__caption`}
+          >
+            Warm-up walk
+          </text>
+        </view>
         <view
           className={
             warmupDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
@@ -433,27 +477,22 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
             blockDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
           }
         />
-        <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
-      </view>
-      <view className='timeline__info'>
-        <view className='timeline__infoZone timeline__infoZone--small'>
-          <text className={buildInfoLabelClassName(warmupPhase.status, isDimmed)}>
-            Warm-up walk
-          </text>
-        </view>
-        <view className='timeline__infoZone timeline__infoZone--block'>
-          <view className='timeline__list'>
-            {intervalLines.map((line) => (
-              <text className='timeline__listLine' key={line.key}>
-                {renderLineSegments(line)}
-              </text>
-            ))}
-          </view>
-        </view>
-        <view className='timeline__infoZone timeline__infoZone--small'>
-          <text className={buildInfoLabelClassName(cooldownPhase.status, isDimmed)}>
+        <view className='timeline__donutColumn'>
+          <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
+          <text
+            className={`${buildInfoLabelClassName(cooldownPhase.status, isDimmed)} timeline__caption`}
+          >
             Cool-down walk
           </text>
+        </view>
+      </view>
+      <view className='timeline__info'>
+        <view className='timeline__list'>
+          {intervalLines.map((line) => (
+            <text className='timeline__listLine' key={line.key}>
+              {renderLineSegments(line)}
+            </text>
+          ))}
         </view>
       </view>
     </view>
