@@ -5,7 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Workout } from './Workout.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
+import { runnerGps, type RunnerGpsModule } from '../../native-bridge/gps.js'
+import { runnerScreen, type RunnerScreenModule } from '../../native-bridge/screen.js'
 import { runnerProfileStorage } from '../../native-bridge/storage.js'
+import {
+  runnerWorkoutTimer,
+  type RunnerWorkoutTimerModule,
+  type WorkoutTimerState,
+} from '../../native-bridge/workout-timer.js'
 
 const buildProfile = (runSeconds: number, walkSeconds: number): TrainingProfile => ({
   schemaVersion: 1,
@@ -14,14 +21,78 @@ const buildProfile = (runSeconds: number, walkSeconds: number): TrainingProfile 
   sessions: [],
 })
 
+const buildTimerModule = (state: WorkoutTimerState | null): RunnerWorkoutTimerModule => ({
+  getWorkoutTimerState: vi.fn(() => (state === null ? null : JSON.stringify(state))),
+  pauseWorkout: vi.fn(),
+  resumeWorkout: vi.fn(),
+  startWorkout: vi.fn(),
+  stopWorkout: vi.fn(),
+})
+
+const buildGpsModule = (): RunnerGpsModule => ({
+  getWorkoutGpsState: vi.fn(() => null),
+  setWorkoutTrackingEnabled: vi.fn(),
+  openLocationSettings: vi.fn(),
+})
+
+const buildScreenModule = (): RunnerScreenModule => ({
+  keepScreenOn: vi.fn(),
+})
+
+const buildLiveTimerState = (): WorkoutTimerState => ({
+  isComplete: false,
+  isPaused: false,
+  isRunning: true,
+  phaseDurationSeconds: 30,
+  phaseIndex: 3,
+  phaseLabel: 'RUN',
+  phaseRemainingSeconds: 17,
+  phaseType: 'run',
+  totalElapsedSeconds: 343,
+  totalRemainingSeconds: 1457,
+})
+
+const buildCompleteTimerState = (): WorkoutTimerState => ({
+  isComplete: true,
+  isPaused: false,
+  isRunning: false,
+  phaseDurationSeconds: 300,
+  phaseIndex: 0,
+  phaseLabel: 'COOLDOWN',
+  phaseRemainingSeconds: 0,
+  phaseType: 'cooldown',
+  totalElapsedSeconds: 1800,
+  totalRemainingSeconds: 0,
+})
+
+const buildStaleTimerState = (): WorkoutTimerState => ({
+  isComplete: false,
+  isPaused: false,
+  isRunning: false,
+  phaseDurationSeconds: 0,
+  phaseIndex: 0,
+  phaseLabel: 'WARMUP',
+  phaseRemainingSeconds: 0,
+  phaseType: 'warmup',
+  totalElapsedSeconds: 0,
+  totalRemainingSeconds: 0,
+})
+
 describe('Workout', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     sharedProfileStore.reset()
     runnerProfileStorage.configure(null)
+    runnerWorkoutTimer.configure(null)
+    runnerGps.configure(null)
+    runnerScreen.configure(null)
   })
 
   afterEach(() => {
     runnerProfileStorage.configure(null)
+    runnerWorkoutTimer.configure(null)
+    runnerGps.configure(null)
+    runnerScreen.configure(null)
     vi.unstubAllGlobals()
   })
 
@@ -47,5 +118,58 @@ describe('Workout', () => {
 
     expect((await findAllByText('Run 33s')).length).toBeGreaterThan(0)
     expect(queryByText('Run 30s')).toBeNull()
+  })
+
+  it('recovers a live workout from the native timer state on mount', async () => {
+    const gpsModule = buildGpsModule()
+    const screenModule = buildScreenModule()
+    const onLiveChange = vi.fn()
+
+    runnerWorkoutTimer.configure(buildTimerModule(buildLiveTimerState()))
+    runnerGps.configure(gpsModule)
+    runnerScreen.configure(screenModule)
+
+    render(<Workout onLiveChange={onLiveChange} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Pause')
+    expect(onLiveChange).toHaveBeenCalledWith(true)
+    expect(screenModule.keepScreenOn).toHaveBeenCalledWith(true)
+    expect(gpsModule.setWorkoutTrackingEnabled).not.toHaveBeenCalled()
+  })
+
+  it('records the session and shows the summary when the workout completed while closed', async () => {
+    const onLiveChange = vi.fn()
+
+    runnerWorkoutTimer.configure(buildTimerModule(buildCompleteTimerState()))
+
+    render(<Workout onLiveChange={onLiveChange} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Workout complete')
+    expect(onLiveChange).toHaveBeenCalledWith(false)
+    expect(sharedProfileStore.loadOrCreate().profile.sessions).toHaveLength(1)
+  })
+
+  it('shows the fresh workout UI when the native timer state is empty', async () => {
+    runnerWorkoutTimer.configure(buildTimerModule(null))
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Start')
+  })
+
+  it('shows the fresh workout UI when the native timer state is stale', async () => {
+    runnerWorkoutTimer.configure(buildTimerModule(buildStaleTimerState()))
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Start')
   })
 })

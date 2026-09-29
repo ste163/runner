@@ -65,6 +65,11 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun gotoSparklingPage() {
+        if (!isTaskRoot) {
+            finish()
+            return
+        }
+
         val initData = mapOf<Any, Any>()
         val initialData: String = JsonUtils.toJson(initData)
         val launchScheme = if (isDebuggable) {

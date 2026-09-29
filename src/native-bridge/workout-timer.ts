@@ -21,10 +21,17 @@ export type RunnerWorkoutTimerModule = {
   stopWorkout: () => void
 }
 
+export const isPendingNativeStartState = (timerState: WorkoutTimerState): boolean =>
+  !timerState.isRunning && !timerState.isPaused && !timerState.isComplete
+
 const parseWorkoutTimerState = (detail: string | null): WorkoutTimerState | null => {
   if (!detail) return null
 
-  return JSON.parse(detail) as WorkoutTimerState
+  try {
+    return JSON.parse(detail) as WorkoutTimerState
+  } catch {
+    return null
+  }
 }
 
 class RunnerWorkoutTimerBridge {

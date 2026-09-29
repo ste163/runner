@@ -1,10 +1,11 @@
-import { useCallback, useState, type ReactElement } from '@lynx-js/react'
+import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './AppShell.css'
 import { BottomNav } from '../BottomNav/index.js'
 import { Home } from '../../pages/home/Home.js'
 import { Settings } from '../../pages/settings/Settings.js'
 import { Workout } from '../../pages/workout/Workout.js'
+import { isPendingNativeStartState, runnerWorkoutTimer } from '../../native-bridge/workout-timer.js'
 
 type Tab = 'home' | 'workout' | 'settings'
 
@@ -37,17 +38,33 @@ export const AppShell = (): ReactElement => {
     setIsWorkoutLive(isLive)
   }, [])
 
+  useEffect(() => {
+    const timerState = runnerWorkoutTimer.loadState()
+
+    if (timerState === null || isPendingNativeStartState(timerState)) return
+
+    setActiveTab('workout')
+  }, [])
+
   return (
     <view className='appShell'>
       <view className='appShell__content'>
-        <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'home') }}>
+        <view
+          className='appShell__tab'
+          style={{ display: buildTabDisplay(activeTab, 'home') }}
+          data-testid='tab-home'
+        >
           <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
             <view className='appShell__page'>
               <Home onStartWorkout={handleStartWorkout} />
             </view>
           </scroll-view>
         </view>
-        <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'workout') }}>
+        <view
+          className='appShell__tab'
+          style={{ display: buildTabDisplay(activeTab, 'workout') }}
+          data-testid='tab-workout'
+        >
           <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
             <view className='appShell__page'>
               <Workout
@@ -57,7 +74,11 @@ export const AppShell = (): ReactElement => {
             </view>
           </scroll-view>
         </view>
-        <view className='appShell__tab' style={{ display: buildTabDisplay(activeTab, 'settings') }}>
+        <view
+          className='appShell__tab'
+          style={{ display: buildTabDisplay(activeTab, 'settings') }}
+          data-testid='tab-settings'
+        >
           <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
             <view className='appShell__page'>
               <Settings />

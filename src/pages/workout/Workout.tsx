@@ -16,7 +16,11 @@ import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
 import { runnerHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen } from '../../native-bridge/screen.js'
-import { runnerWorkoutTimer, type WorkoutTimerState } from '../../native-bridge/workout-timer.js'
+import {
+  isPendingNativeStartState,
+  runnerWorkoutTimer,
+  type WorkoutTimerState,
+} from '../../native-bridge/workout-timer.js'
 import {
   Button,
   buildPauseIconContent,
@@ -109,9 +113,6 @@ const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean 
   previous.walkSeconds !== next.walkSeconds ||
   previous.intervalBlockSeconds !== next.intervalBlockSeconds
 
-const isPendingNativeStartState = (timerState: WorkoutTimerState): boolean =>
-  !timerState.isRunning && !timerState.isPaused && !timerState.isComplete
-
 const setScreenWakeLock = (enabled: boolean): void => {
   runnerScreen.keepScreenOn(enabled)
 }
@@ -159,6 +160,7 @@ export const Workout = ({
   const hasStartedRef = useRef(false)
   const completionHandledRef = useRef(false)
   const startRequestedRef = useRef(false)
+  const recoveryHandledRef = useRef(false)
   const countdownPulseKeyRef = useRef<string | null>(null)
   const lastPhaseIndexRef = useRef<number | null>(null)
   const gpsUnavailable = isGpsUnavailable(gpsState)
@@ -302,6 +304,25 @@ export const Workout = ({
       setScreenWakeLock(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (recoveryHandledRef.current) return
+
+    recoveryHandledRef.current = true
+
+    const recoveredState = runnerWorkoutTimer.loadState()
+
+    if (recoveredState === null || isPendingNativeStartState(recoveredState)) return
+
+    if (recoveredState.isComplete) {
+      syncWorkoutState()
+      return
+    }
+
+    setScreenWakeLock(true)
+    setIsStarted(true)
+    onLiveChange(true)
+  }, [onLiveChange, syncWorkoutState])
 
   useEffect(() => {
     if (!isStarted || summary !== null) return
