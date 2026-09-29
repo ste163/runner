@@ -165,7 +165,7 @@ Repurpose existing workout page (rename/replace). Full-screen workout experience
 - **Countdown timer**: time remaining in current interval
 - **Session progress**: elapsed time / estimated total
 - **Next up** preview: "Next: Walk 2m 0s"
-- **Last 5 seconds**: haptic pulse every second (200ms vibration) as interval-end warning
+- **Countdown**: single 150ms haptic pulse at 4, 3, 2, 1 seconds remaining; double pulse at 0
 - **Workout start**: single 500ms haptic pulse
 - **Pause / Stop** controls
 - On completion: inline **post-workout summary** — app saves session, evaluates progression window,
@@ -232,7 +232,7 @@ Current JS bridge surface:
   `resumeWorkout()`, `stopWorkout()`
 - `RunnerGpsModule`: `getWorkoutGpsState()`, `setWorkoutTrackingEnabled(enabled)`,
   `openLocationSettings()`
-- `RunnerHapticModule`: `vibrate(durationMs)`, `cancel()`
+- `RunnerHapticModule`: `vibratePattern(patternJson)`, `cancel()`
 - `RunnerScreenModule`: `keepScreenOn(enabled)`
 
 Timer state is polled from JS while the workout is active; no event-emitter layer is needed.
@@ -276,6 +276,8 @@ Implemented with `RunnerWorkoutTimerService` and `RunnerWorkoutTimerModule`.
 - The workout page polls `getWorkoutTimerState()` while active, so the UI stays in sync without a
   custom event bridge
 - Pausing freezes both the session clock and GPS accumulation; stopping clears the stored state
+- Ticks self-correct onto exact whole-second marks (`computeNextTickDelayMs`), so the
+  phase-boundary state fires at remaining 0
 
 ### Haptic Feedback
 
@@ -291,15 +293,16 @@ Implemented with a custom `RunnerHapticModule`; Lynx has no built-in haptic API.
 
 ```typescript
 RunnerHapticModule: {
-  vibrate(durationMs: number): void   // single pulse
-  cancel(): void                       // stop active vibration
+  vibratePattern(patternJson: string): void   // waveform pattern: wait/vibrate ms pairs
+  cancel(): void                              // stop active vibration
 }
 ```
 
-**Timing design**: JS controls when to call `vibrate()`.
+**Timing design**: JS controls when to call `vibratePattern()`.
 
-- Workout start: single `vibrate(500)` to signal "go"
-- Last 5 seconds of each interval: `vibrate(200)` once per second as countdown warning
+- Workout start: single 500ms pulse — pattern `[0, 500]`
+- Countdown: single 150ms pulse at 4, 3, 2, 1 seconds remaining — pattern `[0, 150]`
+- Phase boundary (0 seconds remaining): double pulse — pattern `[0, 70, 150, 70]`
 
 **Registration**: `SparklingLynxConfig.Builder` exposes `addLynxModules(Map<String, SparklingLynxModuleWrapper>)`.
 Confirmed by inspecting `sparkling-2.0.1.aar` bytecode. Register in `SparklingApplication.kt`:
@@ -371,7 +374,7 @@ Completed:
 - Workout screen with explicit Start Workout gate before the timer begins
 - Warmup + interval block + cooldown timer
 - Phase labels (WARMUP / RUN / WALK / COOLDOWN), countdown, next-up preview
-- Haptic adapter with start pulse and last-5-seconds pulses
+- Haptic adapter with start pulse, countdown singles, and phase-boundary double pulse
 - Pause/stop controls and back navigation to home
 - Post-workout summary with total distance and per-interval breakdown support
 
@@ -385,7 +388,7 @@ Completed:
 ### Phase 4 — Native bridge ✅ Complete
 
 - COMPLETED: **JS wrapper namespace**: dedicated `src/native-bridge/` area for JS-facing NativeModules
-- COMPLETED: **Haptics**: `RunnerHapticModule` (`vibrate` + `cancel`), `VIBRATE` normal permission
+- COMPLETED: **Haptics**: `RunnerHapticModule` (`vibratePattern` + `cancel`), `VIBRATE` normal permission
 - COMPLETED: **Storage**: `RunnerStorageModule` (`LynxModule` + `@LynxMethod`) with `filesDir` JSON backend,
   atomic write pattern, SAF export/import, and app-exposed import/export controls
 - COMPLETED: **Foreground service**: `RunnerWorkoutTimerService` owns the workout timer and persists
@@ -409,9 +412,9 @@ Completed:
 1. **Week boundary**: Rolling 7-day window from first session of each cycle (not calendar Mon–Sun).
 2. **Partial sessions**: Stopped early → does **not** count. Normal window-expiry regression logic applies.
 3. **Cooldown walk**: Every session ends with 5 min cooldown walk. Total: 5 warmup + 20 intervals + 5 cooldown = 30 min.
-4. **Haptic feedback only** (no audio): `RunnerHapticModule` (`vibrate(durationMs)` + `cancel()`),
-   `VIBRATE` normal permission (manifest only). Triggers: workout start (500ms pulse) + last 5
-   seconds of each interval (200ms pulse/sec).
+4. **Haptic feedback only** (no audio): `RunnerHapticModule` (`vibratePattern(patternJson)` + `cancel()`),
+   `VIBRATE` normal permission (manifest only). Triggers: workout start (500ms pulse), countdown
+   singles (150ms) at 4–1 seconds remaining, double pulse at the phase boundary (0).
 5. **Manual level adjustment**: Home screen increase/decrease buttons. 10% per tap (same as
    auto-progression). Bounds: run min 15s, walk min 10s. Same bounds apply to auto-regression.
 6. **Rest day guidance**: Suggest next session in 2 days after each completed session (not enforced).

@@ -54,6 +54,11 @@ private data class WorkoutTimerState(
     val totalRemainingSeconds: Double,
 )
 
+internal fun computeNextTickDelayMs(remainingMs: Long): Long {
+    val remainder = remainingMs % 1000L
+    return if (remainder == 0L) 1000L else remainder
+}
+
 class RunnerWorkoutTimerService : Service() {
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -108,7 +113,7 @@ class RunnerWorkoutTimerService : Service() {
         val state = buildState()
         startForegroundNotification(state)
         emitState(state)
-        scheduleTick()
+        scheduleTick(computeNextTickDelayMs(phaseEndElapsedMs - SystemClock.elapsedRealtime()))
     }
 
     private fun pauseWorkoutInternal() {
@@ -133,7 +138,7 @@ class RunnerWorkoutTimerService : Service() {
         val state = buildState()
         updateNotification(state)
         emitState(state)
-        scheduleTick()
+        scheduleTick(computeNextTickDelayMs(phaseEndElapsedMs - SystemClock.elapsedRealtime()))
     }
 
     private fun stopWorkoutInternal() {
@@ -193,12 +198,12 @@ class RunnerWorkoutTimerService : Service() {
         val state = buildState()
         updateNotification(state)
         emitState(state)
-        scheduleTick()
+        scheduleTick(computeNextTickDelayMs(phaseEndElapsedMs - SystemClock.elapsedRealtime()))
     }
 
-    private fun scheduleTick() {
+    private fun scheduleTick(delayMs: Long) {
         cancelTick()
-        mainHandler.postDelayed(tickRunnable, 1000L)
+        mainHandler.postDelayed(tickRunnable, delayMs)
     }
 
     private fun cancelTick() {
