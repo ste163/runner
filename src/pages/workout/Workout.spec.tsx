@@ -1,11 +1,12 @@
 import '@testing-library/jest-dom'
-import { getQueriesForElement, render } from '@lynx-js/react/testing-library'
+import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Workout } from './Workout.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingProfile } from '../../domain/types.js'
 import { runnerGps, type RunnerGpsModule } from '../../native-bridge/gps.js'
+import { runnerHaptics, type WorkoutHaptics } from '../../native-bridge/haptics.js'
 import { runnerScreen, type RunnerScreenModule } from '../../native-bridge/screen.js'
 import { runnerProfileStorage } from '../../native-bridge/storage.js'
 import {
@@ -39,6 +40,11 @@ const buildGpsModule = (): RunnerGpsModule => ({
 const buildScreenModule = (): RunnerScreenModule => ({
   keepScreenOn: vi.fn(),
   setShowWhenLocked: vi.fn(),
+})
+
+const buildHapticsModule = (): WorkoutHaptics => ({
+  cancel: vi.fn(),
+  vibratePattern: vi.fn(),
 })
 
 const buildStubNodesRef = () => ({ invoke: () => ({ exec: () => {} }) })
@@ -121,6 +127,7 @@ describe('Workout', () => {
     runnerWorkoutTimer.configure(null)
     runnerGps.configure(null)
     runnerScreen.configure(null)
+    runnerHaptics.configure(null)
     stubSelectorQuery()
   })
 
@@ -129,6 +136,7 @@ describe('Workout', () => {
     runnerWorkoutTimer.configure(null)
     runnerGps.configure(null)
     runnerScreen.configure(null)
+    runnerHaptics.configure(null)
     vi.unstubAllGlobals()
   })
 
@@ -316,5 +324,69 @@ describe('Workout', () => {
     const { findByText } = getQueriesForElement(elementTree.root!)
 
     await findByText('Start')
+  })
+
+  it('vibrates when the user pauses the workout', async () => {
+    const timerModule = buildTimerModule(buildLiveTimerState())
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(timerModule)
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    fireEvent.tap(await findByText('Pause'))
+
+    expect(timerModule.pauseWorkout).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,150]')
+  })
+
+  it('vibrates when the user resumes the workout', async () => {
+    const timerModule = buildTimerModule({
+      ...buildLiveTimerState(),
+      isPaused: true,
+      isRunning: false,
+    })
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(timerModule)
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    fireEvent.tap(await findByText('Resume'))
+
+    expect(timerModule.resumeWorkout).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,150]')
+  })
+
+  it('vibrates when the user confirms stop', async () => {
+    const timerModule = buildTimerModule(buildLiveTimerState())
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(timerModule)
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    fireEvent.tap(await findByText('Stop'))
+    await findByText('If you stop before the cool-down walk, your progress will not be saved.')
+    fireEvent.tap(await findByText('Stop'))
+
+    expect(timerModule.stopWorkout).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.cancel).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,150]')
   })
 })

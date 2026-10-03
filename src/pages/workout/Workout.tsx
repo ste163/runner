@@ -65,8 +65,8 @@ const buildSessionId = (): string => {
 
 const buildWorkoutIntervals = (level: TrainingLevel): WorkoutInterval[] => calculateIntervals(level)
 
-const countdownHapticDurationMs = 150
-const countdownPulsePattern = [0, countdownHapticDurationMs]
+const singlePulseDurationMs = 150
+const singlePulsePattern = [0, singlePulseDurationMs]
 const phaseBoundaryPulsePattern = [0, 70, 150, 70]
 const startWorkoutPulsePattern = [0, 500]
 const timerPollIntervalMs = 500
@@ -234,12 +234,14 @@ export const Workout = ({
     if (timerState?.isPaused) {
       setWorkoutGpsTracking(true)
       runnerWorkoutTimer.resume()
+      runnerHaptics.vibratePattern(singlePulsePattern)
       syncTimerState()
       return
     }
 
     setWorkoutGpsTracking(false)
     runnerWorkoutTimer.pause()
+    runnerHaptics.vibratePattern(singlePulsePattern)
     syncTimerState()
   }, [syncTimerState, timerState])
 
@@ -269,6 +271,7 @@ export const Workout = ({
     setScreenShowWhenLocked(false)
     runnerWorkoutTimer.stop()
     runnerHaptics.cancel()
+    runnerHaptics.vibratePattern(singlePulsePattern)
     setTimerState(null)
     setIsStarted(false)
     runnerGps.reset()
@@ -413,7 +416,7 @@ export const Workout = ({
     if (countdownPulseKeyRef.current === nextPulseKey) return
 
     countdownPulseKeyRef.current = nextPulseKey
-    runnerHaptics.vibratePattern(countdownPulsePattern)
+    runnerHaptics.vibratePattern(singlePulsePattern)
   }, [currentPhaseIndex, displayedRemainingSeconds, isPaused, isStarted, summary])
 
   useEffect(() => {
