@@ -12,6 +12,15 @@ type Tab = 'home' | 'workout' | 'data'
 const buildTabDisplay = (activeTab: Tab, tab: Tab): 'flex' | 'none' =>
   activeTab === tab ? 'flex' : 'none'
 
+interface TabConfig {
+  key: Tab
+  title: string
+  content: ReactElement
+}
+
+const buildActiveTabTitle = (key: Tab, tabs: TabConfig[]): string =>
+  tabs.find((tab) => tab.key === key)?.title ?? ''
+
 export const AppShell = (): ReactElement => {
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [isWorkoutLive, setIsWorkoutLive] = useState(false)
@@ -46,45 +55,38 @@ export const AppShell = (): ReactElement => {
     setActiveTab('workout')
   }, [])
 
+  const tabs: TabConfig[] = [
+    {
+      key: 'home',
+      title: 'Home',
+      content: <Home onStartWorkout={handleStartWorkout} />,
+    },
+    {
+      key: 'workout',
+      title: 'Workout',
+      content: (
+        <Workout onLiveChange={handleWorkoutLiveChange} startRequestId={workoutStartRequest} />
+      ),
+    },
+    { key: 'data', title: 'Data', content: <Data /> },
+  ]
+
   return (
     <view className='appShell'>
       <view className='appShell__content'>
-        <view
-          className='appShell__tab'
-          style={{ display: buildTabDisplay(activeTab, 'home') }}
-          data-testid='tab-home'
-        >
-          <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
-            <view className='appShell__page'>
-              <Home onStartWorkout={handleStartWorkout} />
-            </view>
-          </scroll-view>
-        </view>
-        <view
-          className='appShell__tab'
-          style={{ display: buildTabDisplay(activeTab, 'workout') }}
-          data-testid='tab-workout'
-        >
-          <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
-            <view className='appShell__page'>
-              <Workout
-                onLiveChange={handleWorkoutLiveChange}
-                startRequestId={workoutStartRequest}
-              />
-            </view>
-          </scroll-view>
-        </view>
-        <view
-          className='appShell__tab'
-          style={{ display: buildTabDisplay(activeTab, 'data') }}
-          data-testid='tab-data'
-        >
-          <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
-            <view className='appShell__page'>
-              <Data />
-            </view>
-          </scroll-view>
-        </view>
+        <text className='appShell__tabTitle'>{buildActiveTabTitle(activeTab, tabs)}</text>
+        {tabs.map((tab) => (
+          <view
+            key={tab.key}
+            className='appShell__tab'
+            style={{ display: buildTabDisplay(activeTab, tab.key) }}
+            data-testid={`tab-${tab.key}`}
+          >
+            <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
+              <view className='appShell__page'>{tab.content}</view>
+            </scroll-view>
+          </view>
+        ))}
       </view>
       {isWorkoutLive ? null : (
         <BottomNav
