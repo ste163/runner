@@ -26,8 +26,21 @@ class RunnerScreenModule(context: Context) : LynxModule(context) {
         }
     }
 
+    private fun updateShowWhenLocked(enabled: Boolean) {
+        val activity = resolveActivity() ?: return
+
+        activity.runOnUiThread {
+            activity.setShowWhenLocked(enabled)
+        }
+    }
+
     @LynxMethod
     fun keepScreenOn(enabled: Boolean) {
         updateKeepScreenOn(enabled)
+    }
+
+    @LynxMethod
+    fun setShowWhenLocked(enabled: Boolean) {
+        updateShowWhenLocked(enabled)
     }
 }

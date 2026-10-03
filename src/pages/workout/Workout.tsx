@@ -111,6 +111,10 @@ const setScreenWakeLock = (enabled: boolean): void => {
   runnerScreen.keepScreenOn(enabled)
 }
 
+const setScreenShowWhenLocked = (enabled: boolean): void => {
+  runnerScreen.setShowWhenLocked(enabled)
+}
+
 const setWorkoutGpsTracking = (enabled: boolean): void => {
   runnerGps.setWorkoutTrackingEnabled(enabled)
 }
@@ -178,6 +182,7 @@ export const Workout = ({
     setWorkoutGpsTracking(false)
     runnerWorkoutTimer.stop()
     setScreenWakeLock(false)
+    setScreenShowWhenLocked(false)
 
     const completedAt = new Date()
     const latestProfile = sharedProfileStore.loadOrCreate().profile
@@ -248,6 +253,7 @@ export const Workout = ({
     runnerGps.reset()
     setWorkoutGpsTracking(true)
     setScreenWakeLock(true)
+    setScreenShowWhenLocked(true)
     runnerWorkoutTimer.start(latestProfile.level)
     runnerHaptics.vibratePattern(startWorkoutPulsePattern)
     onLiveChange(true)
@@ -260,6 +266,7 @@ export const Workout = ({
     setIsConfirmingStop(false)
     setWorkoutGpsTracking(false)
     setScreenWakeLock(false)
+    setScreenShowWhenLocked(false)
     runnerWorkoutTimer.stop()
     runnerHaptics.cancel()
     setTimerState(null)
@@ -276,6 +283,7 @@ export const Workout = ({
     setSummary(null)
     setTimerState(null)
     setIsStarted(false)
+    setScreenShowWhenLocked(false)
     runnerGps.reset()
     setGpsState(runnerGps.loadState())
   }, [refreshSessionProfile])
@@ -305,6 +313,7 @@ export const Workout = ({
     return () => {
       setWorkoutGpsTracking(false)
       setScreenWakeLock(false)
+      setScreenShowWhenLocked(false)
     }
   }, [])
 
@@ -323,6 +332,7 @@ export const Workout = ({
     }
 
     setScreenWakeLock(true)
+    setScreenShowWhenLocked(true)
     setIsStarted(true)
     onLiveChange(true)
   }, [onLiveChange, syncTimerState])

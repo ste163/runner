@@ -38,6 +38,7 @@ const buildGpsModule = (): RunnerGpsModule => ({
 
 const buildScreenModule = (): RunnerScreenModule => ({
   keepScreenOn: vi.fn(),
+  setShowWhenLocked: vi.fn(),
 })
 
 const buildLiveTimerState = (): WorkoutTimerState => ({
@@ -149,6 +150,7 @@ describe('Workout', () => {
     expect(await findAllByText('N/A')).toHaveLength(3)
     expect(onLiveChange).toHaveBeenCalledWith(true)
     expect(screenModule.keepScreenOn).toHaveBeenCalledWith(true)
+    expect(screenModule.setShowWhenLocked).toHaveBeenCalledWith(true)
     expect(gpsModule.setWorkoutTrackingEnabled).not.toHaveBeenCalled()
   })
 
@@ -193,8 +195,10 @@ describe('Workout', () => {
 
   it('records the session and shows the summary when the workout completed while closed', async () => {
     const onLiveChange = vi.fn()
+    const screenModule = buildScreenModule()
 
     runnerWorkoutTimer.configure(buildTimerModule(buildCompleteTimerState()))
+    runnerScreen.configure(screenModule)
 
     render(<Workout onLiveChange={onLiveChange} startRequestId={0} />)
 
@@ -203,6 +207,7 @@ describe('Workout', () => {
     await findByText('Workout complete')
     await findByText('Interval breakdown recorded below.')
     expect(onLiveChange).toHaveBeenCalledWith(false)
+    expect(screenModule.setShowWhenLocked).toHaveBeenCalledWith(false)
 
     const storedSession = sharedProfileStore.loadOrCreate().profile.sessions[0]
 

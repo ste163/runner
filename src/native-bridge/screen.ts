@@ -1,5 +1,6 @@
 export type RunnerScreenModule = {
   keepScreenOn: (enabled: boolean) => void
+  setShowWhenLocked: (enabled: boolean) => void
 }
 
 class RunnerScreenBridge {
@@ -14,6 +15,13 @@ class RunnerScreenBridge {
 
     if (!this.module) return
     this.module.keepScreenOn(enabled)
+  }
+
+  setShowWhenLocked = (enabled: boolean): void => {
+    'background only'
+
+    if (!this.module) return
+    this.module.setShowWhenLocked(enabled)
   }
 }
 
