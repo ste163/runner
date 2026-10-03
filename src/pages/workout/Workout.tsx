@@ -69,6 +69,8 @@ const countdownHapticDurationMs = 150
 const countdownPulsePattern = [0, countdownHapticDurationMs]
 const phaseBoundaryPulsePattern = [0, 70, 150, 70]
 const startWorkoutPulsePattern = [0, 500]
+const timerPollIntervalMs = 500
+const gpsPollIntervalMs = 1000
 
 const buildCountdownPulseKey = (
   phaseIndex: number,
@@ -132,7 +134,7 @@ const buildLivePaceLabel = (
   gpsState: WorkoutGpsState | null,
   pace: number | null
 ): LivePaceLabel => {
-  if (isGpsUnavailable(gpsState)) return { value: 'N/A - Location off', unit: null }
+  if (isGpsUnavailable(gpsState)) return { value: 'N/A', unit: null }
   if (!pace) return { value: 'No pace yet', unit: null }
 
   return { value: pace.toFixed(2), unit: 'min/mi' }
@@ -199,14 +201,13 @@ export const Workout = ({
     runnerHaptics.vibratePattern(phaseBoundaryPulsePattern)
   }, [onLiveChange])
 
-  const syncWorkoutState = useCallback((): void => {
+  const syncTimerState = useCallback((): void => {
     const nextTimerState = runnerWorkoutTimer.loadState()
 
     if (!nextTimerState) return
     if (startRequestedRef.current && isPendingNativeStartState(nextTimerState)) return
 
     setTimerState(nextTimerState)
-    setGpsState(runnerGps.loadState())
 
     if (nextTimerState.isComplete) {
       startRequestedRef.current = false
@@ -218,20 +219,24 @@ export const Workout = ({
     setIsStarted(nextTimerState.isRunning)
   }, [completeWorkout])
 
+  const syncGpsState = useCallback((): void => {
+    setGpsState(runnerGps.loadState())
+  }, [])
+
   const handlePauseToggle = useCallback((): void => {
     setIsConfirmingStop(false)
 
     if (timerState?.isPaused) {
       setWorkoutGpsTracking(true)
       runnerWorkoutTimer.resume()
-      syncWorkoutState()
+      syncTimerState()
       return
     }
 
     setWorkoutGpsTracking(false)
     runnerWorkoutTimer.pause()
-    syncWorkoutState()
-  }, [syncWorkoutState, timerState])
+    syncTimerState()
+  }, [syncTimerState, timerState])
 
   const handleStart = useCallback((): void => {
     startRequestedRef.current = true
@@ -246,8 +251,9 @@ export const Workout = ({
     runnerWorkoutTimer.start(latestProfile.level)
     runnerHaptics.vibratePattern(startWorkoutPulsePattern)
     onLiveChange(true)
-    syncWorkoutState()
-  }, [onLiveChange, refreshSessionProfile, syncWorkoutState])
+    syncTimerState()
+    syncGpsState()
+  }, [onLiveChange, refreshSessionProfile, syncGpsState, syncTimerState])
 
   const handleStop = useCallback((): void => {
     startRequestedRef.current = false
@@ -312,26 +318,29 @@ export const Workout = ({
     if (recoveredState === null || isPendingNativeStartState(recoveredState)) return
 
     if (recoveredState.isComplete) {
-      syncWorkoutState()
+      syncTimerState()
       return
     }
 
     setScreenWakeLock(true)
     setIsStarted(true)
     onLiveChange(true)
-  }, [onLiveChange, syncWorkoutState])
+  }, [onLiveChange, syncTimerState])
 
   useEffect(() => {
     if (!isStarted || summary !== null) return
 
-    syncWorkoutState()
+    syncTimerState()
+    syncGpsState()
 
-    const intervalId = setInterval(() => {
-      syncWorkoutState()
-    }, 250)
+    const timerIntervalId = setInterval(syncTimerState, timerPollIntervalMs)
+    const gpsIntervalId = setInterval(syncGpsState, gpsPollIntervalMs)
 
-    return () => clearInterval(intervalId)
-  }, [isStarted, summary, syncWorkoutState])
+    return () => {
+      clearInterval(timerIntervalId)
+      clearInterval(gpsIntervalId)
+    }
+  }, [isStarted, summary, syncTimerState, syncGpsState])
 
   const startRequestIdRef = useRef(startRequestId)
 
@@ -435,13 +444,7 @@ export const Workout = ({
               <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
                 <text className='stats__label'>Run pace</text>
                 <view className='stats__pace'>
-                  <text
-                    className={
-                      gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'
-                    }
-                  >
-                    {runPaceLabel.value}
-                  </text>
+                  <text className='stats__value'>{runPaceLabel.value}</text>
                   {runPaceLabel.unit ? (
                     <text className='stats__unit'>{runPaceLabel.unit}</text>
                   ) : null}
@@ -450,13 +453,7 @@ export const Workout = ({
               <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
                 <text className='stats__label'>Walk pace</text>
                 <view className='stats__pace'>
-                  <text
-                    className={
-                      gpsUnavailable ? 'stats__value stats__value--action' : 'stats__value'
-                    }
-                  >
-                    {walkPaceLabel.value}
-                  </text>
+                  <text className='stats__value'>{walkPaceLabel.value}</text>
                   {walkPaceLabel.unit ? (
                     <text className='stats__unit'>{walkPaceLabel.unit}</text>
                   ) : null}

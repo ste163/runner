@@ -146,7 +146,7 @@ describe('Workout', () => {
     await findByText('Pause')
     await findByText('Run pace')
     await findByText('Walk pace')
-    expect(await findAllByText('N/A - Location off')).toHaveLength(2)
+    expect(await findAllByText('N/A')).toHaveLength(3)
     expect(onLiveChange).toHaveBeenCalledWith(true)
     expect(screenModule.keepScreenOn).toHaveBeenCalledWith(true)
     expect(gpsModule.setWorkoutTrackingEnabled).not.toHaveBeenCalled()

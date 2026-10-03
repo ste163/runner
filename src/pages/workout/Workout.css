@@ -58,10 +58,6 @@
   text-align: center;
 }
 
-.stats__value--action {
-  color: var(--color-walk);
-}
-
 .stats__pace {
   display: flex;
   flex-direction: column;
