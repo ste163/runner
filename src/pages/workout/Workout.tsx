@@ -440,11 +440,11 @@ export const Workout = ({
     <view className='page workout'>
       {summary === null ? (
         <>
-          <Card>
-            <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
-          </Card>
+          <view className='workout__top'>
+            <Card>
+              <WorkoutTimeline intervals={workoutIntervals} timerState={timerState} />
+            </Card>
 
-          <view className='workout__bottom'>
             <Card className='stats'>
               <view className='stats__row'>
                 <view className='stats__item'>
@@ -477,7 +477,9 @@ export const Workout = ({
                 </Pressable>
               </view>
             </Card>
+          </view>
 
+          <view className='workout__bottom'>
             <view className='stack'>
               <Button
                 label={toggleLabel}
