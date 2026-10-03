@@ -136,7 +136,6 @@
 
 .timeline__intervalCount {
   font-size: 1.25rem;
-  font-weight: 800;
   letter-spacing: 0.5px;
   color: var(--color-text-muted);
 }
@@ -165,7 +164,7 @@
 }
 
 .timeline__dial {
-  width: 14rem;
+  width: 100%;
   height: calc(3 * 1.75rem);
 }
 
