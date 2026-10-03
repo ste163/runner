@@ -23,31 +23,20 @@ const easeInOutQuad = (progress: number): number =>
 
 const buildSvgContent = (runPercent: number): string => {
   const safePercent = clampPercent(runPercent)
-  const runLength = ((CIRCUMFERENCE * safePercent) / 100).toFixed(2)
-  const walkLength = ((CIRCUMFERENCE * (100 - safePercent)) / 100).toFixed(2)
+  const runLength = (CIRCUMFERENCE * safePercent) / 100
   const gapLength = CIRCUMFERENCE.toFixed(2)
-  const walkRotation = -90 + (safePercent / 100) * 360
 
   const runArc =
-    safePercent > 0
+    runLength > 0
       ? `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.run}" ` +
         `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
-        `stroke-dasharray="${runLength} ${gapLength}" transform="rotate(-90 ${CENTER} ${CENTER})"/>`
-      : ''
-
-  const walkArc =
-    safePercent < 100
-      ? `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.walkMuted}" ` +
-        `stroke-width="${STROKE_WIDTH}" stroke-linecap="butt" ` +
-        `stroke-dasharray="${walkLength} ${gapLength}" ` +
-        `transform="rotate(${walkRotation} ${CENTER} ${CENTER})"/>`
+        `stroke-dasharray="${runLength.toFixed(2)} ${gapLength}" transform="rotate(-90 ${CENTER} ${CENTER})"/>`
       : ''
 
   return (
     `<svg width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">` +
-    `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.track}" ` +
+    `<circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="none" stroke="${themeColors.walkMuted}" ` +
     `stroke-width="${STROKE_WIDTH}"/>` +
-    walkArc +
     runArc +
     `</svg>`
   )

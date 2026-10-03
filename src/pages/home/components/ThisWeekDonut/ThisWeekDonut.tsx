@@ -18,14 +18,14 @@ const clampCount = (value: number, totalCount: number): number =>
 const buildSvgContent = (completedCount: number, totalCount: number): string => {
   const safeTotal = Math.max(totalCount, 1)
   const fraction = clampCount(completedCount, safeTotal) / safeTotal
-  const arcLength = (CIRCUMFERENCE * fraction).toFixed(2)
+  const arcLength = Math.max(CIRCUMFERENCE * fraction - STROKE_WIDTH, 0)
   const gapLength = CIRCUMFERENCE.toFixed(2)
   const progressCircle =
-    fraction <= 0
+    arcLength <= 0
       ? ''
       : `<circle cx="44" cy="44" r="${RADIUS}" fill="none" stroke="${themeColors.run}" ` +
         `stroke-width="${STROKE_WIDTH}" stroke-linecap="round" ` +
-        `stroke-dasharray="${arcLength} ${gapLength}" transform="rotate(-90 44 44)"/>`
+        `stroke-dasharray="${arcLength.toFixed(2)} ${gapLength}" transform="rotate(-90 44 44)"/>`
 
   return (
     `<svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">` +
