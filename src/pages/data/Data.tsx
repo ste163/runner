@@ -1,6 +1,6 @@
 import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 
-import './Settings.css'
+import './Data.css'
 import { formatClockDuration } from '../../format.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { sharedProfileStore } from '../../domain/profile.js'
@@ -137,7 +137,7 @@ const buildTrashIconContent = (): string =>
   `<line x1="14" x2="14" y1="11" y2="17"/>` +
   `</svg>`
 
-export const Settings = (): ReactElement => {
+export const Data = (): ReactElement => {
   const { profile } = useSharedProfile()
   const [visibleMonth, setVisibleMonth] = useState<VisibleMonth>(() =>
     buildMonthFromDate(new Date())
@@ -185,7 +185,7 @@ export const Settings = (): ReactElement => {
   const isPreviousDisabled = earliestMonth === null || isSameMonth(visibleMonth, earliestMonth)
 
   return (
-    <view className='page settings'>
+    <view className='page data'>
       <Card
         title='Backup & restore'
         subtitle='Export your data to a JSON file to back it up, and import the file on a new device. Runner stores all data on your device.'

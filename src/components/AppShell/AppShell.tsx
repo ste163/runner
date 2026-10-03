@@ -3,11 +3,11 @@ import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/re
 import './AppShell.css'
 import { BottomNav } from '../BottomNav/index.js'
 import { Home } from '../../pages/home/Home.js'
-import { Settings } from '../../pages/settings/Settings.js'
+import { Data } from '../../pages/data/Data.js'
 import { Workout } from '../../pages/workout/Workout.js'
 import { isPendingNativeStartState, runnerWorkoutTimer } from '../../native-bridge/workout-timer.js'
 
-type Tab = 'home' | 'workout' | 'settings'
+type Tab = 'home' | 'workout' | 'data'
 
 const buildTabDisplay = (activeTab: Tab, tab: Tab): 'flex' | 'none' =>
   activeTab === tab ? 'flex' : 'none'
@@ -30,8 +30,8 @@ export const AppShell = (): ReactElement => {
     setWorkoutStartRequest((current) => current + 1)
   }, [])
 
-  const handleSettings = useCallback((): void => {
-    setActiveTab('settings')
+  const handleData = useCallback((): void => {
+    setActiveTab('data')
   }, [])
 
   const handleWorkoutLiveChange = useCallback((isLive: boolean): void => {
@@ -76,12 +76,12 @@ export const AppShell = (): ReactElement => {
         </view>
         <view
           className='appShell__tab'
-          style={{ display: buildTabDisplay(activeTab, 'settings') }}
-          data-testid='tab-settings'
+          style={{ display: buildTabDisplay(activeTab, 'data') }}
+          data-testid='tab-data'
         >
           <scroll-view className='appShell__scroll' scroll-orientation='vertical'>
             <view className='appShell__page'>
-              <Settings />
+              <Data />
             </view>
           </scroll-view>
         </view>
@@ -91,7 +91,7 @@ export const AppShell = (): ReactElement => {
           activeTab={activeTab}
           onHome={handleHome}
           onWorkout={handleWorkout}
-          onSettings={handleSettings}
+          onData={handleData}
         />
       )}
     </view>

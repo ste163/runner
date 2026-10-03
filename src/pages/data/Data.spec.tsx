@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Settings } from './Settings.js'
+import { Data } from './Data.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { IntervalRecord, Session, TrainingProfile } from '../../domain/types.js'
 import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
@@ -44,7 +44,7 @@ const buildSession = (
   totalDistanceMiles,
 })
 
-describe('Settings', () => {
+describe('Data', () => {
   beforeEach(() => {
     sharedProfileStore.reset()
     runnerProfileStorage.configure(null)
@@ -92,7 +92,7 @@ describe('Settings', () => {
 
     runnerProfileStorage.configure(module)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Export')
@@ -124,7 +124,7 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
 
@@ -151,7 +151,7 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
 
@@ -172,7 +172,7 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
 
@@ -192,7 +192,7 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('No runs this month')
@@ -231,7 +231,7 @@ describe('Settings', () => {
     sharedProfileStore.save(profile)
     runnerProfileStorage.configure(module)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Jan 10')
@@ -272,7 +272,7 @@ describe('Settings', () => {
     sharedProfileStore.save(profile)
     runnerProfileStorage.configure(module)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Jan 10')
