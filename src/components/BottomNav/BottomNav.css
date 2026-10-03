@@ -35,10 +35,6 @@
   justify-content: center;
 }
 
-.bottomNav__item--active .bottomNav__icon {
-  background: var(--color-primary-muted);
-}
-
 .bottomNav__label {
   font-size: 0.6875rem;
   font-weight: 700;

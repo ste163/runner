@@ -8,6 +8,12 @@ type BottomNavTab = 'home' | 'workout' | 'settings'
 
 const ICON_STROKE_WIDTH = 1.8
 
+// Keep in sync with .bottomNav__item padding-top (0.625rem) and
+// .bottomNav__icon size (2.5rem) in BottomNav.css at the 16.8px root font-size.
+// Pressable uses these to place the touch fill inside the icon circle.
+const NAV_ICON_SIZE_PX = 42
+const NAV_ICON_TOP_PX = 10.5
+
 const buildSvgOpen = (color: string): string =>
   `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ` +
   `fill="none" stroke="${color}" stroke-width="${ICON_STROKE_WIDTH}" ` +
@@ -88,6 +94,14 @@ export const BottomNav = ({
               key={item.key}
               className={buildTabClassName(isActive)}
               testId={`bottomNav-${item.key}`}
+              rippleColor={themeColors.runMuted}
+              rippleTarget={{
+                top: NAV_ICON_TOP_PX,
+                width: NAV_ICON_SIZE_PX,
+                height: NAV_ICON_SIZE_PX,
+                centeredHorizontally: true,
+              }}
+              ripplePersist={isActive}
               {...(item.action ? { onTap: item.action } : {})}
             >
               <view className='bottomNav__icon'>

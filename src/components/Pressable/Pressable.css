@@ -7,6 +7,31 @@
   animation: pressable-ripple 350ms ease-out forwards;
 }
 
+.pressable__fill-clip {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.pressable__fill {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--color-primary-muted);
+}
+
+.pressable__fill--growing {
+  animation: pressable-fill-grow 120ms ease-out forwards;
+}
+
+.pressable__fill--settled {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.pressable__fill--fading {
+  animation: pressable-fill-fade 100ms ease-in forwards;
+}
+
 @keyframes pressable-ripple {
   0% {
     transform: scale(0);
@@ -15,6 +40,28 @@
 
   100% {
     transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes pressable-fill-grow {
+  0% {
+    transform: scale(0);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pressable-fill-fade {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0);
     opacity: 0;
   }
 }
