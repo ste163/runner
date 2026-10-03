@@ -443,32 +443,36 @@ export const Workout = ({
 
           <view className='workout__bottom'>
             <Card className='stats'>
-              <view className='stats__item'>
-                <text className='stats__label'>Elapsed</text>
-                <text className='stats__value'>{formatClockDuration(elapsedSeconds)}</text>
-              </view>
-              <view className='stats__item'>
-                <text className='stats__label'>Distance</text>
-                <text className='stats__value'>{distanceStatLabel}</text>
-              </view>
-              <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
-                <text className='stats__label'>Run pace</text>
-                <view className='stats__pace'>
-                  <text className='stats__value'>{runPaceLabel.value}</text>
-                  {runPaceLabel.unit ? (
-                    <text className='stats__unit'>{runPaceLabel.unit}</text>
-                  ) : null}
+              <view className='stats__row'>
+                <view className='stats__item'>
+                  <text className='stats__label'>Elapsed</text>
+                  <text className='stats__value'>{formatClockDuration(elapsedSeconds)}</text>
                 </view>
-              </Pressable>
-              <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
-                <text className='stats__label'>Walk pace</text>
-                <view className='stats__pace'>
-                  <text className='stats__value'>{walkPaceLabel.value}</text>
-                  {walkPaceLabel.unit ? (
-                    <text className='stats__unit'>{walkPaceLabel.unit}</text>
-                  ) : null}
+                <view className='stats__item'>
+                  <text className='stats__label'>Distance</text>
+                  <text className='stats__value'>{distanceStatLabel}</text>
                 </view>
-              </Pressable>
+              </view>
+              <view className='stats__row'>
+                <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
+                  <text className='stats__label'>Run pace</text>
+                  <view className='stats__pace'>
+                    <text className='stats__value'>{runPaceLabel.value}</text>
+                    {runPaceLabel.unit ? (
+                      <text className='stats__unit'>{runPaceLabel.unit}</text>
+                    ) : null}
+                  </view>
+                </Pressable>
+                <Pressable className='stats__item' onTap={handleOpenPaceSettings}>
+                  <text className='stats__label'>Walk pace</text>
+                  <view className='stats__pace'>
+                    <text className='stats__value'>{walkPaceLabel.value}</text>
+                    {walkPaceLabel.unit ? (
+                      <text className='stats__unit'>{walkPaceLabel.unit}</text>
+                    ) : null}
+                  </view>
+                </Pressable>
+              </view>
             </Card>
 
             <view className='stack'>

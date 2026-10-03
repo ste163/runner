@@ -28,7 +28,7 @@
   color: var(--color-text-muted);
 }
 
-.stats {
+.stats__row {
   width: 100%;
   display: flex;
   flex-direction: row;
