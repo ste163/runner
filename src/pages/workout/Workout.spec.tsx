@@ -41,6 +41,31 @@ const buildScreenModule = (): RunnerScreenModule => ({
   setShowWhenLocked: vi.fn(),
 })
 
+const buildStubNodesRef = () => ({ invoke: () => ({ exec: () => {} }) })
+
+// The @lynx-js/react testing library mock runtime does not implement
+// NodesRef.invoke. Stub the background thread's lynx.createSelectorQuery so
+// ref-based imperative calls (the timeline dial's scrollTo) become no-ops.
+// The env copies this object onto the worker global on each thread switch,
+// and its auto-reset rebuilds it after every test, so no restore is needed.
+const stubSelectorQuery = (): void => {
+  const backgroundGlobal = (
+    globalThis as unknown as {
+      lynxTestingEnv?: { backgroundThread: { globalThis: Record<string, unknown> } }
+    }
+  ).lynxTestingEnv?.backgroundThread.globalThis
+
+  if (!backgroundGlobal) return
+
+  backgroundGlobal['lynx'] = {
+    ...(backgroundGlobal['lynx'] as Record<string, unknown>),
+    createSelectorQuery: () => ({
+      selectUniqueID: buildStubNodesRef,
+      select: buildStubNodesRef,
+    }),
+  }
+}
+
 const buildLiveTimerState = (): WorkoutTimerState => ({
   isComplete: false,
   isPaused: false,
@@ -96,6 +121,7 @@ describe('Workout', () => {
     runnerWorkoutTimer.configure(null)
     runnerGps.configure(null)
     runnerScreen.configure(null)
+    stubSelectorQuery()
   })
 
   afterEach(() => {
@@ -115,7 +141,6 @@ describe('Workout', () => {
 
     expect((await findAllByText('Run 0:33')).length).toBeGreaterThan(0)
     expect((await findAllByText('Walk 1:30')).length).toBeGreaterThan(0)
-    expect((await findAllByText('1.')).length).toBeGreaterThan(0)
   })
 
   it('updates the timeline when the profile changes on another page', async () => {

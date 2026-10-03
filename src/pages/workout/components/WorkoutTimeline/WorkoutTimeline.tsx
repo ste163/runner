@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
+import type { NodesRef, ScrollEvent } from '@lynx-js/types'
 
 import './WorkoutTimeline.css'
 import { formatClockDuration } from '../../../../format.js'
@@ -51,7 +52,6 @@ interface IntervalSegment {
 
 interface IntervalLine {
   key: string
-  setNumber: number
   segments: IntervalSegment[]
 }
 
@@ -64,9 +64,43 @@ const BLOCK_DONUT_RADIUS = 127
 const BLOCK_DONUT_STROKE = 22
 const ANIMATION_FRAME_MS = 8
 const ANIMATION_DURATION_MS = 1000
+const DIAL_VISIBLE_ROWS = 3
+const DIAL_ROW_HEIGHT_PX = 28 // 1.75rem row; keep in sync with .timeline__row in WorkoutTimeline.css
+const DIAL_CENTER_OFFSET_PX = DIAL_ROW_HEIGHT_PX // parks the target row in the middle slot
+// Lynx scrollTo computes target = child(index).position + offset, so the
+// centering offset must be negative to land on the detent.
+const DIAL_SCROLL_TO_OFFSET_PX = -DIAL_CENTER_OFFSET_PX
+const DIAL_SPACER_ROW_COUNT = 1
+const DIAL_VIEWPORT_HEIGHT_PX = DIAL_ROW_HEIGHT_PX * DIAL_VISIBLE_ROWS
+const DIAL_SNAP_EPSILON_PX = 1
+const DIAL_SNAP_SETTLE_MS = 120
+const DIAL_ROW_SCALE_FALLOFF = 0.008 // scale drops ~0.25 per row of distance from center
+const DIAL_MIN_ROW_SCALE = 0.5
 
 const buildLastBlockIndex = (intervals: TimelineInterval[]): number =>
   Math.max(intervals.length - 2, 0)
+
+const buildActiveLineIndex = (currentIndex: number, lineCount: number): number => {
+  if (currentIndex <= 0) return 0
+
+  return Math.min(Math.floor((currentIndex - 1) / 2), lineCount - 1)
+}
+
+const clampLineIndex = (lineIndex: number, lineCount: number): number =>
+  Math.max(0, Math.min(lineIndex, lineCount - 1))
+
+const buildCenteredLineIndex = (scrollY: number, lineCount: number): number =>
+  clampLineIndex(Math.round(scrollY / DIAL_ROW_HEIGHT_PX), lineCount)
+
+const buildDetentScrollY = (lineIndex: number): number => lineIndex * DIAL_ROW_HEIGHT_PX
+
+const buildRowScale = (lineIndex: number, scrollY: number): number => {
+  const rowCenter =
+    (lineIndex + DIAL_SPACER_ROW_COUNT) * DIAL_ROW_HEIGHT_PX + DIAL_ROW_HEIGHT_PX / 2
+  const distance = Math.abs(rowCenter - scrollY - DIAL_VIEWPORT_HEIGHT_PX / 2)
+
+  return Math.max(1 - distance * DIAL_ROW_SCALE_FALLOFF, DIAL_MIN_ROW_SCALE)
+}
 
 const buildArcFraction = (
   status: PhaseStatus,
@@ -207,7 +241,6 @@ const buildIntervalLines = (segments: IntervalSegment[]): IntervalLine[] =>
     ? []
     : chunkByTwo(segments).map((pair, index) => ({
         key: `line-${index}`,
-        setNumber: index + 1,
         segments: pair,
       }))
 
@@ -224,41 +257,28 @@ const buildInfoLabelClassName = (status: PhaseStatus, dimmed: boolean): string =
 const isLineComplete = (line: IntervalLine): boolean =>
   line.segments.every((segment) => segment.status === 'done')
 
-const buildSetNumberClassName = (line: IntervalLine): string =>
-  isLineComplete(line) ? 'timeline__setNumber timeline__setNumber--done' : 'timeline__setNumber'
+const renderLineSegments = (line: IntervalLine): ReactElement[] =>
+  line.segments.flatMap((segment, index) => {
+    const segmentText = (
+      <text className={buildIntervalSegmentClassName(segment)} key={segment.key}>
+        {segment.label}
+      </text>
+    )
 
-const renderLineSegments = (line: IntervalLine): ReactElement[] => {
-  const setNumberText = (
-    <text className={buildSetNumberClassName(line)} key={`${line.key}-setNumber`}>
-      {`${line.setNumber}. `}
-    </text>
-  )
+    if (index === 0) return [segmentText]
 
-  return [
-    setNumberText,
-    ...line.segments.flatMap((segment, index) => {
-      const segmentText = (
-        <text className={buildIntervalSegmentClassName(segment)} key={segment.key}>
-          {segment.label}
-        </text>
-      )
-
-      if (index === 0) return [segmentText]
-
-      return [
-        <text
-          className={
-            isLineComplete(line) ? 'timeline__slash timeline__slash--done' : 'timeline__slash'
-          }
-          key={`${segment.key}-slash`}
-        >
-          {' / '}
-        </text>,
-        segmentText,
-      ]
-    }),
-  ]
-}
+    return [
+      <text
+        className={
+          isLineComplete(line) ? 'timeline__slash timeline__slash--done' : 'timeline__slash'
+        }
+        key={`${segment.key}-slash`}
+      >
+        {' / '}
+      </text>,
+      segmentText,
+    ]
+  })
 
 const buildDonutSvgContent = (
   size: number,
@@ -450,6 +470,81 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals, blockDone)
   const intervalLines = buildIntervalLines(buildIntervalSegments(intervals, currentIndex))
   const warmupDone = warmupPhase.status === 'done'
+  const dialRef = useRef<NodesRef | null>(null)
+  const dialLineIndex = buildActiveLineIndex(currentIndex, intervalLines.length)
+  const [dialScrollY, setDialScrollY] = useState(() => buildDetentScrollY(dialLineIndex))
+  const dialScrollYRef = useRef(dialScrollY)
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isTouchingRef = useRef(false)
+
+  const cancelPendingSnap = useCallback((): void => {
+    if (snapTimerRef.current !== null) {
+      clearTimeout(snapTimerRef.current)
+      snapTimerRef.current = null
+    }
+  }, [])
+
+  const handleDialScroll = useCallback(
+    (event: ScrollEvent): void => {
+      cancelPendingSnap()
+      dialScrollYRef.current = event.detail.scrollTop
+      setDialScrollY(event.detail.scrollTop)
+    },
+    [cancelPendingSnap]
+  )
+
+  const handleDialTouchStart = useCallback((): void => {
+    isTouchingRef.current = true
+    cancelPendingSnap()
+  }, [cancelPendingSnap])
+
+  const handleDialTouchEnd = useCallback((): void => {
+    isTouchingRef.current = false
+  }, [])
+
+  const snapToCenteredRow = useCallback((): void => {
+    if (intervalLines.length === 0) return
+    if (isTouchingRef.current) return
+
+    const scrollY = dialScrollYRef.current
+    const centeredLineIndex = buildCenteredLineIndex(scrollY, intervalLines.length)
+    const targetScrollY = buildDetentScrollY(centeredLineIndex)
+
+    if (Math.abs(scrollY - targetScrollY) <= DIAL_SNAP_EPSILON_PX) return
+
+    dialRef.current
+      ?.invoke({
+        method: 'scrollTo',
+        params: {
+          index: centeredLineIndex + DIAL_SPACER_ROW_COUNT,
+          offset: DIAL_SCROLL_TO_OFFSET_PX,
+          smooth: true,
+        },
+      })
+      .exec()
+  }, [intervalLines.length])
+
+  const handleDialScrollEnd = useCallback((): void => {
+    cancelPendingSnap()
+    snapTimerRef.current = setTimeout(snapToCenteredRow, DIAL_SNAP_SETTLE_MS)
+  }, [cancelPendingSnap, snapToCenteredRow])
+
+  useEffect(() => {
+    return () => cancelPendingSnap()
+  }, [cancelPendingSnap])
+
+  useEffect(() => {
+    dialRef.current
+      ?.invoke({
+        method: 'scrollTo',
+        params: {
+          index: dialLineIndex + DIAL_SPACER_ROW_COUNT,
+          offset: DIAL_SCROLL_TO_OFFSET_PX,
+          smooth: true,
+        },
+      })
+      .exec()
+  }, [dialLineIndex])
 
   const warmupAnimated = !isDimmed && warmupPhase.status === 'active'
   const blockAnimated = !isDimmed && blockPhase.status === 'active'
@@ -487,13 +582,33 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
         </view>
       </view>
       <view className='timeline__info'>
-        <view className='timeline__list'>
-          {intervalLines.map((line) => (
-            <text className='timeline__listLine' key={line.key}>
-              {renderLineSegments(line)}
-            </text>
-          ))}
-        </view>
+        <scroll-view
+          ref={dialRef}
+          className='timeline__dial'
+          scroll-orientation='vertical'
+          scroll-bar-enable={false}
+          bindscroll={handleDialScroll}
+          bindscrollend={handleDialScrollEnd}
+          bindtouchstart={handleDialTouchStart}
+          bindtouchend={handleDialTouchEnd}
+        >
+          <view className='timeline__row' flatten={false} />
+          {intervalLines.map((line, lineIndex) => {
+            const rowScale = buildRowScale(lineIndex, dialScrollY)
+
+            return (
+              <view
+                className='timeline__row'
+                flatten={false}
+                key={line.key}
+                style={{ transform: `scale(${rowScale.toFixed(3)})`, opacity: rowScale }}
+              >
+                <text className='timeline__listLine'>{renderLineSegments(line)}</text>
+              </view>
+            )
+          })}
+          <view className='timeline__row' flatten={false} />
+        </scroll-view>
       </view>
     </view>
   )
