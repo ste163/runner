@@ -4,12 +4,6 @@
   justify-content: center;
 }
 
-.currentIntervalDonut__ring {
-  position: relative;
-  width: 260px;
-  height: 260px;
-}
-
 .currentIntervalDonut__center {
   position: absolute;
   top: 0;

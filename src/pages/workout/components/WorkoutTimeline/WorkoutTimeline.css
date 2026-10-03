@@ -105,6 +105,20 @@
   background: var(--color-walk-muted);
 }
 
+.timeline__donutLine {
+  position: absolute;
+  top: calc(50% - 1px);
+  height: 2px;
+}
+
+.timeline__donutLine--left {
+  left: 0;
+}
+
+.timeline__donutLine--right {
+  right: 0;
+}
+
 .timeline__setHeader {
   font-size: 1rem;
   font-weight: 800;

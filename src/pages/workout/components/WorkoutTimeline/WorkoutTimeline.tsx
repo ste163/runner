@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactElement } from '@ly
 import type { NodesRef, ScrollEvent } from '@lynx-js/types'
 
 import './WorkoutTimeline.css'
+import { DonutGraph } from '../../../../components/DonutGraph/index.js'
 import { formatClockDuration } from '../../../../format.js'
 import { themeColors } from '../../../../theme.js'
 
@@ -62,8 +63,10 @@ const SMALL_DONUT_STROKE = 10
 const BLOCK_DONUT_SIZE = 276
 const BLOCK_DONUT_RADIUS = 127
 const BLOCK_DONUT_STROKE = 22
-const ANIMATION_FRAME_MS = 8
-const ANIMATION_DURATION_MS = 1000
+// Bridges the ring outline to the donut box edge; keep in sync with
+// .timeline__donutLine in WorkoutTimeline.css.
+const DONUT_LINE_BRIDGE_WIDTH_PX =
+  SMALL_DONUT_SIZE / 2 - (SMALL_DONUT_RADIUS + SMALL_DONUT_STROKE / 2)
 const DIAL_VISIBLE_ROWS = 3
 const DIAL_ROW_HEIGHT_PX = 28 // 1.75rem row; keep in sync with .timeline__row in WorkoutTimeline.css
 const DIAL_CENTER_OFFSET_PX = DIAL_ROW_HEIGHT_PX // parks the target row in the middle slot
@@ -301,146 +304,6 @@ const renderLineSegments = (line: IntervalLine): ReactElement[] =>
     ]
   })
 
-const buildDonutSvgContent = (
-  size: number,
-  radius: number,
-  strokeWidth: number,
-  arcFraction: number,
-  arcColor: string,
-  lineColor: string | null,
-  lineSide: 'left' | 'right' | null
-): string => {
-  const center = size / 2
-  const circumference = 2 * Math.PI * radius
-  const safeFraction = Math.max(0, Math.min(arcFraction, 1))
-  const dashLength = (circumference * safeFraction).toFixed(2)
-
-  const outlineEdge = radius + strokeWidth / 2
-
-  const centerLine =
-    lineColor === null || lineSide === null
-      ? ''
-      : lineSide === 'right'
-        ? `<line x1="${center + outlineEdge}" y1="${center}" x2="${size}" y2="${center}" ` +
-          `stroke="${lineColor}" stroke-width="2"/>`
-        : `<line x1="0" y1="${center}" x2="${center - outlineEdge}" y2="${center}" ` +
-          `stroke="${lineColor}" stroke-width="2"/>`
-
-  const progressCircle =
-    safeFraction <= 0
-      ? ''
-      : `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${arcColor}" ` +
-        `stroke-width="${strokeWidth}" stroke-linecap="round" ` +
-        `stroke-dasharray="${dashLength} ${circumference.toFixed(2)}" ` +
-        `transform="rotate(-90 ${center} ${center})"/>`
-
-  return (
-    `<svg viewBox="0 0 ${size} ${size}" preserveAspectRatio="xMidYMid meet" ` +
-    `xmlns="http://www.w3.org/2000/svg">` +
-    centerLine +
-    `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${themeColors.track}" ` +
-    `stroke-width="${strokeWidth}"/>` +
-    progressCircle +
-    `</svg>`
-  )
-}
-
-const easeInOutQuad = (progress: number): number =>
-  progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress
-
-interface AnimatedDonutProps {
-  size: number
-  radius: number
-  strokeWidth: number
-  arcColor: string
-  targetFraction: number
-  animate: boolean
-  lineColor: string | null
-  lineSide: 'left' | 'right' | null
-}
-
-const AnimatedDonut = ({
-  size,
-  radius,
-  strokeWidth,
-  arcColor,
-  targetFraction,
-  animate,
-  lineColor,
-  lineSide,
-}: AnimatedDonutProps): ReactElement => {
-  const [displayedFraction, setDisplayedFraction] = useState(targetFraction)
-  const displayedFractionRef = useRef(targetFraction)
-  const targetFractionRef = useRef(targetFraction)
-  const animationStartedAtRef = useRef(0)
-  const animationFromRef = useRef(targetFraction)
-  const animationFrameRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const stopAnimation = useCallback((): void => {
-    if (animationFrameRef.current !== null) {
-      clearInterval(animationFrameRef.current)
-      animationFrameRef.current = null
-    }
-  }, [])
-
-  const applyFraction = useCallback((fraction: number): void => {
-    displayedFractionRef.current = fraction
-    setDisplayedFraction(fraction)
-  }, [])
-
-  useEffect(() => {
-    return () => stopAnimation()
-  }, [stopAnimation])
-
-  useEffect(() => {
-    targetFractionRef.current = targetFraction
-
-    if (!animate || Math.abs(targetFraction - displayedFractionRef.current) < 0.001) {
-      stopAnimation()
-      applyFraction(targetFraction)
-      return
-    }
-
-    animationFromRef.current = displayedFractionRef.current
-    animationStartedAtRef.current = Date.now()
-    stopAnimation()
-
-    animationFrameRef.current = setInterval(() => {
-      const elapsed = Date.now() - animationStartedAtRef.current
-      const progress = Math.min(elapsed / ANIMATION_DURATION_MS, 1)
-      const delta = targetFractionRef.current - animationFromRef.current
-      const nextFraction = easeInOutQuad(progress) * delta + animationFromRef.current
-
-      applyFraction(nextFraction)
-
-      if (progress >= 1) {
-        stopAnimation()
-        applyFraction(targetFractionRef.current)
-      }
-    }, ANIMATION_FRAME_MS)
-  }, [animate, applyFraction, stopAnimation, targetFraction])
-
-  const svgStyle =
-    size === BLOCK_DONUT_SIZE
-      ? { width: '100%', height: '100%' }
-      : { width: `${size}px`, height: `${size}px` }
-
-  return (
-    <svg
-      content={buildDonutSvgContent(
-        size,
-        radius,
-        strokeWidth,
-        displayedFraction,
-        arcColor,
-        lineColor,
-        lineSide
-      )}
-      style={svgStyle}
-    />
-  )
-}
-
 const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean }): ReactElement => {
   const sizeClass =
     phase.size === BLOCK_DONUT_SIZE ? 'timeline__donut--block' : 'timeline__donut--small'
@@ -459,23 +322,33 @@ const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean })
 
   return (
     <view className={`timeline__donut ${sizeClass}`}>
-      <AnimatedDonut
+      <DonutGraph
         size={phase.size}
         radius={phase.radius}
         strokeWidth={phase.strokeWidth}
+        fraction={phase.arcFraction}
+        trackColor={themeColors.track}
         arcColor={phase.arcColor}
-        targetFraction={phase.arcFraction}
-        animate={animate}
-        lineColor={phase.lineColor}
-        lineSide={phase.lineSide}
-      />
-      {phase.centerText !== null ? (
-        <view className='timeline__center'>
-          <text className={`timeline__countdown ${toneClass}`}>{phase.centerText}</text>
-          {phase.centerLabel !== null ? (
-            <text className={`timeline__phaseLabel ${labelToneClass}`}>{phase.centerLabel}</text>
-          ) : null}
-        </view>
+        animated={animate}
+        fillContainer={phase.size === BLOCK_DONUT_SIZE}
+      >
+        {phase.centerText !== null ? (
+          <view className='timeline__center'>
+            <text className={`timeline__countdown ${toneClass}`}>{phase.centerText}</text>
+            {phase.centerLabel !== null ? (
+              <text className={`timeline__phaseLabel ${labelToneClass}`}>{phase.centerLabel}</text>
+            ) : null}
+          </view>
+        ) : null}
+      </DonutGraph>
+      {phase.lineColor !== null && phase.lineSide !== null ? (
+        <view
+          className={`timeline__donutLine timeline__donutLine--${phase.lineSide}`}
+          style={{
+            width: `${DONUT_LINE_BRIDGE_WIDTH_PX}px`,
+            backgroundColor: phase.lineColor,
+          }}
+        />
       ) : null}
     </view>
   )
