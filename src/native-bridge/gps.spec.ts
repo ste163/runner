@@ -10,6 +10,7 @@ describe('gps bridge', () => {
   it('does nothing when the native module is unavailable', () => {
     expect(() => runnerGps.setWorkoutTrackingEnabled(true)).not.toThrow()
     expect(() => runnerGps.setWorkoutTrackingEnabled(false)).not.toThrow()
+    expect(() => runnerGps.reset()).not.toThrow()
     expect(runnerGps.loadState()).toBeNull()
   })
 
@@ -23,6 +24,7 @@ describe('gps bridge', () => {
     const module: RunnerGpsModule = {
       getWorkoutGpsState: vi.fn(() => JSON.stringify(state)),
       openLocationSettings: vi.fn(),
+      resetWorkoutDistance: vi.fn(),
       setWorkoutTrackingEnabled: vi.fn(),
     }
 
@@ -31,12 +33,27 @@ describe('gps bridge', () => {
     expect(runnerGps.loadState()).toEqual(state)
     runnerGps.setWorkoutTrackingEnabled(true)
     runnerGps.setWorkoutTrackingEnabled(false)
+    runnerGps.reset()
     runnerGps.openLocationSettings()
 
     expect(module.getWorkoutGpsState).toHaveBeenCalledTimes(1)
     expect(module.setWorkoutTrackingEnabled).toHaveBeenCalledTimes(2)
+    expect(module.resetWorkoutDistance).toHaveBeenCalledTimes(1)
     expect(module.openLocationSettings).toHaveBeenCalledTimes(1)
     expect(module.setWorkoutTrackingEnabled).toHaveBeenNthCalledWith(1, true)
     expect(module.setWorkoutTrackingEnabled).toHaveBeenNthCalledWith(2, false)
+  })
+
+  it('returns null when the native gps state is malformed', () => {
+    const module: RunnerGpsModule = {
+      getWorkoutGpsState: vi.fn(() => 'not json'),
+      openLocationSettings: vi.fn(),
+      resetWorkoutDistance: vi.fn(),
+      setWorkoutTrackingEnabled: vi.fn(),
+    }
+
+    runnerGps.configure(module)
+
+    expect(runnerGps.loadState()).toBeNull()
   })
 })

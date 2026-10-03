@@ -7,6 +7,7 @@ export interface WorkoutGpsState {
 
 export type RunnerGpsModule = {
   getWorkoutGpsState: () => string | null
+  resetWorkoutDistance: () => void
   setWorkoutTrackingEnabled: (enabled: boolean) => void
   openLocationSettings: () => void
 }
@@ -14,7 +15,11 @@ export type RunnerGpsModule = {
 const parseWorkoutGpsState = (detail: string | null): WorkoutGpsState | null => {
   if (!detail) return null
 
-  return JSON.parse(detail) as WorkoutGpsState
+  try {
+    return JSON.parse(detail) as WorkoutGpsState
+  } catch {
+    return null
+  }
 }
 
 class RunnerGpsBridge {
@@ -29,6 +34,13 @@ class RunnerGpsBridge {
 
     if (!this.module) return null
     return parseWorkoutGpsState(this.module.getWorkoutGpsState())
+  }
+
+  reset = (): void => {
+    'background only'
+
+    if (!this.module) return
+    this.module.resetWorkoutDistance()
   }
 
   setWorkoutTrackingEnabled = (enabled: boolean): void => {

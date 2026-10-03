@@ -1,4 +1,10 @@
-import type { TrainingLevel } from '../domain/types.js'
+import type { IntervalRecord, TrainingLevel } from '../domain/types.js'
+
+export interface CompletedWorkoutInterval {
+  type: IntervalRecord['type']
+  durationSeconds: number
+  distanceMiles: number
+}
 
 export interface WorkoutTimerState {
   isComplete: boolean
@@ -11,6 +17,7 @@ export interface WorkoutTimerState {
   phaseType: 'cooldown' | 'run' | 'walk' | 'warmup'
   totalElapsedSeconds: number
   totalRemainingSeconds: number
+  intervals: CompletedWorkoutInterval[]
 }
 
 export type RunnerWorkoutTimerModule = {
@@ -21,10 +28,19 @@ export type RunnerWorkoutTimerModule = {
   stopWorkout: () => void
 }
 
+export const isPendingNativeStartState = (timerState: WorkoutTimerState): boolean =>
+  !timerState.isRunning && !timerState.isPaused && !timerState.isComplete
+
 const parseWorkoutTimerState = (detail: string | null): WorkoutTimerState | null => {
   if (!detail) return null
 
-  return JSON.parse(detail) as WorkoutTimerState
+  try {
+    const parsed = JSON.parse(detail) as WorkoutTimerState
+
+    return Array.isArray(parsed.intervals) ? parsed : { ...parsed, intervals: [] }
+  } catch {
+    return null
+  }
 }
 
 class RunnerWorkoutTimerBridge {

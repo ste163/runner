@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './Home.css'
+import { formatClockDuration } from '../../format.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { adjustLevelManually } from '../../domain/progression.js'
-import { createDefaultProfile, sharedProfileStore } from '../../domain/profile.js'
+import { sharedProfileStore } from '../../domain/profile.js'
 import type { TrainingLevel, TrainingProfile } from '../../domain/types.js'
+import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { CurrentIntervalDonut } from './components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from './components/ThisWeekDonut/index.js'
 import { Button, buildPlayIconContent } from '../../components/Button/index.js'
@@ -12,20 +14,12 @@ import { Card } from '../../components/Card/index.js'
 import { Pressable } from '../../components/Pressable/index.js'
 import { themeColors } from '../../theme.js'
 
-const formatDuration = (seconds: number): string => {
-  const roundedSeconds = Math.round(seconds)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainingSeconds = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainingSeconds}s` : `${minutes}m ${remainingSeconds}s`
-}
-
 const buildIntervalDurationLines = (level: TrainingLevel): [string, string | null] => {
   if (isGraduated(level)) {
-    return [formatDuration(level.intervalBlockSeconds), null]
+    return [formatClockDuration(level.intervalBlockSeconds), null]
   }
 
-  return [formatDuration(level.runSeconds), formatDuration(level.walkSeconds)]
+  return [formatClockDuration(level.runSeconds), formatClockDuration(level.walkSeconds)]
 }
 
 const buildRunPercent = (level: TrainingLevel): number => {
@@ -97,33 +91,21 @@ export const Home = (props: {
   onMounted?: () => void
   onStartWorkout: () => void
 }): ReactElement => {
-  const [profile, setProfile] = useState<TrainingProfile>(() => createDefaultProfile())
+  const { profile } = useSharedProfile()
   const [showManualAdjust, setShowManualAdjust] = useState(false)
 
   useEffect(() => {
-    const next = sharedProfileStore.hydrate()
-
-    setProfile(next.profile)
     props.onMounted?.()
   }, [props.onMounted])
 
-  useEffect(() => {
-    return sharedProfileStore.subscribe((nextProfile) => {
-      setProfile(nextProfile)
-    })
-  }, [])
-
   const handleLevelAdjustment = useCallback((direction: 'up' | 'down'): void => {
-    setProfile((currentProfile) => {
-      const nextProfile = {
-        ...currentProfile,
-        level: adjustLevelManually(currentProfile.level, direction),
-      }
+    const currentProfile = sharedProfileStore.loadOrCreate().profile
+    const nextProfile = {
+      ...currentProfile,
+      level: adjustLevelManually(currentProfile.level, direction),
+    }
 
-      sharedProfileStore.save(nextProfile)
-
-      return nextProfile
-    })
+    sharedProfileStore.save(nextProfile)
   }, [])
 
   const handleDecreaseLevel = useCallback((): void => {

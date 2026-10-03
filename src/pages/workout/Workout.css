@@ -28,7 +28,7 @@
   color: var(--color-text-muted);
 }
 
-.stats {
+.stats__row {
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -58,8 +58,16 @@
   text-align: center;
 }
 
-.stats__value--action {
-  color: var(--color-walk);
+.stats__pace {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stats__unit {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
 }
 
 .stopConfirm__text {

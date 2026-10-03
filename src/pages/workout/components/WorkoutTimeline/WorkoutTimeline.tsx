@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from '@lynx-js/react'
+import type { NodesRef, ScrollEvent } from '@lynx-js/types'
 
 import './WorkoutTimeline.css'
+import { DonutGraph } from '../../../../components/DonutGraph/index.js'
+import { formatClockDuration } from '../../../../format.js'
 import { themeColors } from '../../../../theme.js'
 
 export interface TimelineInterval {
@@ -37,6 +40,8 @@ interface DonutPhase {
   radius: number
   size: number
   strokeWidth: number
+  lineColor: string | null
+  lineSide: 'left' | 'right' | null
 }
 
 interface IntervalSegment {
@@ -52,25 +57,74 @@ interface IntervalLine {
 }
 
 const WARMUP_INDEX = 0
-const SMALL_DONUT_SIZE = 116
-const SMALL_DONUT_RADIUS = 52
-const SMALL_DONUT_STROKE = 12
+const SMALL_DONUT_SIZE = 88
+const SMALL_DONUT_RADIUS = 36
+const SMALL_DONUT_STROKE = 10
 const BLOCK_DONUT_SIZE = 276
 const BLOCK_DONUT_RADIUS = 127
 const BLOCK_DONUT_STROKE = 22
-const ANIMATION_FRAME_MS = 8
-const ANIMATION_DURATION_MS = 1000
-
-const formatDuration = (seconds: number): string => {
-  const roundedSeconds = Math.max(Math.round(seconds), 0)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainder = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainder}s` : `${minutes}m ${remainder}s`
-}
+// Bridges the ring outline to the donut box edge; keep in sync with
+// .timeline__donutLine in WorkoutTimeline.css.
+const DONUT_LINE_BRIDGE_WIDTH_PX =
+  SMALL_DONUT_SIZE / 2 - (SMALL_DONUT_RADIUS + SMALL_DONUT_STROKE / 2)
+const DIAL_VISIBLE_ROWS = 3
+const DIAL_ROW_HEIGHT_PX = 28 // 1.75rem row; keep in sync with .timeline__row in WorkoutTimeline.css
+const DIAL_CENTER_OFFSET_PX = DIAL_ROW_HEIGHT_PX // parks the target row in the middle slot
+// Lynx scrollTo computes target = child(index).position + offset, so the
+// centering offset must be negative to land on the detent.
+const DIAL_SCROLL_TO_OFFSET_PX = -DIAL_CENTER_OFFSET_PX
+const DIAL_SPACER_ROW_COUNT = 1
+const DIAL_VIEWPORT_HEIGHT_PX = DIAL_ROW_HEIGHT_PX * DIAL_VISIBLE_ROWS
+const DIAL_SNAP_EPSILON_PX = 1
+const DIAL_SNAP_SETTLE_MS = 120
+const DIAL_ROW_SCALE_FALLOFF = 0.008 // scale drops ~0.25 per row of distance from center
+const DIAL_MIN_ROW_SCALE = 0.5
 
 const buildLastBlockIndex = (intervals: TimelineInterval[]): number =>
   Math.max(intervals.length - 2, 0)
+
+const buildActiveLineIndex = (currentIndex: number, lineCount: number): number => {
+  if (currentIndex <= 0) return 0
+
+  return Math.min(Math.floor((currentIndex - 1) / 2), lineCount - 1)
+}
+
+const buildSetNumber = (phaseIndex: number, totalSets: number): number => {
+  if (phaseIndex <= 0) return 0
+
+  return Math.min(Math.ceil(phaseIndex / 2), totalSets)
+}
+
+const buildSetHeaderLabel = (setNumber: number, totalSets: number): string =>
+  `Set ${setNumber}/${totalSets}`
+
+const buildCompletedRunCount = (phaseIndex: number, totalRuns: number): number =>
+  Math.max(0, Math.min(Math.floor(phaseIndex / 2), totalRuns))
+
+const buildCompletedWalkCount = (phaseIndex: number, totalWalks: number): number =>
+  Math.max(0, Math.min(Math.floor((phaseIndex - 1) / 2), totalWalks))
+
+const buildIntervalCountLabel = (
+  label: 'Runs' | 'Walks',
+  completed: number,
+  total: number
+): string => `${label} ${completed}/${total}`
+
+const clampLineIndex = (lineIndex: number, lineCount: number): number =>
+  Math.max(0, Math.min(lineIndex, lineCount - 1))
+
+const buildCenteredLineIndex = (scrollY: number, lineCount: number): number =>
+  clampLineIndex(Math.round(scrollY / DIAL_ROW_HEIGHT_PX), lineCount)
+
+const buildDetentScrollY = (lineIndex: number): number => lineIndex * DIAL_ROW_HEIGHT_PX
+
+const buildRowScale = (lineIndex: number, scrollY: number): number => {
+  const rowCenter =
+    (lineIndex + DIAL_SPACER_ROW_COUNT) * DIAL_ROW_HEIGHT_PX + DIAL_ROW_HEIGHT_PX / 2
+  const distance = Math.abs(rowCenter - scrollY - DIAL_VIEWPORT_HEIGHT_PX / 2)
+
+  return Math.max(1 - distance * DIAL_ROW_SCALE_FALLOFF, DIAL_MIN_ROW_SCALE)
+}
 
 const buildArcFraction = (
   status: PhaseStatus,
@@ -106,13 +160,15 @@ const buildWarmupPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
     arcColor: done || isDimmed ? themeColors.walkMuted : themeColors.walk,
-    centerText: done ? 'Done' : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatClockDuration(remainingSeconds),
     centerTextTone: done || isDimmed ? 'muted' : 'walk',
     centerLabel: null,
     centerLabelTone: 'muted',
     radius: SMALL_DONUT_RADIUS,
     size: SMALL_DONUT_SIZE,
     strokeWidth: SMALL_DONUT_STROKE,
+    lineColor: done ? themeColors.walkMuted : themeColors.connector,
+    lineSide: 'right',
   }
 }
 
@@ -141,13 +197,15 @@ const buildBlockPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, currentDuration),
     arcColor: done ? themeColors.runMuted : resolveArcColor(tone, blockActive && !isDimmed),
-    centerText: done ? 'Done' : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatClockDuration(remainingSeconds),
     centerTextTone: done || !blockActive || isDimmed ? 'muted' : tone,
-    centerLabel: done ? null : tone === 'run' ? 'Run' : 'walk',
+    centerLabel: done ? null : tone === 'run' ? 'Run' : 'Walk',
     centerLabelTone: done || !blockActive || isDimmed ? 'muted' : tone,
     radius: BLOCK_DONUT_RADIUS,
     size: BLOCK_DONUT_SIZE,
     strokeWidth: BLOCK_DONUT_STROKE,
+    lineColor: null,
+    lineSide: null,
   }
 }
 
@@ -155,7 +213,8 @@ const buildCooldownPhase = (
   currentIndex: number,
   isDimmed: boolean,
   timerState: TimelineTimerState | null,
-  intervals: TimelineInterval[]
+  intervals: TimelineInterval[],
+  blockDone: boolean
 ): DonutPhase => {
   const cooldownIndex = intervals.length - 1
   const status: PhaseStatus =
@@ -171,13 +230,15 @@ const buildCooldownPhase = (
     status,
     arcFraction: buildArcFraction(status, remainingSeconds, durationSeconds),
     arcColor: done || isDimmed || status === 'upcoming' ? themeColors.walkMuted : themeColors.walk,
-    centerText: done ? 'Done' : formatDuration(remainingSeconds),
+    centerText: done ? 'Done' : formatClockDuration(remainingSeconds),
     centerTextTone: done || isDimmed || status === 'upcoming' ? 'muted' : 'walk',
     centerLabel: null,
     centerLabelTone: 'muted',
     radius: SMALL_DONUT_RADIUS,
     size: SMALL_DONUT_SIZE,
     strokeWidth: SMALL_DONUT_STROKE,
+    lineColor: blockDone ? themeColors.walkMuted : themeColors.connector,
+    lineSide: 'left',
   }
 }
 
@@ -190,7 +251,7 @@ const buildIntervalSegments = (
 
     return {
       key: `${interval.type}-${rowIndex}`,
-      label: `${interval.type === 'run' ? 'Run' : 'walk'} ${formatDuration(interval.durationSeconds)}`,
+      label: `${interval.type === 'run' ? 'Run' : 'Walk'} ${formatClockDuration(interval.durationSeconds)}`,
       status: currentIndex > rowIndex ? 'done' : currentIndex === rowIndex ? 'active' : 'upcoming',
       tone: interval.type === 'run' ? 'run' : 'walk',
     }
@@ -202,7 +263,10 @@ const chunkByTwo = (segments: IntervalSegment[]): IntervalSegment[][] =>
 const buildIntervalLines = (segments: IntervalSegment[]): IntervalLine[] =>
   segments.length === 0
     ? []
-    : chunkByTwo(segments).map((pair, index) => ({ key: `line-${index}`, segments: pair }))
+    : chunkByTwo(segments).map((pair, index) => ({
+        key: `line-${index}`,
+        segments: pair,
+      }))
 
 const buildIntervalSegmentClassName = (segment: IntervalSegment): string =>
   `timeline__segment timeline__segment--${segment.status}--${segment.tone}`
@@ -240,114 +304,6 @@ const renderLineSegments = (line: IntervalLine): ReactElement[] =>
     ]
   })
 
-const buildDonutSvgContent = (
-  size: number,
-  radius: number,
-  strokeWidth: number,
-  arcFraction: number,
-  arcColor: string
-): string => {
-  const center = size / 2
-  const circumference = 2 * Math.PI * radius
-  const safeFraction = Math.max(0, Math.min(arcFraction, 1))
-  const dashLength = (circumference * safeFraction).toFixed(2)
-
-  const progressCircle =
-    safeFraction <= 0
-      ? ''
-      : `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${arcColor}" ` +
-        `stroke-width="${strokeWidth}" stroke-linecap="round" ` +
-        `stroke-dasharray="${dashLength} ${circumference.toFixed(2)}" ` +
-        `transform="rotate(-90 ${center} ${center})"/>`
-
-  return (
-    `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">` +
-    `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${themeColors.track}" ` +
-    `stroke-width="${strokeWidth}"/>` +
-    progressCircle +
-    `</svg>`
-  )
-}
-
-const easeInOutQuad = (progress: number): number =>
-  progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress
-
-interface AnimatedDonutProps {
-  size: number
-  radius: number
-  strokeWidth: number
-  arcColor: string
-  targetFraction: number
-  animate: boolean
-}
-
-const AnimatedDonut = ({
-  size,
-  radius,
-  strokeWidth,
-  arcColor,
-  targetFraction,
-  animate,
-}: AnimatedDonutProps): ReactElement => {
-  const [displayedFraction, setDisplayedFraction] = useState(targetFraction)
-  const displayedFractionRef = useRef(targetFraction)
-  const targetFractionRef = useRef(targetFraction)
-  const animationStartedAtRef = useRef(0)
-  const animationFromRef = useRef(targetFraction)
-  const animationFrameRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const stopAnimation = useCallback((): void => {
-    if (animationFrameRef.current !== null) {
-      clearInterval(animationFrameRef.current)
-      animationFrameRef.current = null
-    }
-  }, [])
-
-  const applyFraction = useCallback((fraction: number): void => {
-    displayedFractionRef.current = fraction
-    setDisplayedFraction(fraction)
-  }, [])
-
-  useEffect(() => {
-    return () => stopAnimation()
-  }, [stopAnimation])
-
-  useEffect(() => {
-    targetFractionRef.current = targetFraction
-
-    if (!animate || Math.abs(targetFraction - displayedFractionRef.current) < 0.001) {
-      stopAnimation()
-      applyFraction(targetFraction)
-      return
-    }
-
-    animationFromRef.current = displayedFractionRef.current
-    animationStartedAtRef.current = Date.now()
-    stopAnimation()
-
-    animationFrameRef.current = setInterval(() => {
-      const elapsed = Date.now() - animationStartedAtRef.current
-      const progress = Math.min(elapsed / ANIMATION_DURATION_MS, 1)
-      const delta = targetFractionRef.current - animationFromRef.current
-      const nextFraction = easeInOutQuad(progress) * delta + animationFromRef.current
-
-      applyFraction(nextFraction)
-
-      if (progress >= 1) {
-        stopAnimation()
-        applyFraction(targetFractionRef.current)
-      }
-    }, ANIMATION_FRAME_MS)
-  }, [animate, applyFraction, stopAnimation, targetFraction])
-
-  return (
-    <svg
-      content={buildDonutSvgContent(size, radius, strokeWidth, displayedFraction, arcColor)}
-      style={{ width: `${size}px`, height: `${size}px` }}
-    />
-  )
-}
-
 const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean }): ReactElement => {
   const sizeClass =
     phase.size === BLOCK_DONUT_SIZE ? 'timeline__donut--block' : 'timeline__donut--small'
@@ -366,21 +322,33 @@ const PhaseDonut = ({ phase, animate }: { phase: DonutPhase; animate: boolean })
 
   return (
     <view className={`timeline__donut ${sizeClass}`}>
-      <AnimatedDonut
+      <DonutGraph
         size={phase.size}
         radius={phase.radius}
         strokeWidth={phase.strokeWidth}
+        fraction={phase.arcFraction}
+        trackColor={themeColors.track}
         arcColor={phase.arcColor}
-        targetFraction={phase.arcFraction}
-        animate={animate}
-      />
-      {phase.centerText !== null ? (
-        <view className='timeline__center'>
-          <text className={`timeline__countdown ${toneClass}`}>{phase.centerText}</text>
-          {phase.centerLabel !== null ? (
-            <text className={`timeline__phaseLabel ${labelToneClass}`}>{phase.centerLabel}</text>
-          ) : null}
-        </view>
+        animated={animate}
+        fillContainer={phase.size === BLOCK_DONUT_SIZE}
+      >
+        {phase.centerText !== null ? (
+          <view className='timeline__center'>
+            <text className={`timeline__countdown ${toneClass}`}>{phase.centerText}</text>
+            {phase.centerLabel !== null ? (
+              <text className={`timeline__phaseLabel ${labelToneClass}`}>{phase.centerLabel}</text>
+            ) : null}
+          </view>
+        ) : null}
+      </DonutGraph>
+      {phase.lineColor !== null && phase.lineSide !== null ? (
+        <view
+          className={`timeline__donutLine timeline__donutLine--${phase.lineSide}`}
+          style={{
+            width: `${DONUT_LINE_BRIDGE_WIDTH_PX}px`,
+            backgroundColor: phase.lineColor,
+          }}
+        />
       ) : null}
     </view>
   )
@@ -392,10 +360,94 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   const lastBlockIndex = buildLastBlockIndex(intervals)
   const warmupPhase = buildWarmupPhase(currentIndex, isDimmed, timerState, intervals)
   const blockPhase = buildBlockPhase(currentIndex, isDimmed, timerState, intervals, lastBlockIndex)
-  const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals)
-  const intervalLines = buildIntervalLines(buildIntervalSegments(intervals, currentIndex))
-  const warmupDone = warmupPhase.status === 'done'
   const blockDone = blockPhase.status === 'done'
+  const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals, blockDone)
+  const intervalLines = buildIntervalLines(buildIntervalSegments(intervals, currentIndex))
+  const totalSets = intervalLines.length
+  const setNumber = buildSetNumber(timerState?.phaseIndex ?? 0, totalSets)
+  const setHeaderLabel = buildSetHeaderLabel(setNumber, totalSets)
+  const totalRuns = intervals.filter((interval) => interval.type === 'run').length
+  const totalWalks = intervals.filter((interval) => interval.type === 'walk').length
+  const completedRuns = buildCompletedRunCount(timerState?.phaseIndex ?? 0, totalRuns)
+  const completedWalks = buildCompletedWalkCount(timerState?.phaseIndex ?? 0, totalWalks)
+  const runCountLabel = buildIntervalCountLabel('Runs', completedRuns, totalRuns)
+  const walkCountLabel = buildIntervalCountLabel('Walks', completedWalks, totalWalks)
+  const warmupDone = warmupPhase.status === 'done'
+  const dialRef = useRef<NodesRef | null>(null)
+  const dialLineIndex = buildActiveLineIndex(currentIndex, intervalLines.length)
+  const [dialScrollY, setDialScrollY] = useState(() => buildDetentScrollY(dialLineIndex))
+  const dialScrollYRef = useRef(dialScrollY)
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isTouchingRef = useRef(false)
+
+  const cancelPendingSnap = useCallback((): void => {
+    if (snapTimerRef.current !== null) {
+      clearTimeout(snapTimerRef.current)
+      snapTimerRef.current = null
+    }
+  }, [])
+
+  const handleDialScroll = useCallback(
+    (event: ScrollEvent): void => {
+      cancelPendingSnap()
+      dialScrollYRef.current = event.detail.scrollTop
+      setDialScrollY(event.detail.scrollTop)
+    },
+    [cancelPendingSnap]
+  )
+
+  const handleDialTouchStart = useCallback((): void => {
+    isTouchingRef.current = true
+    cancelPendingSnap()
+  }, [cancelPendingSnap])
+
+  const handleDialTouchEnd = useCallback((): void => {
+    isTouchingRef.current = false
+  }, [])
+
+  const snapToCenteredRow = useCallback((): void => {
+    if (intervalLines.length === 0) return
+    if (isTouchingRef.current) return
+
+    const scrollY = dialScrollYRef.current
+    const centeredLineIndex = buildCenteredLineIndex(scrollY, intervalLines.length)
+    const targetScrollY = buildDetentScrollY(centeredLineIndex)
+
+    if (Math.abs(scrollY - targetScrollY) <= DIAL_SNAP_EPSILON_PX) return
+
+    dialRef.current
+      ?.invoke({
+        method: 'scrollTo',
+        params: {
+          index: centeredLineIndex + DIAL_SPACER_ROW_COUNT,
+          offset: DIAL_SCROLL_TO_OFFSET_PX,
+          smooth: true,
+        },
+      })
+      .exec()
+  }, [intervalLines.length])
+
+  const handleDialScrollEnd = useCallback((): void => {
+    cancelPendingSnap()
+    snapTimerRef.current = setTimeout(snapToCenteredRow, DIAL_SNAP_SETTLE_MS)
+  }, [cancelPendingSnap, snapToCenteredRow])
+
+  useEffect(() => {
+    return () => cancelPendingSnap()
+  }, [cancelPendingSnap])
+
+  useEffect(() => {
+    dialRef.current
+      ?.invoke({
+        method: 'scrollTo',
+        params: {
+          index: dialLineIndex + DIAL_SPACER_ROW_COUNT,
+          offset: DIAL_SCROLL_TO_OFFSET_PX,
+          smooth: true,
+        },
+      })
+      .exec()
+  }, [dialLineIndex])
 
   const warmupAnimated = !isDimmed && warmupPhase.status === 'active'
   const blockAnimated = !isDimmed && blockPhase.status === 'active'
@@ -404,7 +456,14 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   return (
     <view className='timeline'>
       <view className='timeline__donuts'>
-        <PhaseDonut phase={warmupPhase} animate={warmupAnimated} />
+        <view className='timeline__donutColumn'>
+          <PhaseDonut phase={warmupPhase} animate={warmupAnimated} />
+          <text
+            className={`${buildInfoLabelClassName(warmupPhase.status, isDimmed)} timeline__caption`}
+          >
+            Warm-up walk
+          </text>
+        </view>
         <view
           className={
             warmupDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
@@ -416,30 +475,48 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
             blockDone ? 'timeline__connector timeline__connector--done' : 'timeline__connector'
           }
         />
-        <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
-      </view>
-      <view className='timeline__info'>
-        <view className='timeline__infoRow timeline__infoRow--small'>
-          <text className={buildInfoLabelClassName(warmupPhase.status, isDimmed)}>
-            Warm-up walk
-          </text>
-        </view>
-        <view className='timeline__infoSpacer' />
-        <view className='timeline__infoRow timeline__infoRow--block'>
-          <view className='timeline__list'>
-            {intervalLines.map((line) => (
-              <text className='timeline__listLine' key={line.key}>
-                {renderLineSegments(line)}
-              </text>
-            ))}
-          </view>
-        </view>
-        <view className='timeline__infoSpacer' />
-        <view className='timeline__infoRow timeline__infoRow--small'>
-          <text className={buildInfoLabelClassName(cooldownPhase.status, isDimmed)}>
+        <view className='timeline__donutColumn'>
+          <PhaseDonut phase={cooldownPhase} animate={cooldownAnimated} />
+          <text
+            className={`${buildInfoLabelClassName(cooldownPhase.status, isDimmed)} timeline__caption`}
+          >
             Cool-down walk
           </text>
         </view>
+      </view>
+      <text className='timeline__setHeader'>{setHeaderLabel}</text>
+      <view className='timeline__intervalCounts'>
+        <text className='timeline__intervalCount'>{runCountLabel}</text>
+        {totalWalks > 0 ? <text className='timeline__intervalCount'>{walkCountLabel}</text> : null}
+      </view>
+      <view className='timeline__info'>
+        <scroll-view
+          ref={dialRef}
+          className='timeline__dial'
+          scroll-orientation='vertical'
+          scroll-bar-enable={false}
+          bindscroll={handleDialScroll}
+          bindscrollend={handleDialScrollEnd}
+          bindtouchstart={handleDialTouchStart}
+          bindtouchend={handleDialTouchEnd}
+        >
+          <view className='timeline__row' flatten={false} />
+          {intervalLines.map((line, lineIndex) => {
+            const rowScale = buildRowScale(lineIndex, dialScrollY)
+
+            return (
+              <view
+                className='timeline__row'
+                flatten={false}
+                key={line.key}
+                style={{ transform: `scale(${rowScale.toFixed(3)})`, opacity: rowScale }}
+              >
+                <text className='timeline__listLine'>{renderLineSegments(line)}</text>
+              </view>
+            )
+          })}
+          <view className='timeline__row' flatten={false} />
+        </scroll-view>
       </view>
     </view>
   )

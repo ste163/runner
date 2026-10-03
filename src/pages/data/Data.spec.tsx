@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Settings } from './Settings.js'
+import { Data } from './Data.js'
 import { sharedProfileStore } from '../../domain/profile.js'
 import type { IntervalRecord, Session, TrainingProfile } from '../../domain/types.js'
 import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
@@ -44,7 +44,7 @@ const buildSession = (
   totalDistanceMiles,
 })
 
-describe('Settings', () => {
+describe('Data', () => {
   beforeEach(() => {
     sharedProfileStore.reset()
     runnerProfileStorage.configure(null)
@@ -72,7 +72,6 @@ describe('Settings', () => {
           ),
           level: { runSeconds: 33, walkSeconds: 108, intervalBlockSeconds: 1200 },
           totalElapsedSeconds: 540,
-          avgPaceMinPerMile: 6,
         },
       ],
     }
@@ -93,7 +92,7 @@ describe('Settings', () => {
 
     runnerProfileStorage.configure(module)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Export')
@@ -102,10 +101,11 @@ describe('Settings', () => {
     fireEvent.tap(queries.getByText('Import'))
 
     await queries.findByText('Jan 10')
-    await queries.findByText('33s')
-    await queries.findByText('1m 48s')
+    await queries.findByText('0:33')
+    await queries.findByText('1:48')
     await queries.findByText('1.50 mi')
-    await queries.findByText('6.00 min/mi')
+    await queries.findByText('5.50 min/mi')
+    await queries.findByText('18.00 min/mi')
 
     expect(exportProfile).toHaveBeenCalledTimes(1)
     expect(importProfile).toHaveBeenCalledTimes(1)
@@ -124,13 +124,15 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
 
     await queries.findByText('January 2024')
-    expect(await queries.findAllByText('30s')).toHaveLength(3)
-    expect(await queries.findAllByText('2m 0s')).toHaveLength(3)
+    expect(await queries.findAllByText('0:30')).toHaveLength(3)
+    expect(await queries.findAllByText('2:00')).toHaveLength(3)
+    expect(await queries.findAllByText('5.00 min/mi')).toHaveLength(3)
+    expect(await queries.findAllByText('40.00 min/mi')).toHaveLength(3)
     await queries.findByText('1.23 mi')
     expect(queries.queryByText('Previous')).toBeNull()
     expect(queries.queryByText('Next')).toBeNull()
@@ -149,14 +151,14 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
 
     await queries.findByText('Jan 10')
-    await queries.findByText('30s')
-    await queries.findByText('2m 0s')
-    expect(await queries.findAllByText('—')).toHaveLength(2)
+    await queries.findByText('0:30')
+    await queries.findByText('2:00')
+    expect(await queries.findAllByText('—')).toHaveLength(3)
   })
 
   it('shows an empty state for the current month when it has no sessions', async () => {
@@ -170,7 +172,7 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
 
@@ -190,7 +192,7 @@ describe('Settings', () => {
     }
     sharedProfileStore.save(profile)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('No runs this month')
@@ -229,7 +231,7 @@ describe('Settings', () => {
     sharedProfileStore.save(profile)
     runnerProfileStorage.configure(module)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Jan 10')
@@ -270,7 +272,7 @@ describe('Settings', () => {
     sharedProfileStore.save(profile)
     runnerProfileStorage.configure(module)
 
-    render(<Settings />)
+    render(<Data />)
 
     const queries = getQueriesForElement(elementTree.root!)
     await queries.findByText('Jan 10')

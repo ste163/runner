@@ -30,6 +30,18 @@
   color: var(--color-text);
 }
 
+.appShell__tabTitle {
+  width: 100%;
+  box-sizing: border-box;
+  padding:
+    calc(var(--app-safe-area-top) + 1rem)
+    var(--page-horizontal-gap)
+    0.875rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
 .appShell__page {
   width: 100%;
   height: 100%;

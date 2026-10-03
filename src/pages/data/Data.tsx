@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
+import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 
-import './Settings.css'
+import './Data.css'
+import { formatClockDuration } from '../../format.js'
 import { isGraduated } from '../../domain/intervals.js'
 import { sharedProfileStore } from '../../domain/profile.js'
+import { buildSessionPace } from '../../domain/stats.js'
 import type { Session, TrainingProfile } from '../../domain/types.js'
+import { useSharedProfile } from '../../domain/useSharedProfile.js'
 import { Button } from '../../components/Button/index.js'
 import { Card } from '../../components/Card/index.js'
 import { Pressable } from '../../components/Pressable/index.js'
@@ -78,20 +81,12 @@ const filterSessionsForMonth = (sessions: Session[], month: VisibleMonth): Sessi
 
 const buildIntervalLabel = (session: Session, type: 'run' | 'walk'): string => {
   if (isGraduated(session.level)) {
-    return type === 'run' ? formatSessionDuration(session.level.intervalBlockSeconds) : '—'
+    return type === 'run' ? formatClockDuration(session.level.intervalBlockSeconds) : '—'
   }
 
   const seconds = type === 'run' ? session.level.runSeconds : session.level.walkSeconds
 
-  return formatSessionDuration(seconds)
-}
-
-const formatSessionDuration = (seconds: number): string => {
-  const roundedSeconds = Math.round(seconds)
-  const minutes = Math.floor(roundedSeconds / 60)
-  const remainingSeconds = roundedSeconds % 60
-
-  return minutes === 0 ? `${remainingSeconds}s` : `${minutes}m ${remainingSeconds}s`
+  return formatClockDuration(seconds)
 }
 
 const formatSessionDate = (completedAt: string): string => {
@@ -104,11 +99,14 @@ const formatSessionDate = (completedAt: string): string => {
 const buildDistanceLabel = (totalDistanceMiles: number): string =>
   totalDistanceMiles === 0 ? '—' : `${totalDistanceMiles.toFixed(2)} mi`
 
-const buildPaceLabel = (session: Session): string => {
-  const pace = session.avgPaceMinPerMile
+const buildPaceColumnLabel = (pace: number | null): string =>
+  pace ? `${pace.toFixed(2)} min/mi` : '—'
 
-  return pace === undefined || pace <= 0 ? '—' : `${pace.toFixed(2)} min/mi`
-}
+const buildRunPaceLabel = (session: Session): string =>
+  buildPaceColumnLabel(buildSessionPace(session, 'run'))
+
+const buildWalkPaceLabel = (session: Session): string =>
+  buildPaceColumnLabel(buildSessionPace(session, 'walk'))
 
 const buildSessionRowClassName = (isLastRow: boolean): string =>
   isLastRow ? 'sessions__row sessions__row--last' : 'sessions__row'
@@ -139,20 +137,12 @@ const buildTrashIconContent = (): string =>
   `<line x1="14" x2="14" y1="11" y2="17"/>` +
   `</svg>`
 
-export const Settings = (): ReactElement => {
-  const [profile, setProfile] = useState<TrainingProfile>(
-    () => sharedProfileStore.loadOrCreate().profile
-  )
+export const Data = (): ReactElement => {
+  const { profile } = useSharedProfile()
   const [visibleMonth, setVisibleMonth] = useState<VisibleMonth>(() =>
     buildMonthFromDate(new Date())
   )
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
-
-  useEffect(() => {
-    return sharedProfileStore.subscribe((nextProfile) => {
-      setProfile(nextProfile)
-    })
-  }, [])
 
   const handleExportProfile = useCallback((): void => {
     sharedProfileStore.exportProfile(() => {})
@@ -195,7 +185,7 @@ export const Settings = (): ReactElement => {
   const isPreviousDisabled = earliestMonth === null || isSameMonth(visibleMonth, earliestMonth)
 
   return (
-    <view className='page settings'>
+    <view className='page data'>
       <Card
         title='Backup & restore'
         subtitle='Export your data to a JSON file to back it up, and import the file on a new device. Runner stores all data on your device.'
@@ -227,7 +217,8 @@ export const Settings = (): ReactElement => {
               <text className='sessions__headerText sessions__numberColumn'>Run</text>
               <text className='sessions__headerText sessions__numberColumn'>Walk</text>
               <text className='sessions__headerText sessions__numberColumn'>Distance</text>
-              <text className='sessions__headerText sessions__numberColumn'>Pace</text>
+              <text className='sessions__headerText sessions__numberColumn'>Run pace</text>
+              <text className='sessions__headerText sessions__numberColumn'>Walk pace</text>
               <view className='sessions__iconColumn' />
             </view>
             {visibleSessions.map((session, index) =>
@@ -259,7 +250,10 @@ export const Settings = (): ReactElement => {
                     {buildDistanceLabel(session.totalDistanceMiles)}
                   </text>
                   <text className='sessions__number sessions__numberColumn'>
-                    {buildPaceLabel(session)}
+                    {buildRunPaceLabel(session)}
+                  </text>
+                  <text className='sessions__number sessions__numberColumn'>
+                    {buildWalkPaceLabel(session)}
                   </text>
                   <Pressable
                     className='sessions__trash sessions__iconColumn'
