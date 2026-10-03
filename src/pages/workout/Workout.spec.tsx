@@ -137,10 +137,13 @@ describe('Workout', () => {
 
     render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
 
-    const { findAllByText } = getQueriesForElement(elementTree.root!)
+    const { findAllByText, findByText } = getQueriesForElement(elementTree.root!)
 
     expect((await findAllByText('Run 0:33')).length).toBeGreaterThan(0)
     expect((await findAllByText('Walk 1:30')).length).toBeGreaterThan(0)
+    await findByText('Set 0/10')
+    await findByText('Runs 0/10')
+    await findByText('Walks 0/10')
   })
 
   it('updates the timeline when the profile changes on another page', async () => {
@@ -242,6 +245,57 @@ describe('Workout', () => {
       { type: 'walk', durationSeconds: 120, distanceMiles: 0.25, avgPaceMinPerMile: 8 },
       { type: 'cooldown', durationSeconds: 300, distanceMiles: 0.25, avgPaceMinPerMile: 20 },
     ])
+  })
+
+  it('shows the current set count in the header during the block', async () => {
+    sharedProfileStore.save(buildProfile(33, 90))
+
+    runnerWorkoutTimer.configure(buildTimerModule(buildLiveTimerState()))
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Set 2/10')
+    await findByText('Runs 1/10')
+    await findByText('Walks 1/10')
+  })
+
+  it('shows the final set count in the header during the cooldown', async () => {
+    sharedProfileStore.save(buildProfile(33, 90))
+
+    const cooldownState: WorkoutTimerState = {
+      ...buildLiveTimerState(),
+      phaseDurationSeconds: 300,
+      phaseIndex: 21,
+      phaseLabel: 'COOLDOWN',
+      phaseRemainingSeconds: 210,
+      phaseType: 'cooldown',
+    }
+
+    runnerWorkoutTimer.configure(buildTimerModule(cooldownState))
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Set 10/10')
+    await findByText('Runs 10/10')
+    await findByText('Walks 10/10')
+  })
+
+  it('hides the walk count for a graduated profile', async () => {
+    sharedProfileStore.save(buildProfile(1200, 120))
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText, queryByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Set 0/1')
+    await findByText('Runs 0/1')
+    expect(queryByText(/Walks/)).toBeNull()
   })
 
   it('shows the fresh workout UI when the native timer state is empty', async () => {

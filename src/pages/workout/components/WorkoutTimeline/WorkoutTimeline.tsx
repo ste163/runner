@@ -86,6 +86,27 @@ const buildActiveLineIndex = (currentIndex: number, lineCount: number): number =
   return Math.min(Math.floor((currentIndex - 1) / 2), lineCount - 1)
 }
 
+const buildSetNumber = (phaseIndex: number, totalSets: number): number => {
+  if (phaseIndex <= 0) return 0
+
+  return Math.min(Math.ceil(phaseIndex / 2), totalSets)
+}
+
+const buildSetHeaderLabel = (setNumber: number, totalSets: number): string =>
+  `Set ${setNumber}/${totalSets}`
+
+const buildCompletedRunCount = (phaseIndex: number, totalRuns: number): number =>
+  Math.max(0, Math.min(Math.floor(phaseIndex / 2), totalRuns))
+
+const buildCompletedWalkCount = (phaseIndex: number, totalWalks: number): number =>
+  Math.max(0, Math.min(Math.floor((phaseIndex - 1) / 2), totalWalks))
+
+const buildIntervalCountLabel = (
+  label: 'Runs' | 'Walks',
+  completed: number,
+  total: number
+): string => `${label} ${completed}/${total}`
+
 const clampLineIndex = (lineIndex: number, lineCount: number): number =>
   Math.max(0, Math.min(lineIndex, lineCount - 1))
 
@@ -469,6 +490,15 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
   const blockDone = blockPhase.status === 'done'
   const cooldownPhase = buildCooldownPhase(currentIndex, isDimmed, timerState, intervals, blockDone)
   const intervalLines = buildIntervalLines(buildIntervalSegments(intervals, currentIndex))
+  const totalSets = intervalLines.length
+  const setNumber = buildSetNumber(timerState?.phaseIndex ?? 0, totalSets)
+  const setHeaderLabel = buildSetHeaderLabel(setNumber, totalSets)
+  const totalRuns = intervals.filter((interval) => interval.type === 'run').length
+  const totalWalks = intervals.filter((interval) => interval.type === 'walk').length
+  const completedRuns = buildCompletedRunCount(timerState?.phaseIndex ?? 0, totalRuns)
+  const completedWalks = buildCompletedWalkCount(timerState?.phaseIndex ?? 0, totalWalks)
+  const runCountLabel = buildIntervalCountLabel('Runs', completedRuns, totalRuns)
+  const walkCountLabel = buildIntervalCountLabel('Walks', completedWalks, totalWalks)
   const warmupDone = warmupPhase.status === 'done'
   const dialRef = useRef<NodesRef | null>(null)
   const dialLineIndex = buildActiveLineIndex(currentIndex, intervalLines.length)
@@ -580,6 +610,11 @@ export const WorkoutTimeline = ({ intervals, timerState }: WorkoutTimelineProps)
             Cool-down walk
           </text>
         </view>
+      </view>
+      <text className='timeline__setHeader'>{setHeaderLabel}</text>
+      <view className='timeline__intervalCounts'>
+        <text className='timeline__intervalCount'>{runCountLabel}</text>
+        {totalWalks > 0 ? <text className='timeline__intervalCount'>{walkCountLabel}</text> : null}
       </view>
       <view className='timeline__info'>
         <scroll-view
