@@ -134,7 +134,7 @@ bun install
 bun dev
 ```
 
-`bun dev` is the main day-to-day command.
+`bun dev` watches for file changes and rebuilds and installs the app to the connected device.
 
 ## Logs
 
@@ -159,46 +159,6 @@ bun build
 ```
 
 Builds bundles and copies assets into `android/app/src/main/assets`.
-
-## Tests
-
-```bash
-bun run test
-```
-
-Runs unit tests once.
-
-```bash
-bun run typecheck
-```
-
-Runs TypeScript typecheck only.
-
-## Lint + Format
-
-```bash
-bun lint
-```
-
-Runs lint checks.
-
-```bash
-bun lint:fix
-```
-
-Auto-fixes lint issues.
-
-```bash
-bun fmt:check
-```
-
-Checks formatting.
-
-```bash
-bun fmt
-```
-
-Formats project.
 
 ## Notes
 

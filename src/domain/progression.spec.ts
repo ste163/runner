@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { adjustLevelManually, evaluateWindows } from './progression.js'
+import { adjustLevelManually, evaluateWindows, RUN_LADDER } from './progression.js'
 import type { TrainingProfile } from './types.js'
 
 const createProfile = (overrides: Partial<TrainingProfile> = {}): TrainingProfile => ({
@@ -162,9 +162,7 @@ describe('adjustLevelManually', () => {
       'up'
     )
 
-    expect(adjusted.runSeconds).toBeCloseTo(32.67)
-    expect(adjusted.walkSeconds).toBe(90)
-    expect(adjusted.intervalBlockSeconds).toBe(1200)
+    expect(adjusted).toEqual({ runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 })
   })
 
   it('keeps the phase walk when stepping within a phase', () => {
@@ -177,7 +175,7 @@ describe('adjustLevelManually', () => {
       'up'
     )
 
-    expect(adjusted.runSeconds).toBeCloseTo(110)
+    expect(adjusted.runSeconds).toBeCloseTo(113.9, 1)
     expect(adjusted.walkSeconds).toBe(75)
     expect(adjusted.intervalBlockSeconds).toBe(1200)
   })
@@ -189,12 +187,13 @@ describe('adjustLevelManually', () => {
   })
 
   it('always steps a graduated level back down', () => {
+    const topRung = RUN_LADDER[RUN_LADDER.length - 1]
     const adjusted = adjustLevelManually(
       { runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 },
       'down'
     )
 
-    expect(adjusted.runSeconds).toBeCloseTo(1080)
+    expect(adjusted.runSeconds).toBe(topRung)
     expect(adjusted.walkSeconds).toBe(30)
     expect(adjusted.intervalBlockSeconds).toBe(1200)
   })
@@ -210,5 +209,50 @@ describe('adjustLevelManually', () => {
         'up'
       )
     ).toEqual({ runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 })
+  })
+
+  it('has a strictly ascending ladder of unique rungs', () => {
+    const isAscending = RUN_LADDER.every(
+      (rung, index, ladder) => index === 0 || rung > (ladder[index - 1] ?? 0)
+    )
+
+    expect(isAscending).toBe(true)
+  })
+
+  it('returns to the same rung after increasing then decreasing', () => {
+    for (const runSeconds of RUN_LADDER) {
+      const level = { runSeconds, walkSeconds: 90, intervalBlockSeconds: 1200 }
+      const roundTrip = adjustLevelManually(adjustLevelManually(level, 'up'), 'down')
+
+      expect(roundTrip.runSeconds).toBe(runSeconds)
+    }
+  })
+
+  it('returns to the same rung after decreasing then increasing, except the floor', () => {
+    for (const runSeconds of RUN_LADDER.slice(1)) {
+      const level = { runSeconds, walkSeconds: 90, intervalBlockSeconds: 1200 }
+      const roundTrip = adjustLevelManually(adjustLevelManually(level, 'down'), 'up')
+
+      expect(roundTrip.runSeconds).toBe(runSeconds)
+    }
+  })
+
+  it('steps up from the floor to the first rung and back down to the floor', () => {
+    const floorRung = RUN_LADDER[0] ?? 0
+    const firstRung = RUN_LADDER[1] ?? 0
+    const floorLevel = { runSeconds: floorRung, walkSeconds: 120, intervalBlockSeconds: 1200 }
+    const steppedUp = adjustLevelManually(floorLevel, 'up')
+
+    expect(steppedUp.runSeconds).toBe(firstRung)
+    expect(adjustLevelManually(steppedUp, 'down').runSeconds).toBe(floorRung)
+  })
+
+  it('steps a graduated level down to the top rung and back up to graduation', () => {
+    const topRung = RUN_LADDER[RUN_LADDER.length - 1] ?? 0
+    const graduated = { runSeconds: 1200, walkSeconds: 30, intervalBlockSeconds: 1200 }
+    const steppedDown = adjustLevelManually(graduated, 'down')
+
+    expect(steppedDown.runSeconds).toBe(topRung)
+    expect(adjustLevelManually(steppedDown, 'up')).toEqual(graduated)
   })
 })

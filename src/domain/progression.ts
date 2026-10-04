@@ -3,6 +3,9 @@ import type { Session, TrainingLevel, TrainingProfile } from './types.js'
 const daysToMilliseconds = (days: number): number => days * 24 * 60 * 60 * 1000
 const windowDurationMilliseconds = daysToMilliseconds(7)
 const minRunSeconds = 15
+const runMultiplierUp = 1.1
+const runMultiplierDown = 0.9
+const ladderBaseRunSeconds = 30
 
 interface ProgressionPhase {
   maxRunSeconds: number
@@ -34,18 +37,60 @@ const findPhaseIndex = (runSeconds: number): number => {
   return index === -1 ? PHASES.length - 1 : index
 }
 
+const ladderDownRungCount = Math.floor(
+  Math.log(minRunSeconds / ladderBaseRunSeconds) / Math.log(runMultiplierDown)
+)
+const ladderUpRungCount = Math.floor(
+  Math.log(LAST_PHASE.maxRunSeconds / ladderBaseRunSeconds) / Math.log(runMultiplierUp)
+)
+
+const buildLadderDownRungs = (): number[] =>
+  Array.from(
+    { length: ladderDownRungCount },
+    (_, index) => ladderBaseRunSeconds * Math.pow(runMultiplierDown, ladderDownRungCount - index)
+  )
+
+const buildLadderUpRungs = (): number[] =>
+  Array.from(
+    { length: ladderUpRungCount + 1 },
+    (_, index) => ladderBaseRunSeconds * Math.pow(runMultiplierUp, index)
+  )
+
+// Canonical run ladder: base 30, ×1.1 up (k = 0..38), ×0.9 down (k = 1..6), floor 15.
+// Every adjustment snaps to a rung, so up then down always returns to the same level.
+export const RUN_LADDER: ReadonlyArray<number> = Object.freeze([
+  minRunSeconds,
+  ...buildLadderDownRungs(),
+  ...buildLadderUpRungs(),
+])
+
+const snapToLadder = (runSeconds: number): number =>
+  RUN_LADDER.reduce((nearest, rung) =>
+    Math.abs(rung - runSeconds) < Math.abs(nearest - runSeconds) ? rung : nearest
+  )
+
 const adjustLevel = (level: TrainingLevel, direction: LevelAdjustmentDirection): TrainingLevel => {
-  const runMultiplier = direction === 'up' ? 1.1 : 0.9
+  const runMultiplier = direction === 'up' ? runMultiplierUp : runMultiplierDown
   const nextRunSeconds = clamp(
     level.runSeconds * runMultiplier,
     minRunSeconds,
     level.intervalBlockSeconds
   )
-  const phase = PHASES[findPhaseIndex(nextRunSeconds)] ?? LAST_PHASE
+
+  if (nextRunSeconds >= level.intervalBlockSeconds) {
+    return {
+      ...cloneLevel(level),
+      runSeconds: level.intervalBlockSeconds,
+      walkSeconds: LAST_PHASE.walkSeconds,
+    }
+  }
+
+  const snappedRunSeconds = snapToLadder(nextRunSeconds)
+  const phase = PHASES[findPhaseIndex(snappedRunSeconds)] ?? LAST_PHASE
 
   return {
     ...cloneLevel(level),
-    runSeconds: nextRunSeconds,
+    runSeconds: snappedRunSeconds,
     walkSeconds: phase.walkSeconds,
   }
 }
