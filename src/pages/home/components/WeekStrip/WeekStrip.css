@@ -1,0 +1,45 @@
+.weekStrip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.weekStrip__day {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.0625rem solid var(--color-neutral-border);
+  border-radius: 62.4375rem;
+}
+
+.weekStrip__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-soft);
+}
+
+.weekStrip__day--planned {
+  border-color: var(--color-primary-muted);
+  background: var(--color-primary-soft);
+}
+
+.weekStrip__day--planned .weekStrip__label {
+  color: var(--color-primary);
+}
+
+.weekStrip__day--completed {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.weekStrip__day--completed .weekStrip__label {
+  color: var(--color-bg);
+}
+
+.weekStrip__day--today {
+  border-color: var(--color-primary-strong);
+  border-width: 0.125rem;
+}
