@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from '@lynx-js/react'
 
-import { createDefaultProfile, sharedProfileStore } from './profile.js'
-import type { TrainingProfile } from './types.js'
+import { createDefaultProfile, sharedProfileStore } from '@/domain/profile.js'
+import type { TrainingProfile } from '@/domain/types.js'
 
 interface UseSharedProfileResult {
   profile: TrainingProfile

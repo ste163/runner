@@ -2,10 +2,10 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Data } from './Data.js'
-import { sharedProfileStore } from '../../domain/profile.js'
-import type { IntervalRecord, Session, TrainingProfile } from '../../domain/types.js'
-import { runnerProfileStorage, type RunnerStorageModule } from '../../native-bridge/storage.js'
+import { Data } from '@/pages/data/Data.js'
+import { sharedProfileStore } from '@/domain/profile.js'
+import type { IntervalRecord, Session, TrainingProfile } from '@/domain/types.js'
+import { runnerProfileStorage, type RunnerStorageModule } from '@/native-bridge/storage.js'
 
 const buildProfile = (): TrainingProfile => ({
   schemaVersion: 1,

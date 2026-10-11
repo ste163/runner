@@ -2,18 +2,18 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Workout } from './Workout.js'
-import { sharedProfileStore } from '../../domain/profile.js'
-import type { TrainingProfile } from '../../domain/types.js'
-import { runnerGps, type RunnerGpsModule } from '../../native-bridge/gps.js'
-import { runnerHaptics, type WorkoutHaptics } from '../../native-bridge/haptics.js'
-import { runnerScreen, type RunnerScreenModule } from '../../native-bridge/screen.js'
-import { runnerProfileStorage } from '../../native-bridge/storage.js'
+import { Workout } from '@/pages/workout/Workout.js'
+import { sharedProfileStore } from '@/domain/profile.js'
+import type { TrainingProfile } from '@/domain/types.js'
+import { runnerGps, type RunnerGpsModule } from '@/native-bridge/gps.js'
+import { runnerHaptics, type WorkoutHaptics } from '@/native-bridge/haptics.js'
+import { runnerScreen, type RunnerScreenModule } from '@/native-bridge/screen.js'
+import { runnerProfileStorage } from '@/native-bridge/storage.js'
 import {
   runnerWorkoutTimer,
   type RunnerWorkoutTimerModule,
   type WorkoutTimerState,
-} from '../../native-bridge/workout-timer.js'
+} from '@/native-bridge/workout-timer.js'
 
 const buildProfile = (runSeconds: number, walkSeconds: number): TrainingProfile => ({
   schemaVersion: 1,

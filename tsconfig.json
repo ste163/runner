@@ -10,7 +10,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "sparkling-navigation": ["node_modules/sparkling-navigation"]
+      "sparkling-navigation": ["node_modules/sparkling-navigation"],
+      "@/*": ["src/*"]
     },
 
     "strict": true,

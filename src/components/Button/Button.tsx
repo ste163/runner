@@ -1,7 +1,7 @@
 import type { ReactElement } from '@lynx-js/react'
 
 import './Button.css'
-import { Pressable } from '../Pressable/index.js'
+import { Pressable } from '@/components/Pressable/index.js'
 
 type ButtonVariant = 'primary' | 'danger' | 'neutral'
 

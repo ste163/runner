@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { calculateIntervals, isGraduated } from './intervals.js'
+import { calculateIntervals, isGraduated } from '@/domain/intervals.js'
 
 describe('isGraduated', () => {
   it('returns false when the run is shorter than the block', () => {

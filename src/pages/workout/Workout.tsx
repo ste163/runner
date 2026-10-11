@@ -8,31 +8,31 @@ import {
 } from '@lynx-js/react'
 
 import './Workout.css'
-import { formatClockDuration } from '../../format.js'
-import { calculateIntervals, isGraduated } from '../../domain/intervals.js'
-import { evaluateWindows } from '../../domain/progression.js'
-import { sharedProfileStore } from '../../domain/profile.js'
-import { buildIntervalRecords, buildLiveIntervals, buildPace } from '../../domain/stats.js'
-import type { Session, TrainingLevel, TrainingProfile } from '../../domain/types.js'
-import { useSharedProfile } from '../../domain/useSharedProfile.js'
-import { runnerGps, type WorkoutGpsState } from '../../native-bridge/gps.js'
-import { runnerHaptics } from '../../native-bridge/haptics.js'
-import { runnerScreen } from '../../native-bridge/screen.js'
+import { formatClockDuration } from '@/format.js'
+import { calculateIntervals, isGraduated } from '@/domain/intervals.js'
+import { evaluateWindows } from '@/domain/progression.js'
+import { sharedProfileStore } from '@/domain/profile.js'
+import { buildIntervalRecords, buildLiveIntervals, buildPace } from '@/domain/stats.js'
+import type { Session, TrainingLevel, TrainingProfile } from '@/domain/types.js'
+import { useSharedProfile } from '@/domain/useSharedProfile.js'
+import { runnerGps, type WorkoutGpsState } from '@/native-bridge/gps.js'
+import { runnerHaptics } from '@/native-bridge/haptics.js'
+import { runnerScreen } from '@/native-bridge/screen.js'
 import {
   isPendingNativeStartState,
   runnerWorkoutTimer,
   type WorkoutTimerState,
-} from '../../native-bridge/workout-timer.js'
+} from '@/native-bridge/workout-timer.js'
 import {
   Button,
   buildPauseIconContent,
   buildPlayIconContent,
   buildStopIconContent,
-} from '../../components/Button/index.js'
-import { Pressable } from '../../components/Pressable/index.js'
-import { themeColors } from '../../theme.js'
-import { WorkoutTimeline } from './components/WorkoutTimeline/index.js'
-import { Card } from '../../components/Card/index.js'
+} from '@/components/Button/index.js'
+import { Pressable } from '@/components/Pressable/index.js'
+import { themeColors } from '@/theme.js'
+import { WorkoutTimeline } from '@/pages/workout/components/WorkoutTimeline/index.js'
+import { Card } from '@/components/Card/index.js'
 
 type WorkoutInterval = ReturnType<typeof calculateIntervals>[number]
 

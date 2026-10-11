@@ -1,8 +1,8 @@
 import type { ReactElement } from '@lynx-js/react'
 
-import { DonutGraph } from '../../../../components/DonutGraph/index.js'
+import { DonutGraph } from '@/components/DonutGraph/index.js'
 import './ThisWeekDonut.css'
-import { themeColors } from '../../../../theme.js'
+import { themeColors } from '@/theme.js'
 
 type ThisWeekDonutProps = {
   completedCount: number

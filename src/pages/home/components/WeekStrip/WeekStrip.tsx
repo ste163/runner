@@ -1,7 +1,7 @@
 import type { ReactElement } from '@lynx-js/react'
 
 import './WeekStrip.css'
-import type { WeekDayView } from '../../../../domain/weekView.js'
+import type { WeekDayView } from '@/domain/weekView.js'
 
 type WeekStripProps = {
   days: WeekDayView[]

@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState, type ReactElement } from '@ly
 import type { NodesRef, ScrollEvent } from '@lynx-js/types'
 
 import './WorkoutTimeline.css'
-import { DonutGraph } from '../../../../components/DonutGraph/index.js'
-import { formatClockDuration } from '../../../../format.js'
-import { themeColors } from '../../../../theme.js'
+import { DonutGraph } from '@/components/DonutGraph/index.js'
+import { formatClockDuration } from '@/format.js'
+import { themeColors } from '@/theme.js'
 
 export interface TimelineInterval {
   type: 'cooldown' | 'run' | 'walk' | 'warmup'

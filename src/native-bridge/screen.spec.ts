@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { runnerScreen, type RunnerScreenModule } from './screen.js'
+import { runnerScreen, type RunnerScreenModule } from '@/native-bridge/screen.js'
 
 describe('screen bridge', () => {
   afterEach(() => {

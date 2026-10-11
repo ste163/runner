@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { describe, expect, it, vi } from 'vitest'
 
-import { BottomNav } from './BottomNav.js'
+import { BottomNav } from '@/components/BottomNav/BottomNav.js'
 
 describe('BottomNav', () => {
   it('renders the icon tabs and calls callbacks on tap', async () => {

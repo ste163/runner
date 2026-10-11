@@ -8,7 +8,7 @@ import {
 } from '@lynx-js/react'
 
 import './DonutGraph.css'
-import { buildDonutGraphSvgContent } from './donutSvg.js'
+import { buildDonutGraphSvgContent } from '@/components/DonutGraph/donutSvg.js'
 
 export interface DonutGraphProps {
   size: number

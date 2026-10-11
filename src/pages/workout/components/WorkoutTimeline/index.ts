@@ -1,1 +1,1 @@
-export { WorkoutTimeline } from './WorkoutTimeline.js'
+export { WorkoutTimeline } from '@/pages/workout/components/WorkoutTimeline/WorkoutTimeline.js'

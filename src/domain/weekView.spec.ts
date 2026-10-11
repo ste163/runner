@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildWeekView, countWindowSessions } from './weekView.js'
-import type { Session, TrainingProfile } from './types.js'
+import { buildWeekView, countWindowSessions } from '@/domain/weekView.js'
+import type { Session, TrainingProfile } from '@/domain/types.js'
 
 const MONDAY = new Date(2024, 0, 1, 12)
 

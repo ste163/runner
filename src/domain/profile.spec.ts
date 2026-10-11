@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { InMemoryProfileStorage, SharedProfileStore, createDefaultProfile } from './profile.js'
-import type { TrainingProfile } from './types.js'
-import type { ExportProfileResult, ImportProfileResult } from '../native-bridge/storage.js'
+import {
+  InMemoryProfileStorage,
+  SharedProfileStore,
+  createDefaultProfile,
+} from '@/domain/profile.js'
+import type { TrainingProfile } from '@/domain/types.js'
+import type { ExportProfileResult, ImportProfileResult } from '@/native-bridge/storage.js'
 
 describe('createDefaultProfile', () => {
   it('returns the starting training state', () => {

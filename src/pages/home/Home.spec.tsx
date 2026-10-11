@@ -2,9 +2,9 @@ import '@testing-library/jest-dom'
 import { fireEvent, getQueriesForElement, render } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Home } from './Home.js'
-import { sharedProfileStore } from '../../domain/profile.js'
-import type { Session, TrainingProfile } from '../../domain/types.js'
+import { Home } from '@/pages/home/Home.js'
+import { sharedProfileStore } from '@/domain/profile.js'
+import type { Session, TrainingProfile } from '@/domain/types.js'
 
 const MONDAY = new Date(2024, 0, 1, 12)
 

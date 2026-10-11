@@ -4,8 +4,8 @@ import {
   runnerWorkoutTimer,
   type RunnerWorkoutTimerModule,
   type WorkoutTimerState,
-} from './workout-timer.js'
-import type { TrainingLevel } from '../domain/types.js'
+} from '@/native-bridge/workout-timer.js'
+import type { TrainingLevel } from '@/domain/types.js'
 
 describe('workout timer bridge', () => {
   afterEach(() => {

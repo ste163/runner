@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildIntervalRecords, buildLiveIntervals, buildPace, buildSessionPace } from './stats.js'
-import type { IntervalRecord, Session } from './types.js'
+import {
+  buildIntervalRecords,
+  buildLiveIntervals,
+  buildPace,
+  buildSessionPace,
+} from '@/domain/stats.js'
+import type { IntervalRecord, Session } from '@/domain/types.js'
 
 const buildSession = (intervals: IntervalRecord[]): Session => ({
   id: 'session-1',

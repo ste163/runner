@@ -1,4 +1,4 @@
-import type { Session, TrainingLevel, TrainingProfile } from './types.js'
+import type { Session, TrainingLevel, TrainingProfile } from '@/domain/types.js'
 
 const daysToMilliseconds = (days: number): number => days * 24 * 60 * 60 * 1000
 const windowDurationMilliseconds = daysToMilliseconds(7)

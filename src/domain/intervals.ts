@@ -1,4 +1,4 @@
-import type { TrainingLevel } from './types.js'
+import type { TrainingLevel } from '@/domain/types.js'
 
 const warmupSeconds = 300
 const cooldownSeconds = 300

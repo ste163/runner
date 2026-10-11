@@ -1,4 +1,4 @@
-import type { Session, TrainingProfile } from './types.js'
+import type { Session, TrainingProfile } from '@/domain/types.js'
 
 export type WeekDayState = 'idle' | 'planned' | 'completed'
 

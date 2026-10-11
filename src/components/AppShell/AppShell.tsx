@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/react'
 
 import './AppShell.css'
-import { BottomNav } from '../BottomNav/index.js'
-import { Home } from '../../pages/home/Home.js'
-import { Data } from '../../pages/data/Data.js'
-import { Workout } from '../../pages/workout/Workout.js'
-import { isPendingNativeStartState, runnerWorkoutTimer } from '../../native-bridge/workout-timer.js'
+import { BottomNav } from '@/components/BottomNav/index.js'
+import { Home } from '@/pages/home/Home.js'
+import { Data } from '@/pages/data/Data.js'
+import { Workout } from '@/pages/workout/Workout.js'
+import { isPendingNativeStartState, runnerWorkoutTimer } from '@/native-bridge/workout-timer.js'
 
 type Tab = 'home' | 'workout' | 'data'
 

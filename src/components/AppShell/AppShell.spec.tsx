@@ -2,16 +2,16 @@ import '@testing-library/jest-dom'
 import { getQueriesForElement, render, waitFor } from '@lynx-js/react/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AppShell } from './AppShell.js'
-import { sharedProfileStore } from '../../domain/profile.js'
-import { runnerGps } from '../../native-bridge/gps.js'
-import { runnerScreen } from '../../native-bridge/screen.js'
-import { runnerProfileStorage } from '../../native-bridge/storage.js'
+import { AppShell } from '@/components/AppShell/AppShell.js'
+import { sharedProfileStore } from '@/domain/profile.js'
+import { runnerGps } from '@/native-bridge/gps.js'
+import { runnerScreen } from '@/native-bridge/screen.js'
+import { runnerProfileStorage } from '@/native-bridge/storage.js'
 import {
   runnerWorkoutTimer,
   type RunnerWorkoutTimerModule,
   type WorkoutTimerState,
-} from '../../native-bridge/workout-timer.js'
+} from '@/native-bridge/workout-timer.js'
 
 const buildTimerModule = (state: WorkoutTimerState | null): RunnerWorkoutTimerModule => ({
   getWorkoutTimerState: vi.fn(() => (state === null ? null : JSON.stringify(state))),

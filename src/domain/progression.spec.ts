@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { adjustLevelManually, evaluateWindows, RUN_LADDER } from './progression.js'
-import type { TrainingProfile } from './types.js'
+import { adjustLevelManually, evaluateWindows, RUN_LADDER } from '@/domain/progression.js'
+import type { TrainingProfile } from '@/domain/types.js'
 
 const createProfile = (overrides: Partial<TrainingProfile> = {}): TrainingProfile => ({
   schemaVersion: 1,

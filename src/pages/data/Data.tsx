@@ -1,16 +1,16 @@
 import { useCallback, useState, type ReactElement } from '@lynx-js/react'
 
 import './Data.css'
-import { formatClockDuration } from '../../format.js'
-import { isGraduated } from '../../domain/intervals.js'
-import { sharedProfileStore } from '../../domain/profile.js'
-import { buildSessionPace } from '../../domain/stats.js'
-import type { Session, TrainingProfile } from '../../domain/types.js'
-import { useSharedProfile } from '../../domain/useSharedProfile.js'
-import { Button } from '../../components/Button/index.js'
-import { Card } from '../../components/Card/index.js'
-import { Pressable } from '../../components/Pressable/index.js'
-import { themeColors } from '../../theme.js'
+import { formatClockDuration } from '@/format.js'
+import { isGraduated } from '@/domain/intervals.js'
+import { sharedProfileStore } from '@/domain/profile.js'
+import { buildSessionPace } from '@/domain/stats.js'
+import type { Session, TrainingProfile } from '@/domain/types.js'
+import { useSharedProfile } from '@/domain/useSharedProfile.js'
+import { Button } from '@/components/Button/index.js'
+import { Card } from '@/components/Card/index.js'
+import { Pressable } from '@/components/Pressable/index.js'
+import { themeColors } from '@/theme.js'
 
 const MONTH_NAMES = [
   'January',

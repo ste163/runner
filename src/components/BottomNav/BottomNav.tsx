@@ -1,8 +1,8 @@
 import type { ReactElement } from '@lynx-js/react'
 
 import './BottomNav.css'
-import { Pressable } from '../Pressable/index.js'
-import { themeColors } from '../../theme.js'
+import { Pressable } from '@/components/Pressable/index.js'
+import { themeColors } from '@/theme.js'
 
 type BottomNavTab = 'home' | 'workout' | 'data'
 

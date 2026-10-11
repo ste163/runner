@@ -1,1 +1,1 @@
-export { Card } from './Card.js'
+export { Card } from '@/components/Card/Card.js'

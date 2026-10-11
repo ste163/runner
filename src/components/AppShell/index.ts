@@ -1,1 +1,1 @@
-export { AppShell } from './AppShell.js'
+export { AppShell } from '@/components/AppShell/AppShell.js'

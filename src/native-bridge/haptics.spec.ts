@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { runnerHaptics, type WorkoutHaptics } from './haptics.js'
+import { runnerHaptics, type WorkoutHaptics } from '@/native-bridge/haptics.js'
 
 describe('haptics bridge', () => {
   afterEach(() => {

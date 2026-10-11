@@ -1,1 +1,1 @@
-export { Pressable } from './Pressable.js'
+export { Pressable } from '@/components/Pressable/Pressable.js'

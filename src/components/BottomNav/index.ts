@@ -1,1 +1,1 @@
-export { BottomNav } from './BottomNav.js'
+export { BottomNav } from '@/components/BottomNav/BottomNav.js'

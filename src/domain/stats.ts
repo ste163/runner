@@ -1,4 +1,4 @@
-import type { IntervalRecord, Session } from './types.js'
+import type { IntervalRecord, Session } from '@/domain/types.js'
 
 type PaceKind = 'run' | 'walk'
 type PaceInterval = Pick<IntervalRecord, 'type' | 'durationSeconds' | 'distanceMiles'>

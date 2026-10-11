@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createDefaultProfile } from '../domain/profile.js'
-import { runnerProfileStorage, type RunnerStorageModule } from './storage.js'
+import { createDefaultProfile } from '@/domain/profile.js'
+import { runnerProfileStorage, type RunnerStorageModule } from '@/native-bridge/storage.js'
 
 describe('runner profile storage bridge', () => {
   afterEach(() => {

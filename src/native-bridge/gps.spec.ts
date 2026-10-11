@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { runnerGps, type RunnerGpsModule, type WorkoutGpsState } from './gps.js'
+import { runnerGps, type RunnerGpsModule, type WorkoutGpsState } from '@/native-bridge/gps.js'
 
 describe('gps bridge', () => {
   afterEach(() => {

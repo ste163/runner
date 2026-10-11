@@ -1,4 +1,4 @@
-import type { IntervalRecord, TrainingLevel } from '../domain/types.js'
+import type { IntervalRecord, TrainingLevel } from '@/domain/types.js'
 
 export interface CompletedWorkoutInterval {
   type: IntervalRecord['type']

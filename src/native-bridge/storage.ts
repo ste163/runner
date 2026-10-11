@@ -1,4 +1,4 @@
-import type { TrainingProfile } from '../domain/types.js'
+import type { TrainingProfile } from '@/domain/types.js'
 
 type StorageCompletionStatus = 'success' | 'cancelled' | 'error'
 type StorageCompletionCallback = (status: StorageCompletionStatus, detail: string | null) => void
@@ -17,8 +17,13 @@ export type RunnerStorageModule = {
   saveProfileJson: (profileJson: string) => void
 }
 
-const parseProfileJson = (profileJson: string): TrainingProfile =>
-  JSON.parse(profileJson) as TrainingProfile
+const parseProfileJson = (profileJson: string): TrainingProfile | null => {
+  try {
+    return JSON.parse(profileJson) as TrainingProfile
+  } catch {
+    return null
+  }
+}
 
 const resolveStorageResult = <T extends object>(
   status: StorageCompletionStatus,
@@ -62,7 +67,9 @@ const resolveImportResult = (
     detail,
     (profileJson) => {
       if (!profileJson) throw new Error('Import failed.')
-      return { profile: parseProfileJson(profileJson) }
+      const profile = parseProfileJson(profileJson)
+      if (!profile) throw new Error('Invalid profile data.')
+      return { profile }
     },
     'Import failed.'
   )
