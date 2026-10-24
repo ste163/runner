@@ -97,9 +97,21 @@ describe('Home', () => {
     await findByText('3/3')
     expect(queryByText('Completed!')).toBeNull()
     await findByText('Run again on Monday')
-    expect(getByTestId('week-day-0-completed')).toBeInTheDocument()
-    expect(getByTestId('week-day-2-completed')).toBeInTheDocument()
-    expect(getByTestId('week-day-4-completed')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-0-completed')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-2-completed')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-4-completed')).toBeInTheDocument()
+  })
+
+  it('shows a forward chevron when the next cycle day falls next week', async () => {
+    vi.setSystemTime(buildDay(5))
+    sharedProfileStore.save(buildCompletedWeekProfile())
+
+    render(<Home onStartWorkout={vi.fn()} />)
+
+    const { findByTestId } = getQueriesForElement(elementTree.root!)
+
+    expect(await findByTestId('week-strip-forward')).toBeInTheDocument()
+    expect(await findByTestId('week-day-2-0-planned')).toBeInTheDocument()
   })
 
   it('shows the fresh week plan and says run today', async () => {
@@ -112,9 +124,9 @@ describe('Home', () => {
 
     await findByText('0/3')
     await findByText('Run today')
-    expect(getByTestId('week-day-2-planned')).toBeInTheDocument()
-    expect(getByTestId('week-day-4-planned')).toBeInTheDocument()
-    expect(getByTestId('week-day-6-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-2-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-4-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-6-planned')).toBeInTheDocument()
   })
 
   it('recommends the next planned day after the first run', async () => {
@@ -127,9 +139,9 @@ describe('Home', () => {
 
     await findByText('1/3')
     await findByText('Run again on Wednesday')
-    expect(getByTestId('week-day-0-completed')).toBeInTheDocument()
-    expect(getByTestId('week-day-2-planned')).toBeInTheDocument()
-    expect(getByTestId('week-day-4-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-0-completed')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-2-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-4-planned')).toBeInTheDocument()
   })
 
   it('says run today after a missed planned day', async () => {
@@ -142,9 +154,9 @@ describe('Home', () => {
 
     await findByText('1/3')
     await findByText('Run today')
-    expect(getByTestId('week-day-2-idle')).toBeInTheDocument()
-    expect(getByTestId('week-day-3-planned')).toBeInTheDocument()
-    expect(getByTestId('week-day-5-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-2-idle')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-3-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-5-planned')).toBeInTheDocument()
   })
 
   it('updates the week section when the profile changes elsewhere', async () => {
@@ -178,7 +190,7 @@ describe('Home', () => {
 
     await findByText('2/3')
     await findByText('Run again on Thursday')
-    expect(getByTestId('week-day-3-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-3-planned')).toBeInTheDocument()
   })
 
   it('starts a fresh week plan after the window expires', async () => {
@@ -190,9 +202,9 @@ describe('Home', () => {
     const { findByText, getByTestId } = getQueriesForElement(elementTree.root!)
 
     await findByText('Run today')
-    expect(getByTestId('week-day-0-planned')).toBeInTheDocument()
-    expect(getByTestId('week-day-2-planned')).toBeInTheDocument()
-    expect(getByTestId('week-day-4-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-0-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-2-planned')).toBeInTheDocument()
+    expect(getByTestId('week-day-1-4-planned')).toBeInTheDocument()
   })
 
   it('requests the workout tab when the start button is tapped', async () => {

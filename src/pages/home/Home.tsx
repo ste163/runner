@@ -73,18 +73,20 @@ export const Home = (props: {
 
   const currentWindowSessions = countWindowSessions(profile)
   const currentProgress = Math.min(currentWindowSessions, 3)
-  const weekView = buildWeekView(profile, new Date())
+  const now = new Date()
+  const weekPages = [-1, 0, 1].map((weekOffset) => buildWeekView(profile, now, weekOffset))
+  const currentWeek = weekPages[1]
   const runPercent = buildRunPercent(profile.level)
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
   return (
     <view className='page home'>
       <Card
         title='This Week'
-        subtitle={weekView.recommendation}
+        subtitle={currentWeek?.recommendation ?? ''}
         className='home__section--week'
         headerContent={<ThisWeekDonut completedCount={currentProgress} totalCount={3} />}
       >
-        <WeekStrip days={weekView.days} />
+        <WeekStrip pages={weekPages} />
       </Card>
 
       <Card

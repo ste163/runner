@@ -12,6 +12,8 @@ export interface WeekDayView {
 export interface WeekView {
   days: WeekDayView[]
   recommendation: string
+  canGoBack: boolean
+  canGoForward: boolean
 }
 
 const dayLetters = ['S', 'M', 'T', 'W', 'R', 'F', 'S']
@@ -134,19 +136,57 @@ const buildRecommendation = (
     : `Run again on ${buildWeekdayName(nextPlanned)}`
 }
 
-export const buildWeekView = (profile: TrainingProfile, now: Date): WeekView => {
+const buildMarkedDates = (profile: TrainingProfile, now: Date): Date[] => {
+  const windowRuns = buildWindowRuns(profile, now)
+  const planDays = buildPlanDays(windowRuns, startOfLocalDay(now))
+  const windowStart =
+    profile.window.windowStart === '' ? null : new Date(profile.window.windowStart)
+  const nextCycleDays =
+    isWindowActive(profile, now) && windowStart !== null && windowRuns.length >= targetRunCount
+      ? [addCalendarDays(windowStart, 7)]
+      : []
+
+  return [...windowRuns, ...planDays, ...nextCycleDays]
+}
+
+const hasMarkedDayInWeek = (weekOffset: number, markedDates: Date[], now: Date): boolean => {
+  const weekStart = addCalendarDays(buildWeekStart(now), weekOffset * 7)
+
+  return buildWeekDays(weekStart).some((day) =>
+    markedDates.some((markedDate) => isSameLocalDay(markedDate, day))
+  )
+}
+
+const buildCanNavigateBack = (weekOffset: number, markedDates: Date[], now: Date): boolean => {
+  if (weekOffset <= -1) return false
+
+  return weekOffset - 1 === 0 || hasMarkedDayInWeek(weekOffset - 1, markedDates, now)
+}
+
+const buildCanNavigateForward = (weekOffset: number, markedDates: Date[], now: Date): boolean => {
+  if (weekOffset >= 1) return false
+
+  return weekOffset + 1 === 0 || hasMarkedDayInWeek(weekOffset + 1, markedDates, now)
+}
+
+export const buildWeekView = (
+  profile: TrainingProfile,
+  now: Date,
+  weekOffset: number = 0
+): WeekView => {
   const today = startOfLocalDay(now)
-  const weekDays = buildWeekDays(buildWeekStart(now))
+  const weekDays = buildWeekDays(addCalendarDays(buildWeekStart(now), weekOffset * 7))
   const weekRuns = buildWeekRuns(profile.sessions, weekDays)
   const windowRuns = buildWindowRuns(profile, now)
   const planDays = buildPlanDays(windowRuns, today)
+  const markedDates = buildMarkedDates(profile, now)
   const isActive = isWindowActive(profile, now)
   const windowStart =
     profile.window.windowStart === '' ? null : new Date(profile.window.windowStart)
 
   const days: WeekDayView[] = weekDays.map((date, index) => {
     const isCompleted = weekRuns.some((run) => isSameLocalDay(run, date))
-    const isPlanned = planDays.some((planDay) => isSameLocalDay(planDay, date))
+    const isPlanned = markedDates.some((markedDate) => isSameLocalDay(markedDate, date))
     const state: WeekDayState = isCompleted ? 'completed' : isPlanned ? 'planned' : 'idle'
 
     return {
@@ -160,5 +200,7 @@ export const buildWeekView = (profile: TrainingProfile, now: Date): WeekView => 
   return {
     days,
     recommendation: buildRecommendation(isActive, windowRuns, windowStart, planDays, today),
+    canGoBack: buildCanNavigateBack(weekOffset, markedDates, now),
+    canGoForward: buildCanNavigateForward(weekOffset, markedDates, now),
   }
 }

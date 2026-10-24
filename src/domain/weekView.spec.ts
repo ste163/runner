@@ -225,6 +225,100 @@ describe('buildWeekView', () => {
   })
 })
 
+describe('buildWeekView navigation', () => {
+  it('marks no navigation flags when the plan stays in the current week', () => {
+    const view = buildWeekView(buildProfile(null, []), buildDay(2))
+
+    expect(view.canGoBack).toBe(false)
+    expect(view.canGoForward).toBe(false)
+  })
+
+  it('offers a return chevron from neighboring weeks', () => {
+    const previousWeek = buildWeekView(buildProfile(null, []), buildDay(2), -1)
+
+    expect(previousWeek.canGoBack).toBe(false)
+    expect(previousWeek.canGoForward).toBe(true)
+
+    const nextWeek = buildWeekView(buildProfile(null, []), buildDay(2), 1)
+
+    expect(nextWeek.canGoBack).toBe(true)
+    expect(nextWeek.canGoForward).toBe(false)
+  })
+
+  it('splits a fresh Saturday plan across weeks', () => {
+    const view = buildWeekView(buildProfile(null, []), buildDay(5))
+
+    expect(view.days[5]?.state).toBe('planned')
+    expect(view.canGoBack).toBe(false)
+    expect(view.canGoForward).toBe(true)
+
+    const nextWeek = buildWeekView(buildProfile(null, []), buildDay(5), 1)
+
+    expect(nextWeek.days[0]?.state).toBe('planned')
+    expect(nextWeek.days[2]?.state).toBe('planned')
+    expect(nextWeek.canGoBack).toBe(true)
+    expect(nextWeek.canGoForward).toBe(false)
+  })
+
+  it('points forward when the plan spills into the next week', () => {
+    const profile = buildProfile(MONDAY, [
+      buildSession('session-1', buildDay(0)),
+      buildSession('session-2', buildDay(5)),
+    ])
+    const view = buildWeekView(profile, buildDay(6))
+
+    expect(view.canGoBack).toBe(false)
+    expect(view.canGoForward).toBe(true)
+    expect(view.days.some((day) => day.state === 'planned')).toBe(false)
+
+    const nextWeek = buildWeekView(profile, buildDay(6), 1)
+
+    expect(nextWeek.days[0]?.state).toBe('planned')
+    expect(nextWeek.canGoBack).toBe(true)
+    expect(nextWeek.canGoForward).toBe(false)
+  })
+
+  it('points back when earlier window runs live in the previous week', () => {
+    const profile = buildProfile(buildDay(5), [buildSession('session-1', buildDay(5))])
+    const view = buildWeekView(profile, buildDay(10))
+
+    expect(view.canGoBack).toBe(true)
+    expect(view.canGoForward).toBe(false)
+
+    const previousWeek = buildWeekView(profile, buildDay(10), -1)
+
+    expect(previousWeek.days[5]?.state).toBe('completed')
+    expect(previousWeek.canGoBack).toBe(false)
+    expect(previousWeek.canGoForward).toBe(true)
+  })
+
+  it('marks the next cycle anchor as planned in the following week', () => {
+    const profile = buildProfile(MONDAY, [
+      buildSession('session-1', buildDay(0)),
+      buildSession('session-2', buildDay(2)),
+      buildSession('session-3', buildDay(4)),
+    ])
+    const view = buildWeekView(profile, buildDay(5))
+
+    expect(view.canGoBack).toBe(false)
+    expect(view.canGoForward).toBe(true)
+
+    const nextWeek = buildWeekView(profile, buildDay(5), 1)
+
+    expect(nextWeek.days[0]?.state).toBe('planned')
+    expect(nextWeek.canGoBack).toBe(true)
+    expect(nextWeek.canGoForward).toBe(false)
+  })
+
+  it('keeps the same recommendation on every page', () => {
+    const profile = buildProfile(MONDAY, [buildSession('session-1', buildDay(0))])
+    const recommendation = buildWeekView(profile, buildDay(1)).recommendation
+
+    expect(buildWeekView(profile, buildDay(1), -1).recommendation).toBe(recommendation)
+    expect(buildWeekView(profile, buildDay(1), 1).recommendation).toBe(recommendation)
+  })
+})
+
 describe('countWindowSessions', () => {
   it('counts sessions inside the rolling window', () => {
     const profile = buildProfile(MONDAY, [
