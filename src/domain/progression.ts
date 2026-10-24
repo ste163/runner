@@ -1,11 +1,17 @@
 import type { Session, TrainingLevel, TrainingProfile } from '@/domain/types.js'
+import {
+  addCalendarDays,
+  countDaysBetween,
+  isBeforeLocalDay,
+  startOfLocalDay,
+} from '@/domain/calendar.js'
 
-const daysToMilliseconds = (days: number): number => days * 24 * 60 * 60 * 1000
-const windowDurationMilliseconds = daysToMilliseconds(7)
 const minRunSeconds = 15
 const runMultiplierUp = 1.1
 const runMultiplierDown = 0.9
 const ladderBaseRunSeconds = 30
+const windowDayCount = 7
+const breakGapDayCount = 4
 
 interface ProgressionPhase {
   maxRunSeconds: number
@@ -95,23 +101,48 @@ const adjustLevel = (level: TrainingLevel, direction: LevelAdjustmentDirection):
   }
 }
 
-const countSessionsInWindow = (
-  sessions: Session[],
-  startMilliseconds: number,
-  endMilliseconds: number
-): number =>
+const countSessionsInWindow = (sessions: Session[], startDay: Date, endDay: Date): number =>
   sessions.reduce((count, session) => {
-    const completedAtMilliseconds = new Date(session.completedAt).getTime()
+    const completedDay = startOfLocalDay(new Date(session.completedAt))
 
-    return completedAtMilliseconds >= startMilliseconds && completedAtMilliseconds < endMilliseconds
+    return !isBeforeLocalDay(completedDay, startDay) && isBeforeLocalDay(completedDay, endDay)
       ? count + 1
       : count
   }, 0)
 
-const buildWindowStarts = (startMilliseconds: number, expiredWindowCount: number): number[] =>
-  Array.from(
-    { length: expiredWindowCount },
-    (_, index) => startMilliseconds + index * windowDurationMilliseconds
+const buildWindowStarts = (startDay: Date, expiredWindowCount: number): Date[] =>
+  Array.from({ length: expiredWindowCount }, (_, index) =>
+    addCalendarDays(startDay, index * windowDayCount)
+  )
+
+const countExpiredWindows = (startDay: Date, nowDay: Date): number => {
+  let count = 0
+  let cursor = addCalendarDays(startDay, windowDayCount)
+
+  while (!isBeforeLocalDay(nowDay, cursor)) {
+    count += 1
+    cursor = addCalendarDays(cursor, windowDayCount)
+  }
+
+  return count
+}
+
+const applyMiss = (
+  level: TrainingLevel,
+  consecutiveMissed: number
+): { level: TrainingLevel; consecutiveMissed: number } => ({
+  level: consecutiveMissed + 1 >= 2 ? adjustLevel(level, 'down') : level,
+  consecutiveMissed: consecutiveMissed + 1,
+})
+
+const findLatestSession = (sessions: Session[]): Session | null =>
+  sessions.reduce(
+    (latest, session) =>
+      latest === null ||
+      new Date(session.completedAt).getTime() > new Date(latest.completedAt).getTime()
+        ? session
+        : latest,
+    null as Session | null
   )
 
 export const adjustLevelManually = (
@@ -119,36 +150,133 @@ export const adjustLevelManually = (
   direction: LevelAdjustmentDirection
 ): TrainingLevel => adjustLevel(level, direction)
 
+export const completeSession = (
+  profile: TrainingProfile,
+  session: Session,
+  completedAt: Date
+): TrainingProfile => {
+  const profileWithSession: TrainingProfile = {
+    ...profile,
+    sessions: [...profile.sessions, session],
+  }
+
+  if (profile.window.windowStart === '') {
+    return {
+      ...profileWithSession,
+      window: {
+        ...profile.window,
+        consecutiveMissed: 0,
+        windowStart: startOfLocalDay(completedAt).toISOString(),
+      },
+    }
+  }
+
+  const startDay = startOfLocalDay(new Date(profile.window.windowStart))
+  const endDay = addCalendarDays(startDay, windowDayCount)
+  const completedDay = startOfLocalDay(completedAt)
+
+  if (!isBeforeLocalDay(completedDay, endDay)) {
+    return evaluateWindows(profileWithSession, completedAt)
+  }
+
+  if (countSessionsInWindow(profile.sessions, startDay, endDay) >= 3) {
+    return {
+      ...profileWithSession,
+      window: {
+        ...profile.window,
+        consecutiveMissed: 0,
+        windowStart: completedDay.toISOString(),
+      },
+    }
+  }
+
+  const latestSession = findLatestSession(profile.sessions)
+  const gapDayCount =
+    latestSession === null
+      ? 0
+      : countDaysBetween(startOfLocalDay(new Date(latestSession.completedAt)), completedDay)
+
+  if (gapDayCount >= breakGapDayCount) {
+    const missed = applyMiss(profile.level, profile.window.consecutiveMissed)
+
+    return {
+      ...profileWithSession,
+      level: missed.level,
+      window: {
+        ...profile.window,
+        windowStart: completedDay.toISOString(),
+        consecutiveMissed: missed.consecutiveMissed,
+      },
+    }
+  }
+
+  const sessionCount = countSessionsInWindow(profileWithSession.sessions, startDay, endDay)
+
+  if (sessionCount >= 3) {
+    return {
+      ...profileWithSession,
+      level: adjustLevelManually(profile.level, 'up'),
+      window: {
+        ...profile.window,
+        consecutiveMissed: 0,
+      },
+    }
+  }
+
+  return profileWithSession
+}
+
+export const reanchorWindow = (profile: TrainingProfile, now: Date): TrainingProfile => {
+  const sessions = [...profile.sessions].sort(
+    (a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
+  )
+  const latestThree = sessions.slice(-3)
+  const firstRun = latestThree[0]
+  const lastRun = latestThree[latestThree.length - 1]
+  const anchorDay =
+    latestThree.length === 3 &&
+    firstRun !== undefined &&
+    lastRun !== undefined &&
+    countDaysBetween(
+      startOfLocalDay(new Date(firstRun.completedAt)),
+      startOfLocalDay(new Date(lastRun.completedAt))
+    ) <= windowDayCount
+      ? startOfLocalDay(new Date(firstRun.completedAt))
+      : startOfLocalDay(now)
+
+  return {
+    ...profile,
+    window: {
+      ...profile.window,
+      windowStart: anchorDay.toISOString(),
+      consecutiveMissed: 0,
+    },
+  }
+}
+
 export const evaluateWindows = (profile: TrainingProfile, now: Date): TrainingProfile => {
   if (profile.window.windowStart === '') return profile
 
-  const startMilliseconds = new Date(profile.window.windowStart).getTime()
-  const nowMilliseconds = now.getTime()
-  if (nowMilliseconds <= startMilliseconds) return profile
+  const startDay = startOfLocalDay(new Date(profile.window.windowStart))
+  const nowDay = startOfLocalDay(now)
+  if (!isBeforeLocalDay(startDay, nowDay)) return profile
 
-  const expiredWindowCount = Math.floor(
-    (nowMilliseconds - startMilliseconds) / windowDurationMilliseconds
-  )
+  const expiredWindowCount = countExpiredWindows(startDay, nowDay)
   if (expiredWindowCount <= 0) return profile
 
-  const evaluated = buildWindowStarts(startMilliseconds, expiredWindowCount).reduce(
-    (state, windowStartMilliseconds) => {
+  const evaluated = buildWindowStarts(startDay, expiredWindowCount).reduce(
+    (state, windowStartDay) => {
       const sessionCount = countSessionsInWindow(
         profile.sessions,
-        windowStartMilliseconds,
-        windowStartMilliseconds + windowDurationMilliseconds
+        windowStartDay,
+        addCalendarDays(windowStartDay, windowDayCount)
       )
 
-      return sessionCount >= 3
-        ? {
-            level: adjustLevel(state.level, 'up'),
-            consecutiveMissed: 0,
-          }
-        : {
-            level:
-              state.consecutiveMissed + 1 >= 2 ? adjustLevel(state.level, 'down') : state.level,
-            consecutiveMissed: state.consecutiveMissed + 1,
-          }
+      if (sessionCount >= 3) {
+        return { level: state.level, consecutiveMissed: 0 }
+      }
+
+      return applyMiss(state.level, state.consecutiveMissed)
     },
     { level: cloneLevel(profile.level), consecutiveMissed: profile.window.consecutiveMissed }
   )
@@ -158,7 +286,7 @@ export const evaluateWindows = (profile: TrainingProfile, now: Date): TrainingPr
     level: evaluated.level,
     window: {
       ...profile.window,
-      windowStart: now.toISOString(),
+      windowStart: nowDay.toISOString(),
       consecutiveMissed: evaluated.consecutiveMissed,
     },
   }

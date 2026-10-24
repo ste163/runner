@@ -47,10 +47,10 @@ const rebuildAndInstall = async () => {
       throw new Error(`build failed with code ${buildCode}`)
     }
 
-    console.log('android:dev: install -> sparkling-app-cli run:android')
-    const runCode = await runCommand('sparkling-app-cli', ['run:android'])
+    console.log('android:dev: install -> sh ./scripts/android-install-debug.sh')
+    const runCode = await runCommand('sh', ['./scripts/android-install-debug.sh'])
     if (runCode !== 0) {
-      throw new Error(`run:android failed with code ${runCode}`)
+      throw new Error(`install failed with code ${runCode}`)
     }
   } finally {
     running = false

@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { adjustLevelManually, evaluateWindows, RUN_LADDER } from '@/domain/progression.js'
+import {
+  adjustLevelManually,
+  completeSession,
+  evaluateWindows,
+  reanchorWindow,
+  RUN_LADDER,
+} from '@/domain/progression.js'
 import type { TrainingProfile } from '@/domain/types.js'
+
+const buildDay = (dayOffset: number): Date => new Date(2024, 0, 1 + dayOffset, 12)
+const buildMidnight = (dayOffset: number): Date => new Date(2024, 0, 1 + dayOffset)
 
 const createProfile = (overrides: Partial<TrainingProfile> = {}): TrainingProfile => ({
   schemaVersion: 1,
@@ -12,16 +21,16 @@ const createProfile = (overrides: Partial<TrainingProfile> = {}): TrainingProfil
     ...overrides.level,
   },
   window: {
-    windowStart: '2024-01-01T00:00:00.000Z',
+    windowStart: buildMidnight(0).toISOString(),
     consecutiveMissed: 0,
     ...overrides.window,
   },
   sessions: overrides.sessions ?? [],
 })
 
-const createSession = (completedAt: string): TrainingProfile['sessions'][number] => ({
-  id: completedAt,
-  completedAt,
+const createSession = (completedAt: Date): TrainingProfile['sessions'][number] => ({
+  id: completedAt.toISOString(),
+  completedAt: completedAt.toISOString(),
   level: {
     runSeconds: 30,
     walkSeconds: 90,
@@ -33,14 +42,14 @@ const createSession = (completedAt: string): TrainingProfile['sessions'][number]
 
 describe('evaluateWindows', () => {
   it('regresses across missed windows', () => {
-    const firstMiss = evaluateWindows(createProfile(), new Date('2024-01-15T00:00:00.000Z'))
-    const secondMiss = evaluateWindows(createProfile(), new Date('2024-01-22T00:00:00.000Z'))
+    const firstMiss = evaluateWindows(createProfile(), buildDay(14))
+    const secondMiss = evaluateWindows(createProfile(), buildDay(21))
 
     expect(firstMiss.level.runSeconds).toBeCloseTo(27)
     expect(firstMiss.level.walkSeconds).toBe(120)
     expect(firstMiss.level.intervalBlockSeconds).toBe(1200)
     expect(firstMiss.window).toEqual({
-      windowStart: '2024-01-15T00:00:00.000Z',
+      windowStart: buildMidnight(14).toISOString(),
       consecutiveMissed: 2,
     })
     expect(secondMiss.level.runSeconds).toBeCloseTo(24.3)
@@ -50,14 +59,21 @@ describe('evaluateWindows', () => {
 
   it('keeps the profile unchanged before the window starts', () => {
     const profile = createProfile()
-    const updated = evaluateWindows(profile, new Date('2023-12-31T23:59:59.000Z'))
+    const updated = evaluateWindows(profile, buildDay(-1))
 
     expect(updated).toBe(profile)
   })
 
   it('keeps the profile unchanged while the window is still active', () => {
     const profile = createProfile()
-    const updated = evaluateWindows(profile, new Date('2024-01-03T00:00:00.000Z'))
+    const updated = evaluateWindows(profile, buildDay(2))
+
+    expect(updated).toBe(profile)
+  })
+
+  it('keeps the profile unchanged on the anchor day itself', () => {
+    const profile = createProfile()
+    const updated = evaluateWindows(profile, buildDay(0))
 
     expect(updated).toBe(profile)
   })
@@ -70,43 +86,242 @@ describe('evaluateWindows', () => {
       },
     })
 
-    expect(evaluateWindows(profile, new Date('2024-01-08T00:00:00.000Z'))).toBe(profile)
+    expect(evaluateWindows(profile, buildDay(7))).toBe(profile)
   })
 
   it('counts sessions only inside each expired window', () => {
     const updated = evaluateWindows(
       createProfile({
-        sessions: [createSession('2024-01-10T00:00:00.000Z')],
+        sessions: [createSession(buildDay(9))],
       }),
-      new Date('2024-01-15T00:00:00.000Z')
+      buildDay(14)
     )
 
     expect(updated.level.runSeconds).toBeCloseTo(27)
     expect(updated.level.walkSeconds).toBe(120)
     expect(updated.level.intervalBlockSeconds).toBe(1200)
     expect(updated.window).toEqual({
-      windowStart: '2024-01-15T00:00:00.000Z',
+      windowStart: buildMidnight(14).toISOString(),
       consecutiveMissed: 2,
     })
   })
 
-  it('progresses after a successful 7-day window', () => {
+  it('resets the miss counter without re-leveling a completed window', () => {
     const updated = evaluateWindows(
       createProfile({
+        level: { runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 },
+        window: { windowStart: buildMidnight(0).toISOString(), consecutiveMissed: 1 },
         sessions: [
-          createSession('2024-01-02T00:00:00.000Z'),
-          createSession('2024-01-03T00:00:00.000Z'),
-          createSession('2024-01-04T00:00:00.000Z'),
+          createSession(buildDay(1)),
+          createSession(buildDay(2)),
+          createSession(buildDay(3)),
         ],
       }),
-      new Date('2024-01-08T00:00:00.000Z')
+      buildDay(7)
     )
 
     expect(updated.level).toEqual({ runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 })
     expect(updated.window).toEqual({
-      windowStart: '2024-01-08T00:00:00.000Z',
+      windowStart: buildMidnight(7).toISOString(),
       consecutiveMissed: 0,
     })
+  })
+
+  it('excludes a run on the expiry day from the expired window', () => {
+    const updated = evaluateWindows(
+      createProfile({
+        sessions: [createSession(new Date(2024, 0, 8, 23, 30))],
+      }),
+      buildDay(8)
+    )
+
+    expect(updated.level.runSeconds).toBe(30)
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(8).toISOString(),
+      consecutiveMissed: 1,
+    })
+  })
+})
+
+describe('completeSession', () => {
+  it('anchors the first session at local midnight', () => {
+    const completedAt = new Date(2024, 0, 1, 18, 30)
+    const updated = completeSession(
+      createProfile({ window: { windowStart: '', consecutiveMissed: 0 } }),
+      createSession(completedAt),
+      completedAt
+    )
+
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(0).toISOString(),
+      consecutiveMissed: 0,
+    })
+    expect(updated.sessions).toHaveLength(1)
+  })
+
+  it('levels up immediately when the third session completes the window', () => {
+    const profile = createProfile({
+      sessions: [createSession(buildDay(0)), createSession(buildDay(2))],
+    })
+    const updated = completeSession(profile, createSession(buildDay(4)), buildDay(4))
+
+    expect(updated.level).toEqual({ runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 })
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(0).toISOString(),
+      consecutiveMissed: 0,
+    })
+  })
+
+  it('opens a new window for an early run after completion', () => {
+    const profile = createProfile({
+      level: { runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 },
+      sessions: [
+        createSession(buildDay(0)),
+        createSession(buildDay(2)),
+        createSession(buildDay(4)),
+      ],
+    })
+    const updated = completeSession(profile, createSession(buildDay(5)), buildDay(5))
+
+    expect(updated.level).toEqual({ runSeconds: 33, walkSeconds: 90, intervalBlockSeconds: 1200 })
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(5).toISOString(),
+      consecutiveMissed: 0,
+    })
+  })
+
+  it('evaluates expired windows and starts a new window at the run day', () => {
+    const profile = createProfile({
+      sessions: [createSession(buildDay(1))],
+    })
+    const updated = completeSession(profile, createSession(buildDay(9)), buildDay(9))
+
+    expect(updated.level.runSeconds).toBe(30)
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(9).toISOString(),
+      consecutiveMissed: 1,
+    })
+  })
+
+  it('starts a new window after a four-day break and records the miss', () => {
+    const profile = createProfile({
+      window: { windowStart: buildMidnight(1).toISOString(), consecutiveMissed: 0 },
+      sessions: [createSession(buildDay(1)), createSession(buildDay(3))],
+    })
+    const updated = completeSession(profile, createSession(buildDay(7)), buildDay(7))
+
+    expect(updated.level.runSeconds).toBe(30)
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(7).toISOString(),
+      consecutiveMissed: 1,
+    })
+    expect(updated.sessions).toHaveLength(3)
+  })
+
+  it('keeps a three-day gap inside the window', () => {
+    const profile = createProfile({
+      window: { windowStart: buildMidnight(3).toISOString(), consecutiveMissed: 0 },
+      sessions: [createSession(buildDay(3))],
+    })
+    const afterSunday = completeSession(profile, createSession(buildDay(6)), buildDay(6))
+
+    expect(afterSunday.window.windowStart).toBe(buildMidnight(3).toISOString())
+    expect(afterSunday.window.consecutiveMissed).toBe(0)
+
+    const afterMonday = completeSession(afterSunday, createSession(buildDay(7)), buildDay(7))
+
+    expect(afterMonday.level).toEqual({
+      runSeconds: 33,
+      walkSeconds: 90,
+      intervalBlockSeconds: 1200,
+    })
+    expect(afterMonday.window.windowStart).toBe(buildMidnight(3).toISOString())
+  })
+
+  it('regresses on a second consecutive break miss', () => {
+    const profile = createProfile({
+      window: { windowStart: buildMidnight(1).toISOString(), consecutiveMissed: 1 },
+      sessions: [createSession(buildDay(1)), createSession(buildDay(3))],
+    })
+    const updated = completeSession(profile, createSession(buildDay(7)), buildDay(7))
+
+    expect(updated.level.runSeconds).toBeCloseTo(27)
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(7).toISOString(),
+      consecutiveMissed: 2,
+    })
+  })
+})
+
+describe('reanchorWindow', () => {
+  it('anchors at the first day of the last three sessions', () => {
+    const profile = createProfile({
+      sessions: [
+        createSession(buildDay(0)),
+        createSession(buildDay(2)),
+        createSession(buildDay(4)),
+      ],
+    })
+    const updated = reanchorWindow(profile, buildDay(6))
+
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(0).toISOString(),
+      consecutiveMissed: 0,
+    })
+    expect(updated.sessions).toHaveLength(3)
+  })
+
+  it('anchors a Thu Sun Mon cadence at Thursday', () => {
+    const profile = createProfile({
+      sessions: [
+        createSession(buildDay(3)),
+        createSession(buildDay(6)),
+        createSession(buildDay(7)),
+      ],
+    })
+
+    expect(reanchorWindow(profile, buildDay(8)).window.windowStart).toBe(
+      buildMidnight(3).toISOString()
+    )
+  })
+
+  it('anchors at today when the last three sessions span more than seven days', () => {
+    const profile = createProfile({
+      sessions: [
+        createSession(buildDay(0)),
+        createSession(buildDay(4)),
+        createSession(buildDay(9)),
+      ],
+    })
+    const updated = reanchorWindow(profile, buildDay(10))
+
+    expect(updated.window).toEqual({
+      windowStart: buildMidnight(10).toISOString(),
+      consecutiveMissed: 0,
+    })
+  })
+
+  it('anchors at today with fewer than three sessions', () => {
+    const profile = createProfile({
+      sessions: [createSession(buildDay(0)), createSession(buildDay(2))],
+    })
+
+    expect(reanchorWindow(profile, buildDay(4)).window.windowStart).toBe(
+      buildMidnight(4).toISOString()
+    )
+  })
+
+  it('clears the miss counter', () => {
+    const profile = createProfile({
+      window: { windowStart: buildMidnight(0).toISOString(), consecutiveMissed: 2 },
+      sessions: [
+        createSession(buildDay(0)),
+        createSession(buildDay(2)),
+        createSession(buildDay(4)),
+      ],
+    })
+
+    expect(reanchorWindow(profile, buildDay(6)).window.consecutiveMissed).toBe(0)
   })
 })
 

@@ -1,4 +1,10 @@
 import type { Session, TrainingProfile } from '@/domain/types.js'
+import {
+  addCalendarDays,
+  isBeforeLocalDay,
+  isSameLocalDay,
+  startOfLocalDay,
+} from '@/domain/calendar.js'
 
 export type WeekDayState = 'idle' | 'planned' | 'completed'
 
@@ -20,23 +26,6 @@ const dayLetters = ['S', 'M', 'T', 'W', 'R', 'F', 'S']
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const targetRunCount = 3
 const restDaysBetweenRuns = 2
-const weekDurationMilliseconds = 7 * 24 * 60 * 60 * 1000
-
-const startOfLocalDay = (date: Date): Date =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate())
-
-const addCalendarDays = (date: Date, days: number): Date =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
-
-const isSameLocalDay = (a: Date, b: Date): boolean =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate()
-
-const isBeforeLocalDay = (a: Date, b: Date): boolean =>
-  a.getFullYear() < b.getFullYear() ||
-  (a.getFullYear() === b.getFullYear() &&
-    (a.getMonth() < b.getMonth() || (a.getMonth() === b.getMonth() && a.getDate() < b.getDate())))
 
 const buildDayLetter = (date: Date): string => dayLetters[date.getDay()] ?? ''
 const buildWeekdayName = (date: Date): string => weekdayNames[date.getDay()] ?? ''
@@ -46,42 +35,81 @@ export const countWindowSessions = (profile: TrainingProfile): number => {
     return profile.sessions.length
   }
 
-  const windowStartMilliseconds = new Date(profile.window.windowStart).getTime()
-  const windowEndMilliseconds = windowStartMilliseconds + weekDurationMilliseconds
+  const windowStartDay = startOfLocalDay(new Date(profile.window.windowStart))
+  const windowEndDay = addCalendarDays(windowStartDay, 7)
 
   return profile.sessions.reduce((count, session) => {
-    const completedAtMilliseconds = new Date(session.completedAt).getTime()
+    const completedDay = startOfLocalDay(new Date(session.completedAt))
 
-    return completedAtMilliseconds >= windowStartMilliseconds &&
-      completedAtMilliseconds < windowEndMilliseconds
+    return !isBeforeLocalDay(completedDay, windowStartDay) &&
+      isBeforeLocalDay(completedDay, windowEndDay)
       ? count + 1
       : count
   }, 0)
 }
 
+const longMonthNames = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+const formatWindowDay = (date: Date): string =>
+  `${weekdayNames[date.getDay()] ?? ''}, ${longMonthNames[date.getMonth()] ?? ''} ${date.getDate()}`
+
+export const buildTrainingWindowLabel = (profile: TrainingProfile, now: Date): string => {
+  if (profile.window.windowStart === '') {
+    return 'Training window: starts with your first run'
+  }
+
+  const startDay = startOfLocalDay(new Date(profile.window.windowStart))
+  const endDay = addCalendarDays(startDay, 7)
+  const runCount = countWindowSessions(profile)
+
+  if (isWindowActive(profile, now) && runCount >= 3) {
+    return (
+      `Training window: ${formatWindowDay(startDay)} to ${formatWindowDay(endDay)}` +
+      ` · Complete · Next: ${formatWindowDay(endDay)}`
+    )
+  }
+
+  return (
+    `Training window: ${formatWindowDay(startDay)} to ${formatWindowDay(endDay)}` +
+    ` · ${runCount} of 3 runs`
+  )
+}
+
 const isWindowActive = (profile: TrainingProfile, now: Date): boolean => {
   if (profile.window.windowStart === '') return false
 
-  const windowEndMilliseconds =
-    new Date(profile.window.windowStart).getTime() + weekDurationMilliseconds
+  const windowEndDay = addCalendarDays(startOfLocalDay(new Date(profile.window.windowStart)), 7)
 
-  return now.getTime() < windowEndMilliseconds
+  return isBeforeLocalDay(startOfLocalDay(now), windowEndDay)
 }
 
 const buildWindowRuns = (profile: TrainingProfile, now: Date): Date[] => {
   if (!isWindowActive(profile, now)) return []
 
-  const windowStartMilliseconds = new Date(profile.window.windowStart).getTime()
-  const windowEndMilliseconds = windowStartMilliseconds + weekDurationMilliseconds
+  const windowStartDay = startOfLocalDay(new Date(profile.window.windowStart))
+  const windowEndDay = addCalendarDays(windowStartDay, 7)
 
   return profile.sessions
     .map((session) => new Date(session.completedAt))
     .filter((completedAt) => {
-      const completedAtMilliseconds = completedAt.getTime()
+      const completedDay = startOfLocalDay(completedAt)
 
       return (
-        completedAtMilliseconds >= windowStartMilliseconds &&
-        completedAtMilliseconds < windowEndMilliseconds
+        !isBeforeLocalDay(completedDay, windowStartDay) &&
+        isBeforeLocalDay(completedDay, windowEndDay)
       )
     })
     .sort((a, b) => a.getTime() - b.getTime())

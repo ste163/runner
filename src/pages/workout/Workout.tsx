@@ -10,7 +10,7 @@ import {
 import './Workout.css'
 import { formatClockDuration } from '@/format.js'
 import { calculateIntervals, isGraduated } from '@/domain/intervals.js'
-import { evaluateWindows } from '@/domain/progression.js'
+import { completeSession } from '@/domain/progression.js'
 import { sharedProfileStore } from '@/domain/profile.js'
 import { buildIntervalRecords, buildLiveIntervals, buildPace } from '@/domain/stats.js'
 import type { Session, TrainingLevel, TrainingProfile } from '@/domain/types.js'
@@ -79,28 +79,6 @@ const buildCountdownPulseKey = (
   displayedRemainingSeconds >= 1 && displayedRemainingSeconds <= 4
     ? `${phaseIndex}:${displayedRemainingSeconds}`
     : null
-
-const buildCompletedProfile = (
-  profile: TrainingProfile,
-  session: Session,
-  completedAt: Date
-): TrainingProfile => {
-  const profileWithSession: TrainingProfile = {
-    ...profile,
-    sessions: [...profile.sessions, session],
-  }
-
-  return profile.window.windowStart === ''
-    ? {
-        ...profileWithSession,
-        window: {
-          ...profile.window,
-          consecutiveMissed: 0,
-          windowStart: completedAt.toISOString(),
-        },
-      }
-    : evaluateWindows(profileWithSession, completedAt)
-}
 
 const hasLevelChanged = (previous: TrainingLevel, next: TrainingLevel): boolean =>
   previous.runSeconds !== next.runSeconds ||
@@ -194,7 +172,7 @@ export const Workout = ({
       totalDistanceMiles: completedGpsState?.distanceMiles ?? 0,
       totalElapsedSeconds: completedTimerState?.totalElapsedSeconds ?? 0,
     }
-    const nextProfile = buildCompletedProfile(latestProfile, session, completedAt)
+    const nextProfile = completeSession(latestProfile, session, completedAt)
 
     sharedProfileStore.save(nextProfile)
     setSummary({ profile: nextProfile, session })

@@ -15,11 +15,25 @@ android {
         versionCode = 1
         versionName = "1.0"
         ndk {
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+            abiFilters.addAll(listOf("arm64-v8a"))
         }
         buildTypes {
             release {
-                isMinifyEnabled = false
+                signingConfig = signingConfigs.getByName("debug")
+                isMinifyEnabled = true
+                packaging {
+                    jniLibs {
+                        excludes += "**/liblynx_debug.so"
+                        excludes += "**/libv8_libfull.cr.so"
+                        excludes += "**/libnapi_v8.so"
+                        excludes += "**/liblynx_v8_bridge.so"
+                        excludes += "**/liblynxdevtool.so"
+                        excludes += "**/liblynxdebugrouter.so"
+                        excludes += "**/libbasedevtool.so"
+                        excludes += "**/liblynxdevtool_js_bridge.so"
+                        excludes += "**/liblynxtrace.so"
+                    }
+                }
                 proguardFiles(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro",
@@ -35,18 +49,10 @@ android {
             jvmTarget = "17"
         }
 
-        // Default integrate assets from dist; switch to native assets when env is set
-        val useNativeAssets =
-            System.getenv("SPARKLING_USE_NATIVE_ASSETS")?.equals("true", ignoreCase = true) ?: false
+        // Serve assets directly from dist; no copy step
         sourceSets {
             getByName("main").apply {
-                if (useNativeAssets) {
-                    // Use native assets directory (used in --copy mode)
-                    assets.setSrcDirs(listOf("src/main/assets"))
-                } else {
-                    // Default: use dist directly; no copy required
-                    assets.setSrcDirs(listOf("../../dist"))
-                }
+                assets.setSrcDirs(listOf("../../dist"))
             }
         }
     }
@@ -61,17 +67,16 @@ android {
 
         implementation(libs.lynx)
         implementation(libs.lynx.jssdk)
-        implementation(libs.lynx.trace)
-        implementation(libs.lynx.devtool)
+        debugImplementation(libs.lynx.trace)
+        debugImplementation(libs.lynx.devtool)
         implementation(libs.primjs)
         implementation(libs.lynx.service.image)
         implementation(libs.lynx.service.log)
         implementation(libs.lynx.service.http)
-        implementation(libs.lynx.service.devtool)
+        debugImplementation(libs.lynx.service.devtool)
         implementation("org.lynxsdk.lynx:xelement-svg:4.1.0")
 
         implementation(libs.fresco)
-        implementation(libs.fresco.animated.gif)
         implementation(libs.fresco.animated.webp)
         implementation(libs.fresco.webp.support)
         implementation(libs.fresco.animated.base)

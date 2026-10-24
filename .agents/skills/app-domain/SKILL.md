@@ -22,13 +22,21 @@ Every session = 3 phases:
 
 ## Progression Rules (rolling 7-day window + phases)
 
-A window starts on the first session of a new cycle. If 7 days pass without 3 completions, the window expires.
+Window lifecycle — day-granular, local midnight; window spans [startDay, startDay + 7 days):
 
-| Result                                  | Action                                |
-| --------------------------------------- | ------------------------------------- |
-| 3 sessions within 7 days                | Run +1 rung (×1.1, snapped to ladder) |
-| Window expired, first miss              | No change                             |
-| Window expired, second consecutive miss | Run −1 rung (×0.9, snapped to ladder) |
+- First session anchors window at local midnight of its day.
+- 3rd session in window completes it immediately: run +1 rung, consecutiveMissed → 0. Completed window accepts no further runs.
+- Next session anywhere anchors a new window at its day (early run after completion = new window; cadence self-corrects).
+- Break rule: session ≥4 calendar days after previous session starts a new window; abandoned incomplete window records one miss.
+- Expiry: window expires after 7 days without 3 completions. Evaluated on next session save AND on app open.
+- Expired completed windows reset consecutiveMissed only (rung already given at completion; never double-level).
+- Manual re-anchor: Home "Align window to first run" button. Re-anchors at first day of last 3 sessions when they span ≤7 days, else today. No evaluation, consecutiveMissed → 0.
+
+| Result                                  | Action                                                   |
+| --------------------------------------- | -------------------------------------------------------- |
+| 3 sessions within 7 days                | Run +1 rung (×1.1, snapped to ladder), at 3rd completion |
+| Window expired, first miss              | No change                                                |
+| Window expired, second consecutive miss | Run −1 rung (×0.9, snapped to ladder)                    |
 
 **Run ladder (canonical)**: one ascending sequence; each level is exactly one rung. Base 30.
 
@@ -57,18 +65,18 @@ Run bounds: min 15s / max `intervalBlockSeconds`. Graduation = run reaches the b
 ## Progression Logic (pseudocode)
 
 ```ts
-on session completed (or app open after window expired):
-  for each expired window (oldest first):
-    if sessions in window >= 3:
-      runSeconds = snapLadder(clamp(runSeconds * 1.1, 15, intervalBlockSeconds))
-      walkSeconds = phaseWalk(runSeconds)
-      consecutiveMissed = 0
-    else:
-      consecutiveMissed += 1
-      if consecutiveMissed >= 2:
-        runSeconds = snapLadder(clamp(runSeconds * 0.9, 15, intervalBlockSeconds))
-        walkSeconds = phaseWalk(runSeconds)
-  window.windowStart = now  // advance atomically with level update
+on session completed:
+  no window → anchor window at run day
+  run on/after expiry day → evaluate expired windows (oldest first), anchor at run day
+  window complete (3 runs) → anchor new window at run day
+  gap from previous session >= 4 days → record miss on abandoned window, anchor at run day
+  else join window:
+    if window reaches 3 runs → level up (+1 rung), consecutiveMissed = 0
+on app open:
+  if window expired → evaluate expired windows, anchor at today
+for each expired window (oldest first):
+  sessions >= 3 → consecutiveMissed = 0 (no level change)
+  else → consecutiveMissed += 1; at >= 2 → level down (−1 rung)
 ```
 
 ## Data Model (persisted types only)

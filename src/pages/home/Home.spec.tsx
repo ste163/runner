@@ -114,6 +114,72 @@ describe('Home', () => {
     expect(await findByTestId('week-day-2-0-planned')).toBeInTheDocument()
   })
 
+  it('shows the training window status line', async () => {
+    vi.setSystemTime(buildDay(1))
+    sharedProfileStore.save(buildOneSessionProfile())
+
+    render(<Home onStartWorkout={vi.fn()} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Training window: Monday, January 1 to Monday, January 8 · 1 of 3 runs')
+  })
+
+  it('shows the completed training window with the next cycle day', async () => {
+    vi.setSystemTime(buildDay(5))
+    sharedProfileStore.save(buildCompletedWeekProfile())
+
+    render(<Home onStartWorkout={vi.fn()} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText(
+      'Training window: Monday, January 1 to Monday, January 8 · Complete · Next: Monday, January 8'
+    )
+  })
+
+  it('re-anchors an expired window on mount', async () => {
+    vi.setSystemTime(buildDay(7))
+    sharedProfileStore.save(buildCompletedWeekProfile())
+
+    render(<Home onStartWorkout={vi.fn()} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Training window: Monday, January 8 to Monday, January 15 · 0 of 3 runs')
+    await findByText('0/3')
+    expect(sharedProfileStore.loadOrCreate().profile.window.windowStart).toBe(
+      new Date(2024, 0, 8).toISOString()
+    )
+  })
+
+  it('re-anchors the window when the user taps start new window', async () => {
+    vi.setSystemTime(buildDay(5))
+    const misalignedProfile: TrainingProfile = {
+      ...buildProfile(),
+      window: { windowStart: buildDay(2).toISOString(), consecutiveMissed: 0 },
+      sessions: [
+        buildSession('session-1', buildDay(0)),
+        buildSession('session-2', buildDay(2)),
+        buildSession('session-3', buildDay(4)),
+      ],
+    }
+    sharedProfileStore.save(misalignedProfile)
+
+    render(<Home onStartWorkout={vi.fn()} />)
+
+    const { findByTestId, findByText } = getQueriesForElement(elementTree.root!)
+
+    fireEvent.tap(await findByTestId('window-reanchor'))
+
+    await findByText(
+      'Training window: Monday, January 1 to Monday, January 8 · Complete · Next: Monday, January 8'
+    )
+    expect(sharedProfileStore.loadOrCreate().profile.window.windowStart).toBe(
+      new Date(2024, 0, 1).toISOString()
+    )
+  })
+
   it('shows the fresh week plan and says run today', async () => {
     vi.setSystemTime(buildDay(2))
     sharedProfileStore.save(buildProfile())

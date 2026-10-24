@@ -3,11 +3,11 @@ import { useCallback, useEffect, useState, type ReactElement } from '@lynx-js/re
 import './Home.css'
 import { formatClockDuration } from '@/format.js'
 import { isGraduated } from '@/domain/intervals.js'
-import { adjustLevelManually } from '@/domain/progression.js'
+import { adjustLevelManually, evaluateWindows, reanchorWindow } from '@/domain/progression.js'
 import { sharedProfileStore } from '@/domain/profile.js'
 import type { TrainingLevel } from '@/domain/types.js'
 import { useSharedProfile } from '@/domain/useSharedProfile.js'
-import { buildWeekView, countWindowSessions } from '@/domain/weekView.js'
+import { buildTrainingWindowLabel, buildWeekView, countWindowSessions } from '@/domain/weekView.js'
 import { CurrentIntervalDonut } from '@/pages/home/components/CurrentIntervalDonut/index.js'
 import { ThisWeekDonut } from '@/pages/home/components/ThisWeekDonut/index.js'
 import { WeekStrip } from '@/pages/home/components/WeekStrip/index.js'
@@ -49,6 +49,12 @@ export const Home = (props: {
     props.onMounted?.()
   }, [props.onMounted])
 
+  useEffect(() => {
+    const current = sharedProfileStore.loadOrCreate().profile
+    const evaluated = evaluateWindows(current, new Date())
+    if (evaluated !== current) sharedProfileStore.save(evaluated)
+  }, [])
+
   const handleLevelAdjustment = useCallback((direction: 'up' | 'down'): void => {
     const currentProfile = sharedProfileStore.loadOrCreate().profile
     const nextProfile = {
@@ -71,11 +77,17 @@ export const Home = (props: {
     setShowManualAdjust((currentValue) => !currentValue)
   }, [])
 
+  const handleReanchorWindow = useCallback((): void => {
+    const current = sharedProfileStore.loadOrCreate().profile
+    sharedProfileStore.save(reanchorWindow(current, new Date()))
+  }, [])
+
   const currentWindowSessions = countWindowSessions(profile)
   const currentProgress = Math.min(currentWindowSessions, 3)
   const now = new Date()
   const weekPages = [-1, 0, 1].map((weekOffset) => buildWeekView(profile, now, weekOffset))
   const currentWeek = weekPages[1]
+  const windowLabel = buildTrainingWindowLabel(profile, now)
   const runPercent = buildRunPercent(profile.level)
   const [runDurationLabel, walkDurationLabel] = buildIntervalDurationLines(profile.level)
   return (
@@ -87,6 +99,14 @@ export const Home = (props: {
         headerContent={<ThisWeekDonut completedCount={currentProgress} totalCount={3} />}
       >
         <WeekStrip pages={weekPages} />
+        <text className='home__windowLabel'>{windowLabel}</text>
+        <Pressable
+          className='home__windowReset'
+          testId='window-reanchor'
+          onTap={handleReanchorWindow}
+        >
+          <text>Align window to first run</text>
+        </Pressable>
       </Card>
 
       <Card

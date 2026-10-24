@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildWeekView, countWindowSessions } from '@/domain/weekView.js'
+import { buildTrainingWindowLabel, buildWeekView, countWindowSessions } from '@/domain/weekView.js'
 import type { Session, TrainingProfile } from '@/domain/types.js'
 
 const MONDAY = new Date(2024, 0, 1, 12)
@@ -200,6 +200,26 @@ describe('buildWeekView', () => {
     expect(view.recommendation).toBe('Run today')
   })
 
+  it('recommends the next cycle Monday when M W F land in one midnight-anchored window', () => {
+    const profile = buildProfile(new Date(2024, 0, 1), [
+      buildSession('session-1', new Date(2024, 0, 1, 6)),
+      buildSession('session-2', new Date(2024, 0, 3, 23)),
+      buildSession('session-3', new Date(2024, 0, 5, 18)),
+    ])
+    const view = buildWeekView(profile, buildDay(5))
+
+    expect(view.recommendation).toBe('Run again on Monday')
+    expect(view.days.map((day) => day.state)).toEqual([
+      'completed',
+      'idle',
+      'completed',
+      'idle',
+      'completed',
+      'idle',
+      'idle',
+    ])
+  })
+
   it('preserves the cycle start day', () => {
     const profile = buildProfile(buildDay(2), [
       buildSession('session-1', buildDay(2)),
@@ -320,6 +340,16 @@ describe('buildWeekView navigation', () => {
 })
 
 describe('countWindowSessions', () => {
+  it('counts anchor-day sessions at any time and excludes expiry-day sessions', () => {
+    const profile = buildProfile(new Date(2024, 0, 1), [
+      buildSession('session-1', new Date(2024, 0, 1, 5)),
+      buildSession('session-2', new Date(2024, 0, 1, 23, 30)),
+      buildSession('session-3', new Date(2024, 0, 8, 0, 30)),
+    ])
+
+    expect(countWindowSessions(profile)).toBe(2)
+  })
+
   it('counts sessions inside the rolling window', () => {
     const profile = buildProfile(MONDAY, [
       buildSession('session-1', buildDay(0)),
@@ -341,5 +371,36 @@ describe('countWindowSessions', () => {
 
   it('returns zero for a fresh profile', () => {
     expect(countWindowSessions(buildProfile(null, []))).toBe(0)
+  })
+})
+
+describe('buildTrainingWindowLabel', () => {
+  it('describes a first run before any window starts', () => {
+    expect(buildTrainingWindowLabel(buildProfile(null, []), buildDay(2))).toBe(
+      'Training window: starts with your first run'
+    )
+  })
+
+  it('describes the window span and run count', () => {
+    const profile = buildProfile(new Date(2024, 0, 1), [
+      buildSession('session-1', new Date(2024, 0, 1, 6)),
+      buildSession('session-2', new Date(2024, 0, 3, 18)),
+    ])
+
+    expect(buildTrainingWindowLabel(profile, buildDay(4))).toBe(
+      'Training window: Monday, January 1 to Monday, January 8 · 2 of 3 runs'
+    )
+  })
+
+  it('describes a completed window with the next cycle day', () => {
+    const profile = buildProfile(new Date(2024, 0, 1), [
+      buildSession('session-1', new Date(2024, 0, 1, 6)),
+      buildSession('session-2', new Date(2024, 0, 3, 18)),
+      buildSession('session-3', new Date(2024, 0, 5, 18)),
+    ])
+
+    expect(buildTrainingWindowLabel(profile, buildDay(5))).toBe(
+      'Training window: Monday, January 1 to Monday, January 8 · Complete · Next: Monday, January 8'
+    )
   })
 })
