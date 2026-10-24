@@ -74,8 +74,12 @@ bun run device:check
 ### Running on device
 
 ```sh
-# One-shot: build → install → launch
+# One-shot: build → install → launch (debug)
 bun run smoke
+
+# One-shot: build → install → launch (release, signed with the debug key,
+# installs over the debug build in place)
+bun run smoke:release
 
 # Watch mode: rebuild + reinstall on every src change
 bun dev
@@ -83,6 +87,16 @@ bun dev
 # Tail app logs from the connected device
 bun run log:app
 ```
+
+### Build loop mechanics
+
+- `bun run build` only builds the Lynx bundle; nothing is copied anywhere.
+- Gradle reads assets straight from `dist/` (`../../dist` in `app/build.gradle.kts`).
+- Each smoke run is one bundle build + one gradle invocation (`installDebug`
+  already implies `assembleDebug`).
+- Gradle speed settings (configuration cache, no jetifier, JDK from env) live
+  in `android/gradle.properties`.
+- To build the iOS shell again: run `sparkling-app-cli copy-assets` first.
 
 ### Wireless ADB (optional, Android 11+)
 

@@ -14,13 +14,25 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        // arm64 only: the device is arm64 and Apple Silicon emulators run arm64 images
         ndk {
             abiFilters.addAll(listOf("arm64-v8a"))
         }
         buildTypes {
             release {
+                // Debug key: adb install -r upgrades the debug install in place
                 signingConfig = signingConfigs.getByName("debug")
+                // R8 relies on the Lynx keep rules in proguard-rules.pro
                 isMinifyEnabled = true
+                // Excludes proven by cold-boot test on the device:
+                //   liblynx_debug.so          release loads liblynx.so instead
+                //   libv8_*                  V8 is optional (DevTool-only engine);
+                //                           Android default is PrimJS/QuickJS
+                //   liblynxdevtool*, router, basedevtool, trace
+                //                           devtool pulled transitively by the
+                //                           Sparkling SDK; app code never uses it
+                // WARNING: never exclude libquick.so - it IS the engine (PrimJS).
+                //   Boot crashes in LynxEnv.init without it.
                 packaging {
                     jniLibs {
                         excludes += "**/liblynx_debug.so"
@@ -67,12 +79,14 @@ android {
 
         implementation(libs.lynx)
         implementation(libs.lynx.jssdk)
+        // debug-only: tooling for DevTool/Trace; kept out of release
         debugImplementation(libs.lynx.trace)
         debugImplementation(libs.lynx.devtool)
         implementation(libs.primjs)
         implementation(libs.lynx.service.image)
         implementation(libs.lynx.service.log)
         implementation(libs.lynx.service.http)
+        // debug-only: DevTool service (see release packaging excludes)
         debugImplementation(libs.lynx.service.devtool)
         implementation("org.lynxsdk.lynx:xelement-svg:4.1.0")
 

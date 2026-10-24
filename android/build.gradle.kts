@@ -10,6 +10,9 @@ plugins {
     alias(libs.plugins.kotlin.kapt) apply false
 }
 
+// Note: :sparkling-navigation (node_modules) pins compileSdk=34 vs the app's 35.
+// It cannot be forced from root (AGP: "too late to set compileSdk"). The mismatch
+// is legal and harmless - leave it.
 // Enforce a shared JDK version for all Android subprojects
 val targetJavaVersion = JavaLanguageVersion.of(17)
 val forcedKotlinVersion = "1.8.10"
