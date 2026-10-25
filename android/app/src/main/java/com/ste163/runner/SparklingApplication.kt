@@ -45,7 +45,6 @@ class SparklingApplication : Application() {
         initSparklingMethods()
     }
 
-
     private fun initHybridKit() {
         HybridKit.init(this)
         val baseInfoConfig = BaseInfoConfig(isDebug = isDebuggable)

@@ -18,7 +18,9 @@ android {
         ndk {
             abiFilters.addAll(listOf("arm64-v8a"))
         }
-        buildTypes {
+    }
+
+    buildTypes {
             release {
                 // Debug key: adb install -r upgrades the debug install in place
                 signingConfig = signingConfigs.getByName("debug")
@@ -53,12 +55,12 @@ android {
             }
         }
 
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
         kotlinOptions {
             jvmTarget = "17"
+        }
+
+        buildFeatures {
+            buildConfig = true
         }
 
         // Serve assets directly from dist; no copy step
@@ -66,6 +68,11 @@ android {
             getByName("main").apply {
                 assets.setSrcDirs(listOf("../../dist"))
             }
+        }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
         }
     }
 
@@ -99,6 +106,7 @@ android {
 
         testImplementation(libs.junit)
         testImplementation("org.mockito:mockito-inline:5.2.0")
+        testImplementation("org.json:json:20240303")
 
         // BEGIN SPARKLING AUTOLINK
         listOf(

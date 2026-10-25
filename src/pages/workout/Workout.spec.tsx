@@ -389,4 +389,93 @@ describe('Workout', () => {
     expect(hapticsModule.vibratePattern).toHaveBeenCalledTimes(1)
     expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,150]')
   })
+
+  it('vibrates the start pattern when the user starts a workout', async () => {
+    const timerModule = buildTimerModule(null)
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(timerModule)
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    fireEvent.tap(await findByText('Start'))
+
+    expect(timerModule.startWorkout).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,500]')
+  })
+
+  it('vibrates single pulses during the last four countdown seconds', async () => {
+    const countdownState: WorkoutTimerState = {
+      ...buildLiveTimerState(),
+      phaseRemainingSeconds: 3,
+    }
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(buildTimerModule(countdownState))
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Pause')
+
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,150]')
+  })
+
+  it('vibrates the phase-boundary pattern when the phase changes', async () => {
+    const liveState = buildLiveTimerState()
+    const stateRef = { current: JSON.stringify(liveState) }
+    const timerModule: RunnerWorkoutTimerModule = {
+      getWorkoutTimerState: vi.fn(() => stateRef.current),
+      pauseWorkout: vi.fn(),
+      resumeWorkout: vi.fn(),
+      startWorkout: vi.fn(),
+      stopWorkout: vi.fn(),
+    }
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(timerModule)
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Pause')
+
+    stateRef.current = JSON.stringify({
+      ...liveState,
+      phaseIndex: 4,
+      phaseLabel: 'WALK',
+      phaseType: 'walk',
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 700))
+
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,70,150,70]')
+  })
+
+  it('vibrates the completion pattern when a completed workout is recorded', async () => {
+    const hapticsModule = buildHapticsModule()
+
+    runnerWorkoutTimer.configure(buildTimerModule(buildCompleteTimerState()))
+    runnerHaptics.configure(hapticsModule)
+    runnerScreen.configure(buildScreenModule())
+
+    render(<Workout onLiveChange={vi.fn()} startRequestId={0} />)
+
+    const { findByText } = getQueriesForElement(elementTree.root!)
+
+    await findByText('Workout complete')
+
+    expect(hapticsModule.cancel).toHaveBeenCalledTimes(1)
+    expect(hapticsModule.vibratePattern).toHaveBeenCalledWith('[0,70,150,70]')
+  })
 })

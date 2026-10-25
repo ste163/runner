@@ -1,7 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 
+# shellcheck disable=SC1007
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+# shellcheck source=android-env.sh
 . "$SCRIPT_DIR/android-env.sh"
 
 ANDROID_DIR="$SCRIPT_DIR/../android"
