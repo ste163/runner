@@ -49,8 +49,14 @@ Automatic path-triggered reminders live in `.pi/rules/*.md`. The global `file-pa
 
 ## Hooks
 
-`.pi/hooks.json` configures the global `hooks` extension (dotfiles repo). It blocks android-only commands (`bun run build`, `bun run dev`, `bun dev`, `bun run smoke`, `bun run android`, `bun run log`) on `tool_call` and runs the verification chain on `agent_settled` when the session edited or wrote a file under `src/`, `scripts/`, `.agents/`, `.pi/`, or one of the root config files. The result shows in a dedicated widget section below the editor as `hooks  Verification, running/complete/failed` (the `status` label in `.pi/hooks.json`). The policy lives in `scripts/hooks/`.
+`.pi/hooks.json` configures the global `hooks` extension (dotfiles repo). Pre-tool hook (`scripts/hooks/pre-tool.sh`) is the single source of truth for the command list. Three tiers:
+
+- ALLOW — checks/validation and unit tests run anytime: `bun typecheck`, `bun run test`, `bun lint`, `bun run verify-docs`, `sh scripts/android-test.sh`, `./gradlew :app:testDebugUnitTest`.
+- ASK — builds need the user's OK first; approved runs carry the `RUNNER_APPROVED=1` prefix.
+- NEVER — device-affecting commands (adb, install scripts, `bun dev`, gradle install/connected tasks) are blocked; the user runs them.
+
+`agent_settled` hook runs the verification chain when the session touched `src/`, `scripts/`, `.agents/`, `.pi/`, or a root config file — result shows in the widget (`hooks  Verification, running/complete/failed`).
 
 ## Verification
 
-The `hooks` extension runs the verification chain automatically on `agent_settled` when the session touched source files — result shows in the widget below the editor (`hooks  Verification, running/complete/failed`). Never run the chain, bundle build, or Android APK build manually. Banned in-session: `bun typecheck`, `bun run test`, `bun lint`, `bun run verify-docs`, `rspeedy build`, android-only commands, gradle APK/emulator tasks. Exception: Android unit tests may run in-session — `sh scripts/android-test.sh` or `./gradlew :app:testDebugUnitTest`. When the widget shows `failed`, read the failure output, fix the code, and stop; the hook re-runs on the next `agent_settled`.
+Chain runs automatically on `agent_settled`; prefer it over manual runs (redundant, not harmful). Android unit tests are not in the chain — run them when android code changes. Widget shows `failed` → read the failure output, fix, stop; the hook re-runs on the next `agent_settled`.
